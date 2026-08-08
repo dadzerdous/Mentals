@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+<title>Color Gather Prototype</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #f4efe8;
+    color: #2b2927;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+  }
+
+  #game {
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    background:
+      radial-gradient(
+        circle at 18% 26%,
+        rgba(255,255,255,.75) 0 4%,
+        transparent 4.5%
+      ),
+      radial-gradient(
+        circle at 75% 18%,
+        rgba(255,255,255,.6) 0 5%,
+        transparent 5.5%
+      ),
+      #efe7dc;
+  }
+
+  /* =========================
+     HUD
+     ========================= */
+
+  .hud {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+
+    z-index: 10;
+  }
+
+  .panel {
+    background: rgba(255,255,255,.9);
+    border: 2px solid #2b2927;
+    border-radius: 16px;
+
+    padding: 8px 12px;
+
+    box-shadow: 0 4px 0 rgba(43,41,39,.15);
+
+    font-weight: 800;
+  }
+
+  #backpack {
+    flex: 1;
+    max-width: 230px;
+  }
+
+  #bagBar {
+    height: 12px;
+
+    background: #ddd3c7;
+
+    border-radius: 99px;
+    overflow: hidden;
+
+    margin-top: 6px;
+
+    border: 1px solid #2b2927;
+  }
+
+  #bagFill {
+    width: 0%;
+    height: 100%;
+
+    background: #7f62d8;
+
+    transition: width .08s linear;
+  }
+
+  /* =========================
+     PLAY FIELD
+     ========================= */
+
+  #field {
+    position: absolute;
+    inset: 80px 0 120px 0;
+  }
+
+  .source {
+    position: absolute;
+
+    width: 92px;
+    height: 92px;
+
+    border: 3px solid #2b2927;
+    border-radius: 24px;
+
+    box-shadow: 0 6px 0 rgba(43,41,39,.15);
+
+    display: grid;
+    place-items: center;
+
+    font-size: 42px;
+    font-weight: 900;
+
+    cursor: pointer;
+  }
+
+  .source small {
+    position: absolute;
+    bottom: 7px;
+
+    font-size: 12px;
+
+    background: rgba(255,255,255,.85);
+
+    padding: 2px 7px;
+
+    border-radius: 99px;
+  }
+
+  #red {
+    left: 12%;
+    top: 18%;
+    background: #ff6b6b;
+  }
+
+  #blue {
+    right: 12%;
+    top: 32%;
+    background: #5f9df7;
+  }
+
+  #yellow {
+    left: 28%;
+    bottom: 8%;
+    background: #ffd75f;
+  }
+
+  .source.active {
+    transform: scale(.96);
+
+    box-shadow: 0 2px 0 rgba(43,41,39,.15);
+  }
+
+  /* =========================
+     GATHER ANIMATION
+     ========================= */
+
+  .progressRing {
+    position: absolute;
+    inset: -10px;
+
+    border-radius: 30px;
+
+    border: 5px solid transparent;
+
+    pointer-events: none;
+  }
+
+  .source.active .progressRing {
+    border-top-color: #2b2927;
+
+    animation: spin .55s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* =========================
+     SELL AREA
+     ========================= */
+
+  #shop {
+    position: absolute;
+
+    left: 50%;
+    bottom: 18px;
+
+    transform: translateX(-50%);
+
+    width: min(88vw, 360px);
+    height: 82px;
+
+    background: #ffffff;
+
+    border: 3px solid #2b2927;
+    border-radius: 22px;
+
+    display: grid;
+    place-items: center;
+
+    text-align: center;
+
+    font-weight: 900;
+
+    box-shadow: 0 7px 0 rgba(43,41,39,.15);
+
+    cursor: pointer;
+  }
+
+  #shop:active {
+    transform: translateX(-50%) translateY(3px);
+  }
+
+  /* =========================
+     FLOATING +1
+     ========================= */
+
+  #floaters {
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    overflow: hidden;
+  }
+
+  .floater {
+    position: absolute;
+
+    font-weight: 900;
+
+    animation: floatUp .7s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+
+    from {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: translate(-50%, -42px) scale(1.25);
+    }
+
+  }
+
+  /* =========================
+     MESSAGE
+     ========================= */
+
+  #message {
+    position: absolute;
+
+    left: 50%;
+    top: 82px;
+
+    transform: translateX(-50%);
+
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    background: rgba(43,41,39,.9);
+
+    color: white;
+
+    font-weight: 800;
+
+    opacity: 0;
+
+    transition: opacity .15s;
+
+    pointer-events: none;
+
+    z-index: 20;
+  }
+
+  #message.show {
+    opacity: 1;
+  }
+
+</style>
+</head>
+
+
+<body>
+
+<div id="game">
+
+  <!-- TOP HUD -->
+
+  <div class="hud">
+
+    <div id="backpack" class="panel">
+
+      🎒 <span id="bagText">0 / 10</span>
+
+      <div id="bagBar">
+        <div id="bagFill"></div>
+      </div>
+
+    </div>
+
+    <div class="panel">
+      🪙 <span id="coins">0</span>
+    </div>
+
+  </div>
+
+
+  <!-- POPUP MESSAGE -->
+
+  <div id="message"></div>
+
+
+  <!-- COLOR SOURCES -->
+
+  <div id="field">
+
+    <div
+      class="source"
+      id="red"
+      data-color="Red"
+    >
+
+      🔴
+
+      <small>Hold</small>
+
+      <div class="progressRing"></div>
+
+    </div>
+
+
+    <div
+      class="source"
+      id="blue"
+      data-color="Blue"
+    >
+
+      🔵
+
+      <small>Hold</small>
+
+      <div class="progressRing"></div>
+
+    </div>
+
+
+    <div
+      class="source"
+      id="yellow"
+      data-color="Yellow"
+    >
+
+      🟡
+
+      <small>Hold</small>
+
+      <div class="progressRing"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SELL -->
+
+  <div id="shop">
+
+    🎨 SELL COLORS
+
+    <br>
+
+    <span style="font-size:13px;font-weight:700;">
+      Tap to empty backpack
+    </span>
+
+  </div>
+
+
+  <!-- FLOATING TEXT -->
+
+  <div id="floaters"></div>
+
+</div>
+
+
+<script>
+
+(() => {
+
+  /* =========================
+     GAME STATE
+     ========================= */
+
+  const capacity = 10;
+
+  let bag = [];
+
+  let coins = 0;
+
+  let gatherTimer = null;
+
+  let activeSource = null;
+
+
+  /* =========================
+     ELEMENTS
+     ========================= */
+
+  const bagText =
+    document.querySelector("#bagText");
+
+  const bagFill =
+    document.querySelector("#bagFill");
+
+  const coinsEl =
+    document.querySelector("#coins");
+
+  const shop =
+    document.querySelector("#shop");
+
+  const message =
+    document.querySelector("#message");
+
+  const floaters =
+    document.querySelector("#floaters");
+
+
+  /* =========================
+     HUD
+     ========================= */
+
+  function updateHUD() {
+
+    bagText.textContent =
+      `${bag.length} / ${capacity}`;
+
+    bagFill.style.width =
+      `${(bag.length / capacity) * 100}%`;
+
+    coinsEl.textContent = coins;
+
+  }
+
+
+  /* =========================
+     MESSAGE
+     ========================= */
+
+  function say(text) {
+
+    message.textContent = text;
+
+    message.classList.add("show");
+
+    clearTimeout(message._timer);
+
+    message._timer = setTimeout(() => {
+
+      message.classList.remove("show");
+
+    }, 900);
+
+  }
+
+
+  /* =========================
+     FLOATING +1
+     ========================= */
+
+  function floatText(source, text) {
+
+    const rect =
+      source.getBoundingClientRect();
+
+    const floater =
+      document.createElement("div");
+
+    floater.className = "floater";
+
+    floater.textContent = text;
+
+    floater.style.left =
+      `${rect.left + rect.width / 2}px`;
+
+    floater.style.top =
+      `${rect.top + 18}px`;
+
+    floaters.appendChild(floater);
+
+    setTimeout(() => {
+
+      floater.remove();
+
+    }, 750);
+
+  }
+
+
+  /* =========================
+     GATHER ONE COLOR
+     ========================= */
+
+  function gatherOne(source) {
+
+    if (bag.length >= capacity) {
+
+      stopGather();
+
+      say("🎒 Backpack full!");
+
+      if (navigator.vibrate) {
+        navigator.vibrate([35, 25, 35]);
+      }
+
+      return;
+
+    }
+
+
+    const color =
+      source.dataset.color;
+
+
+    bag.push(color);
+
+
+    floatText(
+      source,
+      "+1"
+    );
+
+
+    updateHUD();
+
+
+    if (navigator.vibrate) {
+      navigator.vibrate(18);
+    }
+
+  }
+
+
+  /* =========================
+     START GATHERING
+     ========================= */
+
+  function startGather(source) {
+
+    if (activeSource === source) {
+      return;
+    }
+
+
+    stopGather();
+
+
+    activeSource = source;
+
+
+    source.classList.add("active");
+
+
+    /* Gather immediately */
+
+    gatherOne(source);
+
+
+    /* Continue while held */
+
+    gatherTimer = setInterval(() => {
+
+      gatherOne(source);
+
+    }, 380);
+
+  }
+
+
+  /* =========================
+     STOP GATHERING
+     ========================= */
+
+  function stopGather() {
+
+    if (gatherTimer) {
+
+      clearInterval(gatherTimer);
+
+    }
+
+
+    gatherTimer = null;
+
+
+    if (activeSource) {
+
+      activeSource.classList.remove("active");
+
+    }
+
+
+    activeSource = null;
+
+  }
+
+
+  /* =========================
+     COLOR INPUT
+     ========================= */
+
+  document
+    .querySelectorAll(".source")
+    .forEach(source => {
+
+
+      source.addEventListener(
+        "pointerdown",
+        event => {
+
+          event.preventDefault();
+
+
+          source.setPointerCapture?.(
+            event.pointerId
+          );
+
+
+          startGather(source);
+
+        }
+      );
+
+
+      source.addEventListener(
+        "pointerup",
+        stopGather
+      );
+
+
+      source.addEventListener(
+        "pointercancel",
+        stopGather
+      );
+
+
+      source.addEventListener(
+        "lostpointercapture",
+        stopGather
+      );
+
+    });
+
+
+  /* =========================
+     SELL COLORS
+     ========================= */
+
+  shop.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+
+      stopGather();
+
+
+      if (bag.length === 0) {
+
+        say("Nothing to sell");
+
+        return;
+
+      }
+
+
+      const earned =
+        bag.length;
+
+
+      coins += earned;
+
+
+      bag = [];
+
+
+      updateHUD();
+
+
+      say(
+        `🎨 Sold for ${earned} coins`
+      );
+
+
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+
+    }
+  );
+
+
+  /* Stop gathering if finger
+     is released elsewhere */
+
+  window.addEventListener(
+    "pointerup",
+    stopGather
+  );
+
+
+  window.addEventListener(
+    "pointercancel",
+    stopGather
+  );
+
+
+  /* =========================
+     START
+     ========================= */
+
+  updateHUD();
+
+
+})();
+
+</script>
+
+</body>
+</html>
