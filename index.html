@@ -3,197 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.07</title>
+<title>Color Gather v0.08</title>
 
-<style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    margin: 0; width: 100%; height: 100%;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: #f4efe8; color: #2b2927;
-    overflow: hidden; touch-action: none; user-select: none;
-  }
-
-  #game {
-    width: 100%; height: 100%; position: relative;
-    background: linear-gradient(#f6f0e8, #eee4d7);
-  }
-
-  .panel {
-    background: rgba(255,255,255,.94);
-    border: 2px solid #2b2927; border-radius: 16px;
-    padding: 8px 10px; box-shadow: 0 4px 0 rgba(43,41,39,.15);
-    font-weight: 800;
-  }
-
-  /* ---- top row: backpack + coins ---- */
-  .top {
-    position: absolute; top: 10px; left: 10px; right: 10px;
-    display: grid; grid-template-columns: 1fr auto; gap: 8px; z-index: 5;
-  }
-
-  #backpackPanel, #warehousePanel { min-height: 56px; }
-  .stashHeader { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; }
-  .stashContents { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
-
-  .stashChip {
-    background: #fff; border: 2px solid #2b2927; border-radius: 999px;
-    padding: 3px 8px; font-size: 12px; font-weight: 900;
-  }
-
-  .stashChip.pickable { cursor: pointer; }
-  .stashChip.pickable:active { transform: translateY(1px); }
-
-  #quest {
-    position: absolute; top: 74px; left: 10px; right: 10px;
-    background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
-    padding: 6px 10px; font-size: 13px; font-weight: 800; z-index: 5;
-    display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  }
-
-  #questProgress { font-size: 12px; opacity: .75; white-space: nowrap; }
-
-  #order {
-    position: absolute; top: 124px; left: 50%; transform: translateX(-50%);
-    width: min(92vw, 390px); text-align: center;
-    background: #fff; border: 3px solid #2b2927; border-radius: 18px;
-    padding: 8px 12px; font-weight: 900; box-shadow: 0 5px 0 rgba(43,41,39,.15);
-    font-size: 13px;
-  }
-
-  #orderTarget { font-size: 22px; margin-top: 2px; }
-
-  #field { position: absolute; inset: 192px 0 240px 0; z-index: 8; }
-
-  .source {
-    position: absolute; width: 78px; height: 78px;
-    border: 3px solid #2b2927; border-radius: 20px;
-    display: grid; place-items: center; font-size: 34px;
-    box-shadow: 0 6px 0 rgba(43,41,39,.15); cursor: pointer;
-  }
-
-  .source small {
-    position: absolute; bottom: 5px; font-size: 10px;
-    background: rgba(255,255,255,.85); padding: 2px 6px; border-radius: 99px;
-  }
-
-  #red { left: 6%; top: 4%; background: #ff6b6b; }
-  #blue { right: 6%; top: 20%; background: #6fa8ff; }
-  #yellow { left: 26%; bottom: 28%; background: #ffd95f; }
-  #white { right: 10%; bottom: 2%; background: #ffffff; }
-
-  .source.pop { animation: pop .18s ease; }
-  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(.9); } 100% { transform: scale(1); } }
-
-  .floater {
-    position: absolute; font-size: 18px; font-weight: 900;
-    pointer-events: none; animation: floatUp .5s ease-out forwards; z-index: 10;
-  }
-  @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-
-  /* ---- minions: little critters that walk between sources ---- */
-  .minion {
-    position: absolute; width: 32px; height: 32px;
-    display: grid; place-items: center; font-size: 22px;
-    pointer-events: none; z-index: 9;
-    transition: left .9s ease, top .9s ease;
-    filter: drop-shadow(0 3px 0 rgba(43,41,39,.35));
-  }
-
-  /* ---- warehouse row ---- */
-  #warehouseRow {
-    position: absolute; left: 10px; right: 10px; bottom: 96px; z-index: 5;
-  }
-
-  #actions {
-    position: absolute; left: 10px; right: 10px; bottom: 16px;
-    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;
-  }
-
-  button {
-    min-height: 72px; border: 3px solid #2b2927; border-radius: 18px;
-    background: #fff; font: inherit; font-weight: 900; font-size: 13px;
-    box-shadow: 0 6px 0 rgba(43,41,39,.15);
-  }
-  button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(43,41,39,.15); }
-  button:disabled { opacity: .4; }
-
-  #storeBtn { background: #ffe08a; position: relative; }
-
-  .storeBadge {
-    position: absolute; top: -6px; right: -6px;
-    width: 18px; height: 18px; border-radius: 50%;
-    background: #ff5f5f; border: 2px solid #2b2927;
-    font-size: 10px; color: #fff; display: grid; place-items: center;
-  }
-
-  #mixBtn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 6px 4px;
-  }
-
-  #mixLabel { font-size: 13px; }
-  #mixChips { display: flex; gap: 3px; min-height: 20px; }
-
-  .mixChip {
-    background: #fff8e6; border: 2px solid #2b2927; border-radius: 999px;
-    width: 22px; height: 22px; font-size: 12px;
-    display: grid; place-items: center; cursor: pointer;
-  }
-
-  #message {
-    position: absolute; left: 50%; top: 156px; transform: translateX(-50%);
-    background: rgba(43,41,39,.94); color: white; padding: 8px 14px;
-    border-radius: 999px; font-weight: 800; opacity: 0; transition: opacity .15s;
-    pointer-events: none; z-index: 11; white-space: nowrap;
-  }
-  #message.show { opacity: 1; }
-
-  /* ---- store overlay ---- */
-  #storeOverlay {
-    position: absolute; inset: 0; background: rgba(43,41,39,.55);
-    display: none; align-items: flex-end; z-index: 20;
-  }
-  #storeOverlay.open { display: flex; }
-
-  #storeSheet {
-    width: 100%; max-height: 82%; background: #f4efe8;
-    border-radius: 22px 22px 0 0; border: 3px solid #2b2927; border-bottom: none;
-    padding: 14px; overflow-y: auto;
-  }
-
-  #storeHeader {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px; font-weight: 900; font-size: 18px;
-  }
-  #storeCloseBtn { min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px; }
-
-  #storeTabs {
-    display: flex; gap: 8px; margin-bottom: 10px;
-  }
-
-  .storeTabBtn {
-    flex: 1; min-height: 44px; border-radius: 12px; font-size: 13px;
-    background: #fff;
-  }
-
-  .storeTabBtn.active { background: #ffe08a; }
-
-  .upgradeCard {
-    background: #fff; border: 2px solid #2b2927; border-radius: 16px;
-    padding: 10px 12px; margin-bottom: 10px;
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  }
-  .upgradeInfo { flex: 1; }
-  .upgradeName { font-weight: 900; font-size: 14px; }
-  .upgradeDesc { font-size: 12px; opacity: .75; margin-top: 2px; }
-  .upgradeBuyBtn { min-height: 52px; padding: 0 14px; font-size: 13px; white-space: nowrap; }
-
-  #emptyTabNote {
-    font-size: 13px; opacity: .7; text-align: center; padding: 20px 10px;
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -202,10 +14,15 @@
 
   <div class="top">
     <div id="backpackPanel" class="panel">
-      <div class="stashHeader">🎒 <span id="bagText">0 / 8</span></div>
+      <div class="stashHeader">
+        🎒 <span id="bagText">0 / 8</span>
+      </div>
       <div id="bagContents" class="stashContents"></div>
     </div>
-    <div class="panel">🪙 <span id="coins">0</span></div>
+
+    <div class="panel">
+      🪙 <span id="coins">0</span>
+    </div>
   </div>
 
   <div id="quest">
@@ -216,633 +33,129 @@
   <div id="order">
     ORDER
     <div id="orderTarget">🟣 Purple ×1</div>
-    <div style="font-size:12px;font-weight:700;">Reward: 🪙 <span id="reward">10</span></div>
+    <div style="font-size:12px;font-weight:700;">
+      Reward: 🪙 <span id="reward">10</span>
+    </div>
   </div>
 
   <div id="message"></div>
 
   <div id="field">
-    <div class="source" id="red" data-color="red">🔴<small>Tap</small></div>
-    <div class="source" id="blue" data-color="blue">🔵<small>Tap</small></div>
-    <div class="source" id="yellow" data-color="yellow">🟡<small>Tap</small></div>
-    <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
+
+    <div class="source" id="red" data-color="red">
+      🔴
+      <small>Tap</small>
+    </div>
+
+    <div class="source" id="blue" data-color="blue">
+      🔵
+      <small>Tap</small>
+    </div>
+
+    <div class="source" id="yellow" data-color="yellow">
+      🟡
+      <small>Tap</small>
+    </div>
+
+    <div
+      class="source"
+      id="white"
+      data-color="white"
+      style="display:none;"
+    >
+      ⚪
+      <small>Tap</small>
+    </div>
+
   </div>
 
   <div id="warehouseRow">
     <div id="warehousePanel" class="panel">
-      <div class="stashHeader">📦 Warehouse <span id="storageText">0 / 4</span></div>
-      <div id="storageContents" class="stashContents"></div>
+
+      <div class="stashHeader">
+        📦 Warehouse
+        <span id="storageText">0 / 4</span>
+      </div>
+
+      <div
+        id="storageContents"
+        class="stashContents"
+      ></div>
+
     </div>
   </div>
 
   <div id="actions">
+
     <button id="mixBtn">
       <span id="mixLabel">🎨 MIX</span>
       <span id="mixChips"></span>
     </button>
-    <button id="sellBtn">🪙 SELL RAW</button>
-    <button id="fulfillBtn">📦 FULFILL</button>
+
+    <button id="sellBtn">
+      🪙 SELL RAW
+    </button>
+
+    <button id="fulfillBtn">
+      📦 FULFILL
+    </button>
+
     <button id="storeBtn">
       🏪 STORE
-      <span id="storeBadge" class="storeBadge" style="display:none;">!</span>
+      <span
+        id="storeBadge"
+        class="storeBadge"
+        style="display:none;"
+      >
+        !
+      </span>
     </button>
+
   </div>
 
   <div id="storeOverlay">
+
     <div id="storeSheet">
+
       <div id="storeHeader">
-        <span>🏪 Store &amp; Upgrades</span>
-        <button id="storeCloseBtn">Close</button>
+
+        <span>
+          🏪 Store &amp; Upgrades
+        </span>
+
+        <button id="storeCloseBtn">
+          Close
+        </button>
+
       </div>
+
       <div id="storeTabs">
-        <button id="storeTabBtn" class="storeTabBtn active">🛒 Store</button>
-        <button id="upgradeTabBtn" class="storeTabBtn">⚙️ Upgrades</button>
+
+        <button
+          id="storeTabBtn"
+          class="storeTabBtn active"
+        >
+          🛒 Store
+        </button>
+
+        <button
+          id="upgradeTabBtn"
+          class="storeTabBtn"
+        >
+          ⚙️ Upgrades
+        </button>
+
       </div>
+
       <div id="upgradeList"></div>
+
     </div>
+
   </div>
 
 </div>
 
-<script>
-(() => {
-
-  // ---------- state ----------
-
-  let coins = 0;
-
-  const bag = { red: 0, blue: 0, yellow: 0, white: 0 };
-  let bagCapacity = 8;
-
-  const storage = { purple: 0, orange: 0, green: 0, pink: 0, skyblue: 0, cream: 0 };
-  let storageCapacity = 4;
-
-  let mixerSlots = [];
-
-  let whiteUnlocked = false;
-  let minionCount = 0;
-  let minionSpeedLevel = 0;
-  const minions = []; // { el, timer }
-
-  let totalGathered = 0;
-  let totalSold = 0;
-  let totalMixed = 0;
-  let totalFulfilled = 0;
-
-  let activeStoreTab = "store"; // "store" | "upgrades"
-
-  const colorInfo = {
-    red:     { emoji: "🔴", label: "Red" },
-    blue:    { emoji: "🔵", label: "Blue" },
-    yellow:  { emoji: "🟡", label: "Yellow" },
-    white:   { emoji: "⚪", label: "White" },
-    purple:  { emoji: "🟣", label: "Purple" },
-    orange:  { emoji: "🟠", label: "Orange" },
-    green:   { emoji: "🟢", label: "Green" },
-    pink:    { emoji: "🩷", label: "Pink" },
-    skyblue: { emoji: "🩵", label: "Sky Blue" },
-    cream:   { emoji: "🟤", label: "Cream" }
-  };
-
-  const baseRecipes = [
-    { a: "red", b: "blue", result: "purple" },
-    { a: "red", b: "yellow", result: "orange" },
-    { a: "blue", b: "yellow", result: "green" }
-  ];
-
-  const whiteRecipes = [
-    { a: "red", b: "white", result: "pink" },
-    { a: "blue", b: "white", result: "skyblue" },
-    { a: "yellow", b: "white", result: "cream" }
-  ];
-
-  function activeRecipes() {
-    return whiteUnlocked ? baseRecipes.concat(whiteRecipes) : baseRecipes;
-  }
-
-  function findRecipeForPair(colorA, colorB) {
-    return activeRecipes().find(r =>
-      (r.a === colorA && r.b === colorB) || (r.a === colorB && r.b === colorA)
-    );
-  }
-
-  function activeOrderColors() {
-    const colors = ["purple", "orange", "green"];
-    if (whiteUnlocked) colors.push("pink", "skyblue", "cream");
-    return colors;
-  }
-
-  function makeOrder(color) {
-    const baseReward = { purple: 10, orange: 12, green: 12, pink: 14, skyblue: 14, cream: 14 };
-    return { color, reward: baseReward[color] || 10 };
-  }
-
-  let currentOrder = makeOrder("purple");
-
-  // ---------- quests ----------
-
-  const quests = [
-    { id: "collect5", desc: "Collect 5 raw colors", type: "gather", target: 5, reward: 15 },
-    { id: "sell5", desc: "Sell 5 raw colors", type: "sell", target: 5, reward: 20 },
-    { id: "mix3", desc: "Mix 3 colors together", type: "mix", target: 3, reward: 25 },
-    { id: "fulfill3", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
-    { id: "collect20", desc: "Collect 20 raw colors total", type: "gather", target: 20, reward: 40 }
-  ];
-  let questIndex = 0;
-
-  function currentTotalFor(type) {
-    if (type === "gather") return totalGathered;
-    if (type === "sell") return totalSold;
-    if (type === "mix") return totalMixed;
-    if (type === "fulfill") return totalFulfilled;
-    return 0;
-  }
-
-  function checkQuests() {
-    if (questIndex >= quests.length) return;
-    const q = quests[questIndex];
-    if (currentTotalFor(q.type) >= q.target) {
-      coins += q.reward;
-      say(`✅ Quest complete! +${q.reward}`);
-      questIndex++;
-    }
-    renderQuest();
-  }
-
-  function renderQuest() {
-    const questText = document.querySelector("#questText");
-    const questProgress = document.querySelector("#questProgress");
-
-    if (questIndex >= quests.length) {
-      questText.textContent = "All starter quests done! 🎉";
-      questProgress.textContent = "";
-      return;
-    }
-
-    const q = quests[questIndex];
-    questText.textContent = `Quest: ${q.desc}`;
-    questProgress.textContent = `${Math.min(currentTotalFor(q.type), q.target)} / ${q.target}`;
-  }
-
-  // ---------- STORE: one-time / repeatable tool purchases ----------
-
-  const storeItems = [
-    {
-      id: "backpack",
-      name: "Bigger Backpack",
-      level: 0,
-      baseCost: 20,
-      growth: 1.6,
-      desc: () => `Raw color capacity: ${bagCapacity} → ${bagCapacity + 4}`,
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { bagCapacity += 4; this.level++; }
-    },
-    {
-      id: "storage",
-      name: "Bigger Warehouse",
-      level: 0,
-      baseCost: 25,
-      growth: 1.6,
-      desc: () => `Mixed color capacity: ${storageCapacity} → ${storageCapacity + 4}`,
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { storageCapacity += 4; this.level++; }
-    },
-    {
-      id: "white",
-      name: "Unlock White Source",
-      level: 0,
-      maxLevel: 1,
-      baseCost: 50,
-      growth: 1,
-      desc: () => "Adds a 4th raw color + 3 new mixable colors (pink, sky blue, cream)",
-      cost: function () { return this.baseCost; },
-      buy: function () {
-        whiteUnlocked = true;
-        this.level = 1;
-        document.querySelector("#white").style.display = "grid";
-      }
-    },
-    {
-      id: "minion",
-      name: "Hire a Minion",
-      level: 0,
-      baseCost: 40,
-      growth: 1.8,
-      desc: function () { return `A minion that walks between sources and gathers on its own. Minions: ${minionCount} (only while the game is open — no offline progress yet)`; },
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { minionCount++; this.level++; spawnMinion(); }
-    }
-  ];
-
-  // ---------- UPGRADES: level up tools you already own ----------
-
-  const toolUpgrades = [
-    {
-      id: "minionSpeed",
-      name: "Faster Minions",
-      level: 0,
-      maxLevel: 5,
-      baseCost: 30,
-      growth: 1.7,
-      requires: () => minionCount > 0,
-      lockedNote: "Hire a minion in the Store tab first",
-      desc: function () { return `Minions gather quicker. Speed level ${this.level} / ${this.maxLevel}`; },
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { minionSpeedLevel++; this.level++; }
-    }
-  ];
-
-  function minionTravelMs() { return Math.max(400, 900 - minionSpeedLevel * 100); }
-  function minionPauseMs() { return Math.max(120, 300 - minionSpeedLevel * 30); }
-
-  function cheapestAffordableExists() {
-    const affordable = list => list.some(item => {
-      if (item.maxLevel && item.level >= item.maxLevel) return false;
-      if (item.requires && !item.requires()) return false;
-      return coins >= item.cost();
-    });
-    return affordable(storeItems) || affordable(toolUpgrades);
-  }
-
-  function buyFromList(list, id) {
-    const item = list.find(i => i.id === id);
-    if (!item) return;
-    if (item.maxLevel && item.level >= item.maxLevel) return;
-    const cost = item.cost();
-    if (coins < cost) { say("Not enough coins"); return; }
-    coins -= cost;
-    item.buy();
-    say(`${item.name} upgraded!`);
-    renderAll();
-  }
-
-  function renderUpgradeCard(item, list) {
-    const maxed = item.maxLevel && item.level >= item.maxLevel;
-    const locked = item.requires && !item.requires();
-
-    const card = document.createElement("div");
-    card.className = "upgradeCard";
-
-    const info = document.createElement("div");
-    info.className = "upgradeInfo";
-    info.innerHTML = `
-      <div class="upgradeName">${item.name}${maxed ? " (Maxed)" : ""}</div>
-      <div class="upgradeDesc">${locked ? item.lockedNote : (typeof item.desc === "function" ? item.desc() : item.desc)}</div>
-    `;
-
-    const buyBtn = document.createElement("button");
-    buyBtn.className = "upgradeBuyBtn";
-    buyBtn.textContent = maxed ? "✓" : `🪙 ${item.cost()}`;
-    buyBtn.disabled = maxed || locked || coins < item.cost();
-    buyBtn.addEventListener("click", () => buyFromList(list, item.id));
-
-    card.appendChild(info);
-    card.appendChild(buyBtn);
-    return card;
-  }
-
-  function renderStore() {
-    const list = document.querySelector("#upgradeList");
-    list.innerHTML = "";
-
-    const items = activeStoreTab === "store" ? storeItems : toolUpgrades;
-
-    if (activeStoreTab === "upgrades" && toolUpgrades.every(u => u.requires && !u.requires())) {
-      const note = document.createElement("div");
-      note.id = "emptyTabNote";
-      note.textContent = "No tools owned yet — buy one in the Store tab to unlock its upgrades.";
-      list.appendChild(note);
-      return;
-    }
-
-    items.forEach(item => list.appendChild(renderUpgradeCard(item, activeStoreTab === "store" ? storeItems : toolUpgrades)));
-  }
-
-  function setStoreTab(tab) {
-    activeStoreTab = tab;
-    document.querySelector("#storeTabBtn").classList.toggle("active", tab === "store");
-    document.querySelector("#upgradeTabBtn").classList.toggle("active", tab === "upgrades");
-    renderStore();
-  }
-
-  // ---------- minions: visible critters walking between sources ----------
-
-  const field = document.querySelector("#field");
-
-  function getUnlockedSources() {
-    return Array.from(document.querySelectorAll(".source")).filter(el => el.style.display !== "none");
-  }
-
-  function positionMinionAt(el, sourceEl, instant) {
-    const rect = sourceEl.getBoundingClientRect();
-    const fieldRect = field.getBoundingClientRect();
-    const left = rect.left - fieldRect.left + rect.width / 2 - 16;
-    const top = rect.top - fieldRect.top + rect.height / 2 - 16;
-
-    if (instant) {
-      el.style.transition = "none";
-      el.style.left = left + "px";
-      el.style.top = top + "px";
-      void el.offsetWidth;
-      el.style.transition = "";
-    } else {
-      el.style.transitionDuration = `${minionTravelMs()}ms`;
-      el.style.left = left + "px";
-      el.style.top = top + "px";
-    }
-  }
-
-  function scheduleMinionMove(minion) {
-    const sources = getUnlockedSources();
-    if (!sources.length) {
-      minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
-      return;
-    }
-
-    const target = sources[Math.floor(Math.random() * sources.length)];
-    positionMinionAt(minion.el, target, false);
-
-    minion.timer = setTimeout(() => {
-      tapSource(target, true);
-      minion.timer = setTimeout(() => scheduleMinionMove(minion), minionPauseMs());
-    }, minionTravelMs());
-  }
-
-  function spawnMinion() {
-    const el = document.createElement("div");
-    el.className = "minion";
-    el.textContent = "🐿️";
-    field.appendChild(el);
-
-    const minion = { el, timer: null };
-    minions.push(minion);
-
-    const sources = getUnlockedSources();
-    if (sources.length) {
-      positionMinionAt(el, sources[Math.floor(Math.random() * sources.length)], true);
-    }
-
-    scheduleMinionMove(minion);
-  }
-
-  // ---------- helpers ----------
-
-  const bagText = document.querySelector("#bagText");
-  const bagContents = document.querySelector("#bagContents");
-  const storageText = document.querySelector("#storageText");
-  const storageContents = document.querySelector("#storageContents");
-  const coinsEl = document.querySelector("#coins");
-  const orderTarget = document.querySelector("#orderTarget");
-  const rewardEl = document.querySelector("#reward");
-  const message = document.querySelector("#message");
-  const mixChips = document.querySelector("#mixChips");
-  const storeBadge = document.querySelector("#storeBadge");
-
-  function say(text) {
-    message.textContent = text;
-    message.classList.add("show");
-    clearTimeout(message._timer);
-    message._timer = setTimeout(() => message.classList.remove("show"), 950);
-  }
-
-  function bagTotal() {
-    return Object.values(bag).reduce((a, b) => a + b, 0);
-  }
-
-  function storageTotal() {
-    return Object.values(storage).reduce((a, b) => a + b, 0);
-  }
-
-  function renderBackpack() {
-    bagContents.innerHTML = "";
-    Object.keys(bag).forEach(color => {
-      if (bag[color] > 0) {
-        const chip = document.createElement("div");
-        chip.className = "stashChip pickable";
-        chip.textContent = `${colorInfo[color].emoji} ${bag[color]}`;
-        chip.addEventListener("click", () => selectForMixer(color));
-        bagContents.appendChild(chip);
-      }
-    });
-    if (bagTotal() === 0) {
-      const empty = document.createElement("div");
-      empty.style.fontSize = "12px";
-      empty.style.opacity = ".6";
-      empty.textContent = "Empty";
-      bagContents.appendChild(empty);
-    }
-  }
-
-  function renderWarehouse() {
-    storageContents.innerHTML = "";
-    Object.keys(storage).forEach(color => {
-      if (storage[color] > 0) {
-        const chip = document.createElement("div");
-        chip.className = "stashChip";
-        chip.textContent = `${colorInfo[color].emoji} ${colorInfo[color].label} ×${storage[color]}`;
-        storageContents.appendChild(chip);
-      }
-    });
-    if (storageTotal() === 0) {
-      const empty = document.createElement("div");
-      empty.style.fontSize = "12px";
-      empty.style.opacity = ".6";
-      empty.textContent = "Empty";
-      storageContents.appendChild(empty);
-    }
-  }
-
-  function renderMixChips() {
-    mixChips.innerHTML = "";
-    mixerSlots.forEach((color, index) => {
-      const chip = document.createElement("span");
-      chip.className = "mixChip";
-      chip.textContent = colorInfo[color].emoji;
-      chip.addEventListener("click", event => {
-        event.stopPropagation();
-        clearMixerSlot(index);
-      });
-      mixChips.appendChild(chip);
-    });
-  }
-
-  function renderAll() {
-    bagText.textContent = `${bagTotal()} / ${bagCapacity}`;
-    storageText.textContent = `${storageTotal()} / ${storageCapacity}`;
-    coinsEl.textContent = coins;
-
-    const orderInfo = colorInfo[currentOrder.color];
-    orderTarget.textContent = `${orderInfo.emoji} ${orderInfo.label} ×1`;
-    rewardEl.textContent = currentOrder.reward;
-
-    renderBackpack();
-    renderWarehouse();
-    renderMixChips();
-    renderQuest();
-
-    storeBadge.style.display = cheapestAffordableExists() ? "grid" : "none";
-
-    if (document.querySelector("#storeOverlay").classList.contains("open")) {
-      renderStore();
-    }
-  }
-
-  function spawnFloater(source, text) {
-    const rect = source.getBoundingClientRect();
-    const fieldRect = field.getBoundingClientRect();
-    const floater = document.createElement("div");
-    floater.className = "floater";
-    floater.textContent = text;
-    floater.style.left = `${rect.left - fieldRect.left + rect.width / 2 - 10}px`;
-    floater.style.top = `${rect.top - fieldRect.top}px`;
-    field.appendChild(floater);
-    setTimeout(() => floater.remove(), 500);
-  }
-
-  function tapSource(source, fromMinion) {
-    if (bagTotal() >= bagCapacity) {
-      if (!fromMinion) say("🎒 Backpack full!");
-      return;
-    }
-
-    const color = source.dataset.color;
-    bag[color]++;
-    totalGathered++;
-
-    source.classList.remove("pop");
-    void source.offsetWidth;
-    source.classList.add("pop");
-
-    spawnFloater(source, `+1 ${colorInfo[color].emoji}`);
-    renderAll();
-    checkQuests();
-
-    if (!fromMinion && navigator.vibrate) navigator.vibrate(12);
-  }
-
-  // ---------- mixer selection ----------
-
-  function selectForMixer(color) {
-    if (mixerSlots.length >= 2) { say("Mixer full — tap a color on the MIX button to remove it"); return; }
-    if (bag[color] <= 0) return;
-
-    bag[color]--;
-    mixerSlots.push(color);
-    renderAll();
-
-    if (navigator.vibrate) navigator.vibrate(10);
-  }
-
-  function clearMixerSlot(index) {
-    const color = mixerSlots[index];
-    if (color === undefined) return;
-
-    bag[color]++;
-    mixerSlots.splice(index, 1);
-    renderAll();
-  }
-
-  // ---------- wire up sources ----------
-
-  document.querySelectorAll(".source").forEach(source => {
-    source.addEventListener("pointerdown", event => {
-      event.preventDefault();
-      tapSource(source, false);
-    });
-  });
-
-  // ---------- action buttons ----------
-
-  document.querySelector("#mixBtn").addEventListener("click", () => {
-    if (mixerSlots.length < 2) { say("Pick 2 colors from your backpack first"); return; }
-
-    const recipe = findRecipeForPair(mixerSlots[0], mixerSlots[1]);
-
-    if (!recipe) {
-      say("That combo doesn't mix — returned to backpack");
-      bag[mixerSlots[0]]++;
-      bag[mixerSlots[1]]++;
-      mixerSlots = [];
-      renderAll();
-      return;
-    }
-
-    if (storageTotal() >= storageCapacity) { say("📦 Warehouse full!"); return; }
-
-    storage[recipe.result]++;
-    totalMixed++;
-    mixerSlots = [];
-
-    say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
-    renderAll();
-    checkQuests();
-
-    if (navigator.vibrate) navigator.vibrate(28);
-  });
-
-  document.querySelector("#sellBtn").addEventListener("click", () => {
-    const earned = bagTotal();
-    if (earned === 0) { say("No raw colors to sell"); return; }
-
-    coins += earned;
-    totalSold += earned;
-    Object.keys(bag).forEach(c => bag[c] = 0);
-
-    say(`🪙 Sold raw colors +${earned}`);
-    renderAll();
-    checkQuests();
-
-    if (navigator.vibrate) navigator.vibrate(24);
-  });
-
-  document.querySelector("#fulfillBtn").addEventListener("click", () => {
-    const neededColor = currentOrder.color;
-    if (storage[neededColor] <= 0) {
-      say(`Need ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label}`);
-      return;
-    }
-
-    storage[neededColor]--;
-    const earnedReward = currentOrder.reward;
-    coins += earnedReward;
-    totalFulfilled++;
-
-    const colors = activeOrderColors();
-    let nextColor;
-    do {
-      nextColor = colors[Math.floor(Math.random() * colors.length)];
-    } while (colors.length > 1 && nextColor === currentOrder.color);
-    currentOrder = makeOrder(nextColor);
-
-    say(`✅ Order complete! +${earnedReward}`);
-    renderAll();
-    checkQuests();
-
-    if (navigator.vibrate) navigator.vibrate([25, 20, 25]);
-  });
-
-  // ---------- store overlay ----------
-
-  const storeOverlay = document.querySelector("#storeOverlay");
-
-  document.querySelector("#storeBtn").addEventListener("click", () => {
-    storeOverlay.classList.add("open");
-    renderStore();
-  });
-
-  document.querySelector("#storeCloseBtn").addEventListener("click", () => {
-    storeOverlay.classList.remove("open");
-  });
-
-  document.querySelector("#storeTabBtn").addEventListener("click", () => setStoreTab("store"));
-  document.querySelector("#upgradeTabBtn").addEventListener("click", () => setStoreTab("upgrades"));
-
-  // ---------- init ----------
-
-  renderAll();
-
-})();
-</script>
+<script src="game.js"></script>
 
 </body>
 </html>
