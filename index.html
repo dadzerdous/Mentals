@@ -3,234 +3,155 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.03</title>
+<title>Color Gather v0.04</title>
 
 <style>
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
+    margin: 0; width: 100%; height: 100%;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: #f4efe8;
-    color: #2b2927;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
+    background: #f4efe8; color: #2b2927;
+    overflow: hidden; touch-action: none; user-select: none;
   }
 
   #game {
-    width: 100%;
-    height: 100%;
-    position: relative;
+    width: 100%; height: 100%; position: relative;
     background: linear-gradient(#f6f0e8, #eee4d7);
   }
 
   .top {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    z-index: 5;
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    display: grid; grid-template-columns: 1fr auto auto; gap: 8px; z-index: 5;
   }
 
   .panel {
     background: rgba(255,255,255,.94);
-    border: 2px solid #2b2927;
-    border-radius: 16px;
-    padding: 8px 10px;
-    box-shadow: 0 4px 0 rgba(43,41,39,.15);
+    border: 2px solid #2b2927; border-radius: 16px;
+    padding: 8px 10px; box-shadow: 0 4px 0 rgba(43,41,39,.15);
     font-weight: 800;
   }
 
-  #backpackPanel {
-    min-height: 70px;
-  }
-
-  #bagHeader {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-
-  #bagContents {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    min-height: 28px;
-  }
-
+  #backpackPanel { min-height: 60px; }
+  #bagHeader { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; }
+  #bagContents { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
   .bagChip {
-    background: #fff;
-    border: 2px solid #2b2927;
-    border-radius: 999px;
-    padding: 3px 8px;
-    font-size: 13px;
-    font-weight: 900;
+    background: #fff; border: 2px solid #2b2927; border-radius: 999px;
+    padding: 3px 8px; font-size: 12px; font-weight: 900;
   }
+
+  #storagePanel { font-size: 13px; white-space: nowrap; }
+
+  #quest {
+    position: absolute; top: 72px; left: 10px; right: 10px;
+    background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
+    padding: 6px 10px; font-size: 13px; font-weight: 800; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+
+  #questProgress { font-size: 12px; opacity: .75; white-space: nowrap; }
 
   #order {
-    position: absolute;
-    top: 98px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(92vw, 390px);
-    text-align: center;
-    background: #fff;
-    border: 3px solid #2b2927;
-    border-radius: 18px;
-    padding: 10px 12px;
-    font-weight: 900;
-    box-shadow: 0 5px 0 rgba(43,41,39,.15);
+    position: absolute; top: 122px; left: 50%; transform: translateX(-50%);
+    width: min(92vw, 390px); text-align: center;
+    background: #fff; border: 3px solid #2b2927; border-radius: 18px;
+    padding: 8px 12px; font-weight: 900; box-shadow: 0 5px 0 rgba(43,41,39,.15);
+    font-size: 13px;
   }
 
-  #orderTarget {
-    font-size: 28px;
-    margin-top: 4px;
-  }
+  #orderTarget { font-size: 24px; margin-top: 2px; }
 
-  #field {
-    position: absolute;
-    inset: 176px 0 180px 0;
-  }
+  #field { position: absolute; inset: 196px 0 180px 0; }
 
   .source {
-    position: absolute;
-    width: 92px;
-    height: 92px;
-    border: 3px solid #2b2927;
-    border-radius: 24px;
-    display: grid;
-    place-items: center;
-    font-size: 42px;
-    box-shadow: 0 6px 0 rgba(43,41,39,.15);
+    position: absolute; width: 84px; height: 84px;
+    border: 3px solid #2b2927; border-radius: 22px;
+    display: grid; place-items: center; font-size: 38px;
+    box-shadow: 0 6px 0 rgba(43,41,39,.15); cursor: pointer;
   }
 
   .source small {
-    position: absolute;
-    bottom: 7px;
-    font-size: 11px;
-    background: rgba(255,255,255,.85);
-    padding: 2px 7px;
-    border-radius: 99px;
+    position: absolute; bottom: 6px; font-size: 10px;
+    background: rgba(255,255,255,.85); padding: 2px 6px; border-radius: 99px;
   }
 
-  #red {
-    left: 8%;
-    top: 10%;
-    background: #ff6b6b;
-  }
+  #red { left: 6%; top: 6%; background: #ff6b6b; }
+  #blue { right: 6%; top: 24%; background: #6fa8ff; }
+  #yellow { left: 26%; bottom: 30%; background: #ffd95f; }
+  #white { right: 10%; bottom: 4%; background: #ffffff; }
 
-  #blue {
-    right: 8%;
-    top: 30%;
-    background: #6fa8ff;
-  }
+  .source.pop { animation: pop .18s ease; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(.9); } 100% { transform: scale(1); } }
 
-  #yellow {
-    left: 30%;
-    bottom: 4%;
-    background: #ffd95f;
+  .floater {
+    position: absolute; font-size: 18px; font-weight: 900;
+    pointer-events: none; animation: floatUp .5s ease-out forwards; z-index: 6;
   }
-
-  .source.active {
-    transform: scale(.96);
-  }
-
-  .ring {
-    position: absolute;
-    inset: -10px;
-    border-radius: 30px;
-    border: 5px solid transparent;
-    pointer-events: none;
-  }
-
-  .source.active .ring {
-    border-top-color: #2b2927;
-    animation: spin .55s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+  @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
 
   #crafted {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 112px;
-    min-height: 44px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
+    position: absolute; left: 10px; right: 10px; bottom: 112px;
+    min-height: 40px; display: flex; gap: 8px; align-items: center;
+    justify-content: center; flex-wrap: wrap;
   }
-
   .craftedChip {
-    background: #fff;
-    border: 2px solid #2b2927;
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-weight: 900;
+    background: #fff; border: 2px solid #2b2927; border-radius: 999px;
+    padding: 5px 9px; font-weight: 900; font-size: 13px;
   }
 
   #actions {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
+    position: absolute; left: 10px; right: 10px; bottom: 16px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;
   }
 
   button {
-    min-height: 76px;
-    border: 3px solid #2b2927;
-    border-radius: 20px;
-    background: #fff;
-    font: inherit;
-    font-weight: 900;
-    font-size: 16px;
+    min-height: 72px; border: 3px solid #2b2927; border-radius: 18px;
+    background: #fff; font: inherit; font-weight: 900; font-size: 13px;
     box-shadow: 0 6px 0 rgba(43,41,39,.15);
   }
+  button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(43,41,39,.15); }
+  button:disabled { opacity: .4; }
 
-  button:active {
-    transform: translateY(3px);
-    box-shadow: 0 3px 0 rgba(43,41,39,.15);
-  }
+  #storeBtn { background: #ffe08a; }
 
   #message {
-    position: absolute;
-    left: 50%;
-    top: 156px;
-    transform: translateX(-50%);
-    background: rgba(43,41,39,.94);
-    color: white;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-weight: 800;
-    opacity: 0;
-    transition: opacity .15s;
-    pointer-events: none;
-    z-index: 10;
-    white-space: nowrap;
+    position: absolute; left: 50%; top: 156px; transform: translateX(-50%);
+    background: rgba(43,41,39,.94); color: white; padding: 8px 14px;
+    border-radius: 999px; font-weight: 800; opacity: 0; transition: opacity .15s;
+    pointer-events: none; z-index: 10; white-space: nowrap;
+  }
+  #message.show { opacity: 1; }
+
+  /* store overlay */
+  #storeOverlay {
+    position: absolute; inset: 0; background: rgba(43,41,39,.55);
+    display: none; align-items: flex-end; z-index: 20;
+  }
+  #storeOverlay.open { display: flex; }
+
+  #storeSheet {
+    width: 100%; max-height: 82%; background: #f4efe8;
+    border-radius: 22px 22px 0 0; border: 3px solid #2b2927; border-bottom: none;
+    padding: 14px; overflow-y: auto;
   }
 
-  #message.show {
-    opacity: 1;
+  #storeHeader {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; font-weight: 900; font-size: 18px;
   }
+  #storeCloseBtn {
+    min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px;
+  }
+
+  .upgradeCard {
+    background: #fff; border: 2px solid #2b2927; border-radius: 16px;
+    padding: 10px 12px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .upgradeInfo { flex: 1; }
+  .upgradeName { font-weight: 900; font-size: 14px; }
+  .upgradeDesc { font-size: 12px; opacity: .75; margin-top: 2px; }
+  .upgradeBuyBtn { min-height: 52px; padding: 0 14px; font-size: 13px; white-space: nowrap; }
 </style>
 </head>
 
@@ -239,744 +160,474 @@
 <div id="game">
 
   <div class="top">
-
     <div id="backpackPanel" class="panel">
-
-      <div id="bagHeader">
-        🎒 <span id="bagText">0 / 8</span>
-      </div>
-
+      <div id="bagHeader">🎒 <span id="bagText">0 / 8</span></div>
       <div id="bagContents"></div>
-
     </div>
+    <div id="storagePanel" class="panel">📦 <span id="storageText">0 / 4</span></div>
+    <div class="panel">🪙 <span id="coins">0</span></div>
+  </div>
 
-    <div class="panel">
-      🪙 <span id="coins">0</span>
-    </div>
-
+  <div id="quest">
+    <span id="questText">Quest: Collect 5 colors</span>
+    <span id="questProgress">0 / 5</span>
   </div>
 
   <div id="order">
-
     ORDER
-
-    <div id="orderTarget">
-      🟣 Purple ×1
-    </div>
-
-    <div style="font-size:13px;font-weight:700;">
-      Reward: 🪙 <span id="reward">10</span>
-    </div>
-
+    <div id="orderTarget">🟣 Purple ×1</div>
+    <div style="font-size:12px;font-weight:700;">Reward: 🪙 <span id="reward">10</span></div>
   </div>
 
   <div id="message"></div>
 
   <div id="field">
-
-    <div
-      class="source"
-      id="red"
-      data-color="red"
-    >
-      🔴
-      <small>Hold</small>
-      <div class="ring"></div>
-    </div>
-
-    <div
-      class="source"
-      id="blue"
-      data-color="blue"
-    >
-      🔵
-      <small>Hold</small>
-      <div class="ring"></div>
-    </div>
-
-    <div
-      class="source"
-      id="yellow"
-      data-color="yellow"
-    >
-      🟡
-      <small>Hold</small>
-      <div class="ring"></div>
-    </div>
-
+    <div class="source" id="red" data-color="red">🔴<small>Tap</small></div>
+    <div class="source" id="blue" data-color="blue">🔵<small>Tap</small></div>
+    <div class="source" id="yellow" data-color="yellow">🟡<small>Tap</small></div>
+    <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
   </div>
 
   <div id="crafted"></div>
 
   <div id="actions">
+    <button id="mixBtn">🎨 MIX</button>
+    <button id="sellBtn">🪙 SELL RAW</button>
+    <button id="fulfillBtn">📦 FULFILL</button>
+    <button id="storeBtn">🏪 STORE</button>
+  </div>
 
-    <button id="mixBtn">
-      🎨 MIX
-    </button>
-
-    <button id="sellBtn">
-      🪙 SELL RAW
-    </button>
-
-    <button id="fulfillBtn">
-      📦 FULFILL
-    </button>
-
+  <div id="storeOverlay">
+    <div id="storeSheet">
+      <div id="storeHeader">
+        <span>🏪 Store &amp; Upgrades</span>
+        <button id="storeCloseBtn">Close</button>
+      </div>
+      <div id="upgradeList"></div>
+    </div>
   </div>
 
 </div>
 
 <script>
-
 (() => {
 
-  const capacity = 8;
+  // ---------- state ----------
 
   let coins = 0;
-  let bag = [];
-  let crafted = [];
-  let activeSource = null;
-  let gatherTimer = null;
+
+  const bag = { red: 0, blue: 0, yellow: 0, white: 0 };
+  let bagCapacity = 8;
+
+  const storage = { purple: 0, orange: 0, green: 0, pink: 0, skyblue: 0, cream: 0 };
+  let storageCapacity = 4;
+
+  let whiteUnlocked = false;
+  let minionCount = 0;
+  let minionTimer = null;
+
+  let totalGathered = 0;
+  let totalSold = 0;
+  let totalMixed = 0;
+  let totalFulfilled = 0;
 
   const colorInfo = {
-
-    red: {
-      emoji: "🔴",
-      label: "Red"
-    },
-
-    blue: {
-      emoji: "🔵",
-      label: "Blue"
-    },
-
-    yellow: {
-      emoji: "🟡",
-      label: "Yellow"
-    },
-
-    purple: {
-      emoji: "🟣",
-      label: "Purple"
-    },
-
-    orange: {
-      emoji: "🟠",
-      label: "Orange"
-    },
-
-    green: {
-      emoji: "🟢",
-      label: "Green"
-    }
-
+    red:     { emoji: "🔴", label: "Red" },
+    blue:    { emoji: "🔵", label: "Blue" },
+    yellow:  { emoji: "🟡", label: "Yellow" },
+    white:   { emoji: "⚪", label: "White" },
+    purple:  { emoji: "🟣", label: "Purple" },
+    orange:  { emoji: "🟠", label: "Orange" },
+    green:   { emoji: "🟢", label: "Green" },
+    pink:    { emoji: "🩷", label: "Pink" },
+    skyblue: { emoji: "🩵", label: "Sky Blue" },
+    cream:   { emoji: "🟤", label: "Cream" }
   };
 
-
-  const recipes = [
-
-    {
-      a: "red",
-      b: "blue",
-      result: "purple"
-    },
-
-    {
-      a: "red",
-      b: "yellow",
-      result: "orange"
-    },
-
-    {
-      a: "blue",
-      b: "yellow",
-      result: "green"
-    }
-
+  // base recipes always available; white recipes unlock via store
+  const baseRecipes = [
+    { a: "red", b: "blue", result: "purple" },
+    { a: "red", b: "yellow", result: "orange" },
+    { a: "blue", b: "yellow", result: "green" }
   ];
 
-
-  const orders = [
-
-    {
-      color: "purple",
-      reward: 10
-    },
-
-    {
-      color: "orange",
-      reward: 12
-    },
-
-    {
-      color: "green",
-      reward: 12
-    }
-
+  const whiteRecipes = [
+    { a: "red", b: "white", result: "pink" },
+    { a: "blue", b: "white", result: "skyblue" },
+    { a: "yellow", b: "white", result: "cream" }
   ];
 
+  function activeRecipes() {
+    return whiteUnlocked ? baseRecipes.concat(whiteRecipes) : baseRecipes;
+  }
 
-  let currentOrder = orders[0];
+  function activeOrderColors() {
+    const colors = ["purple", "orange", "green"];
+    if (whiteUnlocked) colors.push("pink", "skyblue", "cream");
+    return colors;
+  }
 
+  function makeOrder(color) {
+    // reward scales a little with how "deep" the color is
+    const baseReward = { purple: 10, orange: 12, green: 12, pink: 14, skyblue: 14, cream: 14 };
+    return { color, reward: baseReward[color] || 10 };
+  }
 
-  const bagText =
-    document.querySelector("#bagText");
+  let currentOrder = makeOrder("purple");
 
-  const bagContents =
-    document.querySelector("#bagContents");
+  // ---------- quests ----------
 
-  const coinsEl =
-    document.querySelector("#coins");
+  const quests = [
+    { id: "collect5", desc: "Collect 5 raw colors", type: "gather", target: 5, reward: 15 },
+    { id: "sell5", desc: "Sell 5 raw colors", type: "sell", target: 5, reward: 20 },
+    { id: "mix3", desc: "Mix 3 colors together", type: "mix", target: 3, reward: 25 },
+    { id: "fulfill3", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
+    { id: "collect20", desc: "Collect 20 raw colors total", type: "gather", target: 20, reward: 40 }
+  ];
+  let questIndex = 0;
 
-  const craftedEl =
-    document.querySelector("#crafted");
+  function currentTotalFor(type) {
+    if (type === "gather") return totalGathered;
+    if (type === "sell") return totalSold;
+    if (type === "mix") return totalMixed;
+    if (type === "fulfill") return totalFulfilled;
+    return 0;
+  }
 
-  const orderTarget =
-    document.querySelector("#orderTarget");
+  function checkQuests() {
+    if (questIndex >= quests.length) return;
+    const q = quests[questIndex];
+    if (currentTotalFor(q.type) >= q.target) {
+      coins += q.reward;
+      say(`✅ Quest complete! +${q.reward}`);
+      questIndex++;
+    }
+    renderQuest();
+  }
 
-  const rewardEl =
-    document.querySelector("#reward");
+  function renderQuest() {
+    const questEl = document.querySelector("#quest");
+    const questText = document.querySelector("#questText");
+    const questProgress = document.querySelector("#questProgress");
 
-  const message =
-    document.querySelector("#message");
+    if (questIndex >= quests.length) {
+      questText.textContent = "All starter quests done! 🎉";
+      questProgress.textContent = "";
+      return;
+    }
 
-  const mixBtn =
-    document.querySelector("#mixBtn");
+    const q = quests[questIndex];
+    questText.textContent = `Quest: ${q.desc}`;
+    questProgress.textContent = `${Math.min(currentTotalFor(q.type), q.target)} / ${q.target}`;
+  }
 
-  const sellBtn =
-    document.querySelector("#sellBtn");
+  // ---------- upgrades ----------
 
-  const fulfillBtn =
-    document.querySelector("#fulfillBtn");
+  const upgrades = [
+    {
+      id: "backpack",
+      name: "Bigger Backpack",
+      level: 0,
+      baseCost: 20,
+      growth: 1.6,
+      desc: () => `Raw color capacity: ${bagCapacity} → ${bagCapacity + 4}`,
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { bagCapacity += 4; this.level++; }
+    },
+    {
+      id: "storage",
+      name: "More Storage",
+      level: 0,
+      baseCost: 25,
+      growth: 1.6,
+      desc: () => `Mixed color storage: ${storageCapacity} → ${storageCapacity + 4}`,
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { storageCapacity += 4; this.level++; }
+    },
+    {
+      id: "white",
+      name: "Unlock White Source",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 50,
+      growth: 1,
+      desc: () => "Adds a 4th raw color + 3 new mixable colors (pink, sky blue, cream)",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        whiteUnlocked = true;
+        this.level = 1;
+        document.querySelector("#white").style.display = "grid";
+      }
+    },
+    {
+      id: "minion",
+      name: "Hire a Minion",
+      level: 0,
+      baseCost: 40,
+      growth: 1.8,
+      desc: function () { return `Auto-taps a random source every few seconds. Minions: ${minionCount} (runs only while the game is open — no offline progress yet)`; },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { minionCount++; this.level++; startMinions(); }
+    }
+  ];
 
+  function buyUpgrade(id) {
+    const upg = upgrades.find(u => u.id === id);
+    if (!upg) return;
+    if (upg.maxLevel && upg.level >= upg.maxLevel) return;
+    const cost = upg.cost();
+    if (coins < cost) { say("Not enough coins"); return; }
+    coins -= cost;
+    upg.buy();
+    say(`${upg.name} upgraded!`);
+    renderAll();
+  }
+
+  function renderStore() {
+    const list = document.querySelector("#upgradeList");
+    list.innerHTML = "";
+
+    upgrades.forEach(upg => {
+      const maxed = upg.maxLevel && upg.level >= upg.maxLevel;
+
+      const card = document.createElement("div");
+      card.className = "upgradeCard";
+
+      const info = document.createElement("div");
+      info.className = "upgradeInfo";
+      info.innerHTML = `
+        <div class="upgradeName">${upg.name}${maxed ? " (Owned)" : ""}</div>
+        <div class="upgradeDesc">${typeof upg.desc === "function" ? upg.desc() : upg.desc}</div>
+      `;
+
+      const buyBtn = document.createElement("button");
+      buyBtn.className = "upgradeBuyBtn";
+      buyBtn.textContent = maxed ? "✓" : `🪙 ${upg.cost()}`;
+      buyBtn.disabled = maxed || coins < upg.cost();
+      buyBtn.addEventListener("click", () => buyUpgrade(upg.id));
+
+      card.appendChild(info);
+      card.appendChild(buyBtn);
+      list.appendChild(card);
+    });
+  }
+
+  // ---------- minions ----------
+
+  function startMinions() {
+    if (minionTimer) return;
+    minionTimer = setInterval(() => {
+      if (minionCount <= 0) return;
+      const sources = Array.from(document.querySelectorAll(".source"))
+        .filter(el => el.style.display !== "none");
+      if (sources.length === 0) return;
+      for (let i = 0; i < minionCount; i++) {
+        const el = sources[Math.floor(Math.random() * sources.length)];
+        tapSource(el, true);
+      }
+    }, 2200);
+  }
+
+  // ---------- helpers ----------
+
+  const bagText = document.querySelector("#bagText");
+  const bagContents = document.querySelector("#bagContents");
+  const storageText = document.querySelector("#storageText");
+  const coinsEl = document.querySelector("#coins");
+  const craftedEl = document.querySelector("#crafted");
+  const orderTarget = document.querySelector("#orderTarget");
+  const rewardEl = document.querySelector("#reward");
+  const message = document.querySelector("#message");
+  const field = document.querySelector("#field");
 
   function say(text) {
-
     message.textContent = text;
-
     message.classList.add("show");
-
     clearTimeout(message._timer);
-
-    message._timer =
-      setTimeout(() => {
-
-        message.classList.remove("show");
-
-      }, 950);
-
+    message._timer = setTimeout(() => message.classList.remove("show"), 950);
   }
 
-
-  function countInBag(color) {
-
-    return bag.filter(
-      item => item === color
-    ).length;
-
+  function bagTotal() {
+    return Object.values(bag).reduce((a, b) => a + b, 0);
   }
 
-
-  function countCrafted(color) {
-
-    return crafted.filter(
-      item => item === color
-    ).length;
-
+  function storageTotal() {
+    return Object.values(storage).reduce((a, b) => a + b, 0);
   }
-
 
   function renderBackpack() {
-
     bagContents.innerHTML = "";
-
-
-    [
-      "red",
-      "blue",
-      "yellow"
-    ].forEach(color => {
-
-      const count =
-        countInBag(color);
-
-
-      if (count > 0) {
-
-        const chip =
-          document.createElement("div");
-
-        chip.className =
-          "bagChip";
-
-        chip.textContent =
-          `${colorInfo[color].emoji} ${count}`;
-
+    Object.keys(bag).forEach(color => {
+      if (bag[color] > 0) {
+        const chip = document.createElement("div");
+        chip.className = "bagChip";
+        chip.textContent = `${colorInfo[color].emoji} ${bag[color]}`;
         bagContents.appendChild(chip);
-
       }
-
     });
-
-
-    if (bag.length === 0) {
-
-      const empty =
-        document.createElement("div");
-
-      empty.style.fontSize =
-        "13px";
-
-      empty.style.opacity =
-        ".6";
-
-      empty.textContent =
-        "Empty";
-
+    if (bagTotal() === 0) {
+      const empty = document.createElement("div");
+      empty.style.fontSize = "12px";
+      empty.style.opacity = ".6";
+      empty.textContent = "Empty";
       bagContents.appendChild(empty);
-
     }
-
   }
 
-
-  function renderCrafted() {
-
+  function renderStorageStrip() {
     craftedEl.innerHTML = "";
-
-
-    [
-      "purple",
-      "orange",
-      "green"
-    ].forEach(color => {
-
-      const count =
-        countCrafted(color);
-
-
-      if (count > 0) {
-
-        const chip =
-          document.createElement("div");
-
-        chip.className =
-          "craftedChip";
-
-        chip.textContent =
-          `${colorInfo[color].emoji} ${colorInfo[color].label} ×${count}`;
-
+    Object.keys(storage).forEach(color => {
+      if (storage[color] > 0) {
+        const chip = document.createElement("div");
+        chip.className = "craftedChip";
+        chip.textContent = `${colorInfo[color].emoji} ${colorInfo[color].label} ×${storage[color]}`;
         craftedEl.appendChild(chip);
-
       }
-
     });
-
   }
 
+  function renderAll() {
+    bagText.textContent = `${bagTotal()} / ${bagCapacity}`;
+    storageText.textContent = `${storageTotal()} / ${storageCapacity}`;
+    coinsEl.textContent = coins;
 
-  function updateHUD() {
-
-    bagText.textContent =
-      `${bag.length} / ${capacity}`;
-
-    coinsEl.textContent =
-      coins;
-
-
-    const orderInfo =
-      colorInfo[currentOrder.color];
-
-
-    orderTarget.textContent =
-      `${orderInfo.emoji} ${orderInfo.label} ×1`;
-
-
-    rewardEl.textContent =
-      currentOrder.reward;
-
+    const orderInfo = colorInfo[currentOrder.color];
+    orderTarget.textContent = `${orderInfo.emoji} ${orderInfo.label} ×1`;
+    rewardEl.textContent = currentOrder.reward;
 
     renderBackpack();
+    renderStorageStrip();
+    renderQuest();
 
-    renderCrafted();
-
+    if (document.querySelector("#storeOverlay").classList.contains("open")) {
+      renderStore();
+    }
   }
 
+  function spawnFloater(source, text) {
+    const rect = source.getBoundingClientRect();
+    const fieldRect = field.getBoundingClientRect();
+    const floater = document.createElement("div");
+    floater.className = "floater";
+    floater.textContent = text;
+    floater.style.left = `${rect.left - fieldRect.left + rect.width / 2 - 10}px`;
+    floater.style.top = `${rect.top - fieldRect.top}px`;
+    field.appendChild(floater);
+    setTimeout(() => floater.remove(), 500);
+  }
 
-  function gatherOne(source) {
-
-    if (bag.length >= capacity) {
-
-      stopGather();
-
-      say("🎒 Backpack full!");
-
+  function tapSource(source, fromMinion) {
+    if (bagTotal() >= bagCapacity) {
+      if (!fromMinion) say("🎒 Backpack full!");
       return;
-
     }
 
+    const color = source.dataset.color;
+    bag[color]++;
+    totalGathered++;
 
-    bag.push(
-      source.dataset.color
-    );
+    source.classList.remove("pop");
+    void source.offsetWidth;
+    source.classList.add("pop");
 
+    spawnFloater(source, `+1 ${colorInfo[color].emoji}`);
+    renderAll();
+    checkQuests();
 
-    updateHUD();
-
-
-    if (navigator.vibrate) {
-
-      navigator.vibrate(16);
-
-    }
-
+    if (!fromMinion && navigator.vibrate) navigator.vibrate(12);
   }
-
-
-  function startGather(source) {
-
-    stopGather();
-
-
-    activeSource =
-      source;
-
-
-    source.classList.add(
-      "active"
-    );
-
-
-    gatherOne(source);
-
-
-    gatherTimer =
-      setInterval(() => {
-
-        gatherOne(source);
-
-      }, 420);
-
-  }
-
-
-  function stopGather() {
-
-    if (gatherTimer) {
-
-      clearInterval(
-        gatherTimer
-      );
-
-    }
-
-
-    gatherTimer = null;
-
-
-    if (activeSource) {
-
-      activeSource.classList.remove(
-        "active"
-      );
-
-    }
-
-
-    activeSource = null;
-
-  }
-
-
-  function removeOneFromBag(color) {
-
-    const index =
-      bag.indexOf(color);
-
-
-    if (index === -1) {
-
-      return false;
-
-    }
-
-
-    bag.splice(
-      index,
-      1
-    );
-
-
-    return true;
-
-  }
-
 
   function getAvailableRecipe() {
-
-    return recipes.find(
-      recipe => {
-
-        return (
-          countInBag(recipe.a) > 0 &&
-          countInBag(recipe.b) > 0
-        );
-
-      }
-    );
-
+    return activeRecipes().find(r => bag[r.a] > 0 && bag[r.b] > 0);
   }
 
+  // ---------- wire up sources ----------
 
-  document
-    .querySelectorAll(".source")
-    .forEach(source => {
-
-      source.addEventListener(
-        "pointerdown",
-        event => {
-
-          event.preventDefault();
-
-
-          source.setPointerCapture?.(
-            event.pointerId
-          );
-
-
-          startGather(source);
-
-        }
-      );
-
-
-      source.addEventListener(
-        "pointerup",
-        stopGather
-      );
-
-
-      source.addEventListener(
-        "pointercancel",
-        stopGather
-      );
-
-
-      source.addEventListener(
-        "lostpointercapture",
-        stopGather
-      );
-
+  document.querySelectorAll(".source").forEach(source => {
+    source.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      tapSource(source, false);
     });
+  });
 
+  // ---------- action buttons ----------
 
-  mixBtn.addEventListener(
-    "click",
-    () => {
+  document.querySelector("#mixBtn").addEventListener("click", () => {
+    const recipe = getAvailableRecipe();
+    if (!recipe) { say("Need two mixable colors"); return; }
+    if (storageTotal() >= storageCapacity) { say("📦 Storage full!"); return; }
 
-      const recipe =
-        getAvailableRecipe();
+    bag[recipe.a]--;
+    bag[recipe.b]--;
+    storage[recipe.result]++;
+    totalMixed++;
 
+    say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
+    renderAll();
+    checkQuests();
 
-      if (!recipe) {
+    if (navigator.vibrate) navigator.vibrate(28);
+  });
 
-        say(
-          "Need two mixable colors"
-        );
+  document.querySelector("#sellBtn").addEventListener("click", () => {
+    const earned = bagTotal();
+    if (earned === 0) { say("No raw colors to sell"); return; }
 
-        return;
+    coins += earned;
+    totalSold += earned;
+    Object.keys(bag).forEach(c => bag[c] = 0);
 
-      }
+    say(`🪙 Sold raw colors +${earned}`);
+    renderAll();
+    checkQuests();
 
+    if (navigator.vibrate) navigator.vibrate(24);
+  });
 
-      removeOneFromBag(
-        recipe.a
-      );
-
-
-      removeOneFromBag(
-        recipe.b
-      );
-
-
-      crafted.push(
-        recipe.result
-      );
-
-
-      const resultInfo =
-        colorInfo[recipe.result];
-
-
-      say(
-        `${resultInfo.emoji} Made ${resultInfo.label}!`
-      );
-
-
-      updateHUD();
-
-
-      if (navigator.vibrate) {
-
-        navigator.vibrate(28);
-
-      }
-
+  document.querySelector("#fulfillBtn").addEventListener("click", () => {
+    const neededColor = currentOrder.color;
+    if (storage[neededColor] <= 0) {
+      say(`Need ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label}`);
+      return;
     }
-  );
 
+    storage[neededColor]--;
+    const earnedReward = currentOrder.reward;
+    coins += earnedReward;
+    totalFulfilled++;
 
-  sellBtn.addEventListener(
-    "click",
-    () => {
+    const colors = activeOrderColors();
+    let nextColor;
+    do {
+      nextColor = colors[Math.floor(Math.random() * colors.length)];
+    } while (colors.length > 1 && nextColor === currentOrder.color);
+    currentOrder = makeOrder(nextColor);
 
-      if (bag.length === 0) {
+    say(`✅ Order complete! +${earnedReward}`);
+    renderAll();
+    checkQuests();
 
-        say(
-          "No raw colors to sell"
-        );
+    if (navigator.vibrate) navigator.vibrate([25, 20, 25]);
+  });
 
-        return;
+  // ---------- store overlay ----------
 
-      }
+  const storeOverlay = document.querySelector("#storeOverlay");
 
+  document.querySelector("#storeBtn").addEventListener("click", () => {
+    storeOverlay.classList.add("open");
+    renderStore();
+  });
 
-      const earned =
-        bag.length;
+  document.querySelector("#storeCloseBtn").addEventListener("click", () => {
+    storeOverlay.classList.remove("open");
+  });
 
+  // ---------- init ----------
 
-      coins +=
-        earned;
-
-
-      bag = [];
-
-
-      say(
-        `🪙 Sold raw colors +${earned}`
-      );
-
-
-      updateHUD();
-
-
-      if (navigator.vibrate) {
-
-        navigator.vibrate(24);
-
-      }
-
-    }
-  );
-
-
-  fulfillBtn.addEventListener(
-    "click",
-    () => {
-
-      const neededColor =
-        currentOrder.color;
-
-
-      const craftedIndex =
-        crafted.indexOf(
-          neededColor
-        );
-
-
-      if (craftedIndex === -1) {
-
-        const info =
-          colorInfo[neededColor];
-
-
-        say(
-          `Need ${info.emoji} ${info.label}`
-        );
-
-
-        return;
-
-      }
-
-
-      const earned =
-        currentOrder.reward;
-
-
-      crafted.splice(
-        craftedIndex,
-        1
-      );
-
-
-      coins +=
-        earned;
-
-
-      let nextOrder;
-
-
-      do {
-
-        nextOrder =
-          orders[
-            Math.floor(
-              Math.random() *
-              orders.length
-            )
-          ];
-
-      } while (
-
-        orders.length > 1 &&
-
-        nextOrder.color ===
-        currentOrder.color
-
-      );
-
-
-      currentOrder =
-        nextOrder;
-
-
-      say(
-        `✅ Order complete! +${earned}`
-      );
-
-
-      updateHUD();
-
-
-      if (navigator.vibrate) {
-
-        navigator.vibrate(
-          [25, 20, 25]
-        );
-
-      }
-
-    }
-  );
-
-
-  window.addEventListener(
-    "pointerup",
-    stopGather
-  );
-
-
-  window.addEventListener(
-    "pointercancel",
-    stopGather
-  );
-
-
-  updateHUD();
+  renderAll();
 
 })();
-
 </script>
 
 </body>
