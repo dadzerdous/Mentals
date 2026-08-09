@@ -1,0 +1,3113 @@
+(() => {
+
+  // =========================================================
+  // STATE
+  // =========================================================
+
+  let coins = 0;
+
+  const bag = {
+    red: 0,
+    blue: 0,
+    yellow: 0,
+    white: 0
+  };
+
+  let bagCapacity = 8;
+
+  const storage = {
+    purple: 0,
+    orange: 0,
+    green: 0,
+    pink: 0,
+    skyblue: 0,
+    cream: 0
+  };
+
+  let storageCapacity = 4;
+
+  let mixerSlots = [];
+
+  let whiteUnlocked = false;
+
+  let minionCount = 0;
+  let minionSpeedLevel = 0;
+
+  const minions = [];
+
+  let totalGathered = 0;
+  let totalSold = 0;
+  let totalMixed = 0;
+  let totalFulfilled = 0;
+
+  let activeStoreTab = "store";
+
+
+  // =========================================================
+  // COLOR DATA
+  // =========================================================
+
+  const colorInfo = {
+
+    red: {
+      emoji: "🔴",
+      label: "Red"
+    },
+
+    blue: {
+      emoji: "🔵",
+      label: "Blue"
+    },
+
+    yellow: {
+      emoji: "🟡",
+      label: "Yellow"
+    },
+
+    white: {
+      emoji: "⚪",
+      label: "White"
+    },
+
+    purple: {
+      emoji: "🟣",
+      label: "Purple"
+    },
+
+    orange: {
+      emoji: "🟠",
+      label: "Orange"
+    },
+
+    green: {
+      emoji: "🟢",
+      label: "Green"
+    },
+
+    pink: {
+      emoji: "🩷",
+      label: "Pink"
+    },
+
+    skyblue: {
+      emoji: "🩵",
+      label: "Sky Blue"
+    },
+
+    cream: {
+      emoji: "🟤",
+      label: "Cream"
+    }
+
+  };
+
+
+  // Actual colors used by the paint splat effect
+
+  const paintSplatColors = {
+
+    purple: "#8e5bd9",
+
+    orange: "#ff9f43",
+
+    green: "#55c96b",
+
+    pink: "#ff8fc7",
+
+    skyblue: "#7fcfff",
+
+    cream: "#f3df9b"
+
+  };
+
+
+  // =========================================================
+  // RECIPES
+  // =========================================================
+
+  const baseRecipes = [
+
+    {
+      a: "red",
+      b: "blue",
+      result: "purple"
+    },
+
+    {
+      a: "red",
+      b: "yellow",
+      result: "orange"
+    },
+
+    {
+      a: "blue",
+      b: "yellow",
+      result: "green"
+    }
+
+  ];
+
+
+  const whiteRecipes = [
+
+    {
+      a: "red",
+      b: "white",
+      result: "pink"
+    },
+
+    {
+      a: "blue",
+      b: "white",
+      result: "skyblue"
+    },
+
+    {
+      a: "yellow",
+      b: "white",
+      result: "cream"
+    }
+
+  ];
+
+
+  function activeRecipes() {
+
+    if (whiteUnlocked) {
+
+      return baseRecipes.concat(
+        whiteRecipes
+      );
+
+    }
+
+    return baseRecipes;
+
+  }
+
+
+  function findRecipeForPair(
+    colorA,
+    colorB
+  ) {
+
+    return activeRecipes().find(
+
+      recipe =>
+
+        (
+          recipe.a === colorA &&
+          recipe.b === colorB
+        )
+
+        ||
+
+        (
+          recipe.a === colorB &&
+          recipe.b === colorA
+        )
+
+    );
+
+  }
+
+
+  // =========================================================
+  // ORDERS
+  // =========================================================
+
+  function activeOrderColors() {
+
+    const colors = [
+      "purple",
+      "orange",
+      "green"
+    ];
+
+    if (whiteUnlocked) {
+
+      colors.push(
+        "pink",
+        "skyblue",
+        "cream"
+      );
+
+    }
+
+    return colors;
+
+  }
+
+
+  function makeOrder(color) {
+
+    const baseReward = {
+
+      purple: 10,
+
+      orange: 12,
+
+      green: 12,
+
+      pink: 14,
+
+      skyblue: 14,
+
+      cream: 14
+
+    };
+
+
+    return {
+
+      color: color,
+
+      reward:
+        baseReward[color] || 10
+
+    };
+
+  }
+
+
+  let currentOrder =
+    makeOrder("purple");
+
+
+  // =========================================================
+  // QUESTS
+  // =========================================================
+
+  const quests = [
+
+    {
+      id: "collect5",
+      desc: "Collect 5 raw colors",
+      type: "gather",
+      target: 5,
+      reward: 15
+    },
+
+    {
+      id: "sell5",
+      desc: "Sell 5 raw colors",
+      type: "sell",
+      target: 5,
+      reward: 20
+    },
+
+    {
+      id: "mix3",
+      desc: "Mix 3 colors together",
+      type: "mix",
+      target: 3,
+      reward: 25
+    },
+
+    {
+      id: "fulfill3",
+      desc: "Fulfill 3 orders",
+      type: "fulfill",
+      target: 3,
+      reward: 30
+    },
+
+    {
+      id: "collect20",
+      desc: "Collect 20 raw colors total",
+      type: "gather",
+      target: 20,
+      reward: 40
+    }
+
+  ];
+
+
+  let questIndex = 0;
+
+
+  function currentTotalFor(type) {
+
+    if (type === "gather") {
+
+      return totalGathered;
+
+    }
+
+
+    if (type === "sell") {
+
+      return totalSold;
+
+    }
+
+
+    if (type === "mix") {
+
+      return totalMixed;
+
+    }
+
+
+    if (type === "fulfill") {
+
+      return totalFulfilled;
+
+    }
+
+
+    return 0;
+
+  }
+
+
+  function checkQuests() {
+
+    if (
+      questIndex >= quests.length
+    ) {
+
+      return;
+
+    }
+
+
+    const quest =
+      quests[questIndex];
+
+
+    if (
+      currentTotalFor(
+        quest.type
+      ) >= quest.target
+    ) {
+
+      coins +=
+        quest.reward;
+
+
+      say(
+        `✅ Quest complete! +${quest.reward}`
+      );
+
+
+      questIndex++;
+
+    }
+
+
+    renderQuest();
+
+  }
+
+
+  function renderQuest() {
+
+    const questText =
+      document.querySelector(
+        "#questText"
+      );
+
+
+    const questProgress =
+      document.querySelector(
+        "#questProgress"
+      );
+
+
+    if (
+      questIndex >= quests.length
+    ) {
+
+      questText.textContent =
+        "All starter quests done! 🎉";
+
+
+      questProgress.textContent =
+        "";
+
+
+      return;
+
+    }
+
+
+    const quest =
+      quests[questIndex];
+
+
+    questText.textContent =
+      `Quest: ${quest.desc}`;
+
+
+    questProgress.textContent =
+      `${
+        Math.min(
+          currentTotalFor(
+            quest.type
+          ),
+          quest.target
+        )
+      } / ${quest.target}`;
+
+  }
+
+
+  // =========================================================
+  // STORE ITEMS
+  // =========================================================
+
+  const storeItems = [
+
+    {
+
+      id: "backpack",
+
+      name:
+        "Bigger Backpack",
+
+      level: 0,
+
+      baseCost: 20,
+
+      growth: 1.6,
+
+
+      desc: () =>
+
+        `Raw color capacity: ${bagCapacity} → ${bagCapacity + 4}`,
+
+
+      cost: function () {
+
+        return Math.round(
+
+          this.baseCost *
+
+          Math.pow(
+            this.growth,
+            this.level
+          )
+
+        );
+
+      },
+
+
+      buy: function () {
+
+        bagCapacity += 4;
+
+        this.level++;
+
+      }
+
+    },
+
+
+    {
+
+      id: "storage",
+
+      name:
+        "Bigger Warehouse",
+
+      level: 0,
+
+      baseCost: 25,
+
+      growth: 1.6,
+
+
+      desc: () =>
+
+        `Mixed color capacity: ${storageCapacity} → ${storageCapacity + 4}`,
+
+
+      cost: function () {
+
+        return Math.round(
+
+          this.baseCost *
+
+          Math.pow(
+            this.growth,
+            this.level
+          )
+
+        );
+
+      },
+
+
+      buy: function () {
+
+        storageCapacity += 4;
+
+        this.level++;
+
+      }
+
+    },
+
+
+    {
+
+      id: "white",
+
+      name:
+        "Unlock White Source",
+
+      level: 0,
+
+      maxLevel: 1,
+
+      baseCost: 50,
+
+      growth: 1,
+
+
+      desc: () =>
+
+        "Adds a 4th raw color + 3 new mixable colors (pink, sky blue, cream)",
+
+
+      cost: function () {
+
+        return this.baseCost;
+
+      },
+
+
+      buy: function () {
+
+        whiteUnlocked = true;
+
+        this.level = 1;
+
+
+        document
+          .querySelector(
+            "#white"
+          )
+          .style
+          .display =
+          "grid";
+
+      }
+
+    },
+
+
+    {
+
+      id: "minion",
+
+      name:
+        "Hire a Minion",
+
+      level: 0,
+
+      baseCost: 40,
+
+      growth: 1.8,
+
+
+      desc: function () {
+
+        return (
+
+          `A minion that walks between sources and gathers on its own. ` +
+
+          `Minions: ${minionCount} ` +
+
+          `(only while the game is open — no offline progress yet)`
+
+        );
+
+      },
+
+
+      cost: function () {
+
+        return Math.round(
+
+          this.baseCost *
+
+          Math.pow(
+            this.growth,
+            this.level
+          )
+
+        );
+
+      },
+
+
+      buy: function () {
+
+        minionCount++;
+
+        this.level++;
+
+        spawnMinion();
+
+      }
+
+    }
+
+  ];
+
+
+  // =========================================================
+  // TOOL UPGRADES
+  // =========================================================
+
+  const toolUpgrades = [
+
+    {
+
+      id:
+        "minionSpeed",
+
+      name:
+        "Faster Minions",
+
+      level: 0,
+
+      maxLevel: 5,
+
+      baseCost: 30,
+
+      growth: 1.7,
+
+
+      requires: () =>
+        minionCount > 0,
+
+
+      lockedNote:
+        "Hire a minion in the Store tab first",
+
+
+      desc: function () {
+
+        return (
+
+          `Minions gather quicker. ` +
+
+          `Speed level ${this.level} / ${this.maxLevel}`
+
+        );
+
+      },
+
+
+      cost: function () {
+
+        return Math.round(
+
+          this.baseCost *
+
+          Math.pow(
+            this.growth,
+            this.level
+          )
+
+        );
+
+      },
+
+
+      buy: function () {
+
+        minionSpeedLevel++;
+
+        this.level++;
+
+      }
+
+    }
+
+  ];
+
+
+  function minionTravelMs() {
+
+    return Math.max(
+
+      400,
+
+      900 -
+      minionSpeedLevel * 100
+
+    );
+
+  }
+
+
+  function minionPauseMs() {
+
+    return Math.max(
+
+      120,
+
+      300 -
+      minionSpeedLevel * 30
+
+    );
+
+  }
+
+
+  // =========================================================
+  // STORE LOGIC
+  // =========================================================
+
+  function cheapestAffordableExists() {
+
+    const affordable =
+      list =>
+
+        list.some(
+          item => {
+
+            if (
+              item.maxLevel &&
+              item.level >=
+              item.maxLevel
+            ) {
+
+              return false;
+
+            }
+
+
+            if (
+              item.requires &&
+              !item.requires()
+            ) {
+
+              return false;
+
+            }
+
+
+            return (
+              coins >=
+              item.cost()
+            );
+
+          }
+        );
+
+
+    return (
+
+      affordable(
+        storeItems
+      )
+
+      ||
+
+      affordable(
+        toolUpgrades
+      )
+
+    );
+
+  }
+
+
+  function buyFromList(
+    list,
+    id
+  ) {
+
+    const item =
+      list.find(
+        candidate =>
+          candidate.id === id
+      );
+
+
+    if (!item) {
+
+      return;
+
+    }
+
+
+    if (
+
+      item.maxLevel &&
+
+      item.level >=
+      item.maxLevel
+
+    ) {
+
+      return;
+
+    }
+
+
+    const cost =
+      item.cost();
+
+
+    if (
+      coins < cost
+    ) {
+
+      say(
+        "Not enough coins"
+      );
+
+      return;
+
+    }
+
+
+    coins -= cost;
+
+
+    item.buy();
+
+
+    say(
+      `${item.name} upgraded!`
+    );
+
+
+    renderAll();
+
+  }
+
+
+  function renderUpgradeCard(
+    item,
+    list
+  ) {
+
+    const maxed =
+
+      item.maxLevel &&
+
+      item.level >=
+      item.maxLevel;
+
+
+    const locked =
+
+      item.requires &&
+
+      !item.requires();
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "upgradeCard";
+
+
+    const info =
+      document.createElement(
+        "div"
+      );
+
+
+    info.className =
+      "upgradeInfo";
+
+
+    info.innerHTML = `
+
+      <div class="upgradeName">
+
+        ${item.name}
+
+        ${maxed ? " (Maxed)" : ""}
+
+      </div>
+
+
+      <div class="upgradeDesc">
+
+        ${
+          locked
+
+            ? item.lockedNote
+
+            : (
+                typeof item.desc ===
+                "function"
+
+                  ? item.desc()
+
+                  : item.desc
+              )
+        }
+
+      </div>
+
+    `;
+
+
+    const buyBtn =
+      document.createElement(
+        "button"
+      );
+
+
+    buyBtn.className =
+      "upgradeBuyBtn";
+
+
+    buyBtn.textContent =
+
+      maxed
+
+        ? "✓"
+
+        : `🪙 ${item.cost()}`;
+
+
+    buyBtn.disabled =
+
+      maxed ||
+
+      locked ||
+
+      coins <
+      item.cost();
+
+
+    buyBtn.addEventListener(
+
+      "click",
+
+      () =>
+        buyFromList(
+          list,
+          item.id
+        )
+
+    );
+
+
+    card.appendChild(
+      info
+    );
+
+
+    card.appendChild(
+      buyBtn
+    );
+
+
+    return card;
+
+  }
+
+
+  function renderStore() {
+
+    const list =
+      document.querySelector(
+        "#upgradeList"
+      );
+
+
+    list.innerHTML =
+      "";
+
+
+    const items =
+
+      activeStoreTab ===
+      "store"
+
+        ? storeItems
+
+        : toolUpgrades;
+
+
+    if (
+
+      activeStoreTab ===
+      "upgrades"
+
+      &&
+
+      toolUpgrades.every(
+
+        upgrade =>
+
+          upgrade.requires &&
+
+          !upgrade.requires()
+
+      )
+
+    ) {
+
+      const note =
+        document.createElement(
+          "div"
+        );
+
+
+      note.id =
+        "emptyTabNote";
+
+
+      note.textContent =
+        "No tools owned yet — buy one in the Store tab to unlock its upgrades.";
+
+
+      list.appendChild(
+        note
+      );
+
+
+      return;
+
+    }
+
+
+    items.forEach(
+      item => {
+
+        list.appendChild(
+
+          renderUpgradeCard(
+
+            item,
+
+            activeStoreTab ===
+            "store"
+
+              ? storeItems
+
+              : toolUpgrades
+
+          )
+
+        );
+
+      }
+    );
+
+  }
+
+
+  function setStoreTab(tab) {
+
+    activeStoreTab =
+      tab;
+
+
+    document
+      .querySelector(
+        "#storeTabBtn"
+      )
+      .classList
+      .toggle(
+        "active",
+        tab === "store"
+      );
+
+
+    document
+      .querySelector(
+        "#upgradeTabBtn"
+      )
+      .classList
+      .toggle(
+        "active",
+        tab === "upgrades"
+      );
+
+
+    renderStore();
+
+  }
+
+
+  // =========================================================
+  // MINIONS
+  // =========================================================
+
+  const field =
+    document.querySelector(
+      "#field"
+    );
+
+
+  function getUnlockedSources() {
+
+    return Array
+      .from(
+        document.querySelectorAll(
+          ".source"
+        )
+      )
+      .filter(
+
+        source =>
+
+          source.style.display !==
+          "none"
+
+      );
+
+  }
+
+
+  function positionMinionAt(
+    element,
+    sourceElement,
+    instant
+  ) {
+
+    const rect =
+      sourceElement
+        .getBoundingClientRect();
+
+
+    const fieldRect =
+      field
+        .getBoundingClientRect();
+
+
+    const left =
+
+      rect.left -
+
+      fieldRect.left +
+
+      rect.width / 2 -
+
+      16;
+
+
+    const top =
+
+      rect.top -
+
+      fieldRect.top +
+
+      rect.height / 2 -
+
+      16;
+
+
+    if (instant) {
+
+      element.style.transition =
+        "none";
+
+
+      element.style.left =
+        left + "px";
+
+
+      element.style.top =
+        top + "px";
+
+
+      void element.offsetWidth;
+
+
+      element.style.transition =
+        "";
+
+    }
+
+    else {
+
+      element
+        .style
+        .transitionDuration =
+
+        `${minionTravelMs()}ms`;
+
+
+      element.style.left =
+        left + "px";
+
+
+      element.style.top =
+        top + "px";
+
+    }
+
+  }
+
+
+  function scheduleMinionMove(
+    minion
+  ) {
+
+    const sources =
+      getUnlockedSources();
+
+
+    if (
+      !sources.length
+    ) {
+
+      minion.timer =
+        setTimeout(
+
+          () =>
+            scheduleMinionMove(
+              minion
+            ),
+
+          1000
+
+        );
+
+
+      return;
+
+    }
+
+
+    const target =
+
+      sources[
+
+        Math.floor(
+
+          Math.random() *
+
+          sources.length
+
+        )
+
+      ];
+
+
+    positionMinionAt(
+
+      minion.el,
+
+      target,
+
+      false
+
+    );
+
+
+    minion.timer =
+      setTimeout(
+
+        () => {
+
+          tapSource(
+            target,
+            true
+          );
+
+
+          minion.timer =
+            setTimeout(
+
+              () =>
+                scheduleMinionMove(
+                  minion
+                ),
+
+              minionPauseMs()
+
+            );
+
+        },
+
+        minionTravelMs()
+
+      );
+
+  }
+
+
+  function spawnMinion() {
+
+    const element =
+      document.createElement(
+        "div"
+      );
+
+
+    element.className =
+      "minion";
+
+
+    element.textContent =
+      "🐿️";
+
+
+    field.appendChild(
+      element
+    );
+
+
+    const minion = {
+
+      el: element,
+
+      timer: null
+
+    };
+
+
+    minions.push(
+      minion
+    );
+
+
+    const sources =
+      getUnlockedSources();
+
+
+    if (
+      sources.length
+    ) {
+
+      positionMinionAt(
+
+        element,
+
+        sources[
+
+          Math.floor(
+
+            Math.random() *
+
+            sources.length
+
+          )
+
+        ],
+
+        true
+
+      );
+
+    }
+
+
+    scheduleMinionMove(
+      minion
+    );
+
+  }
+
+
+  // =========================================================
+  // DOM REFERENCES
+  // =========================================================
+
+  const bagText =
+    document.querySelector(
+      "#bagText"
+    );
+
+
+  const bagContents =
+    document.querySelector(
+      "#bagContents"
+    );
+
+
+  const storageText =
+    document.querySelector(
+      "#storageText"
+    );
+
+
+  const storageContents =
+    document.querySelector(
+      "#storageContents"
+    );
+
+
+  const coinsEl =
+    document.querySelector(
+      "#coins"
+    );
+
+
+  const orderTarget =
+    document.querySelector(
+      "#orderTarget"
+    );
+
+
+  const rewardEl =
+    document.querySelector(
+      "#reward"
+    );
+
+
+  const message =
+    document.querySelector(
+      "#message"
+    );
+
+
+  const mixChips =
+    document.querySelector(
+      "#mixChips"
+    );
+
+
+  const storeBadge =
+    document.querySelector(
+      "#storeBadge"
+    );
+
+
+  // =========================================================
+  // BASIC HELPERS
+  // =========================================================
+
+  function say(text) {
+
+    message.textContent =
+      text;
+
+
+    message
+      .classList
+      .add(
+        "show"
+      );
+
+
+    clearTimeout(
+      message._timer
+    );
+
+
+    message._timer =
+      setTimeout(
+
+        () => {
+
+          message
+            .classList
+            .remove(
+              "show"
+            );
+
+        },
+
+        950
+
+      );
+
+  }
+
+
+  function bagTotal() {
+
+    return Object
+      .values(
+        bag
+      )
+      .reduce(
+
+        (a, b) =>
+          a + b,
+
+        0
+
+      );
+
+  }
+
+
+  function storageTotal() {
+
+    return Object
+      .values(
+        storage
+      )
+      .reduce(
+
+        (a, b) =>
+          a + b,
+
+        0
+
+      );
+
+  }
+
+
+  function randomBetween(
+    min,
+    max
+  ) {
+
+    return (
+
+      Math.random() *
+
+      (max - min)
+
+      +
+
+      min
+
+    );
+
+  }
+
+
+  // =========================================================
+  // PAINT SPLAT EFFECT
+  // =========================================================
+
+  function createSinglePaintSplat(
+    color
+  ) {
+
+    const game =
+      document.querySelector(
+        "#game"
+      );
+
+
+    const splatColor =
+
+      paintSplatColors[color]
+
+      ||
+
+      "#999";
+
+
+    const wrap =
+      document.createElement(
+        "div"
+      );
+
+
+    wrap.className =
+      "paintSplatWrap";
+
+
+    // Random position
+
+    wrap.style.left =
+
+      randomBetween(
+        15,
+        85
+      )
+
+      +
+
+      "%";
+
+
+    wrap.style.top =
+
+      randomBetween(
+        18,
+        82
+      )
+
+      +
+
+      "%";
+
+
+    // Random rotations
+
+    wrap.style.setProperty(
+
+      "--r0",
+
+      randomBetween(
+        -35,
+        -8
+      )
+
+      +
+
+      "deg"
+
+    );
+
+
+    wrap.style.setProperty(
+
+      "--r1",
+
+      randomBetween(
+        4,
+        22
+      )
+
+      +
+
+      "deg"
+
+    );
+
+
+    wrap.style.setProperty(
+
+      "--r2",
+
+      randomBetween(
+        -12,
+        12
+      )
+
+      +
+
+      "deg"
+
+    );
+
+
+    // Each splat disappears
+    // at a different speed.
+
+    const lifeMs =
+      randomBetween(
+        1700,
+        4200
+      );
+
+
+    wrap.style.setProperty(
+
+      "--life",
+
+      (lifeMs / 1000)
+
+      +
+
+      "s"
+
+    );
+
+
+    // Random main splat size
+
+    const baseSize =
+      randomBetween(
+        110,
+        220
+      );
+
+
+    const main =
+      document.createElement(
+        "div"
+      );
+
+
+    main.className =
+      "paintSplatMain";
+
+
+    main.style.width =
+      baseSize + "px";
+
+
+    main.style.height =
+
+      randomBetween(
+
+        baseSize * .7,
+
+        baseSize * 1.05
+
+      )
+
+      +
+
+      "px";
+
+
+    main.style.background =
+      splatColor;
+
+
+    // Irregular blob shape
+
+    main.style.borderRadius =
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}% / ` +
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}% ` +
+
+      `${randomBetween(35,60)}%`;
+
+
+    wrap.appendChild(
+      main
+    );
+
+
+    // Nearby paint droplets
+
+    const dropCount =
+
+      Math.floor(
+
+        randomBetween(
+          6,
+          12
+        )
+
+      );
+
+
+    for (
+      let i = 0;
+      i < dropCount;
+      i++
+    ) {
+
+      const drop =
+        document.createElement(
+          "div"
+        );
+
+
+      drop.className =
+        "paintDrop";
+
+
+      const size =
+        randomBetween(
+          10,
+          42
+        );
+
+
+      const angle =
+        randomBetween(
+
+          0,
+
+          Math.PI * 2
+
+        );
+
+
+      const distance =
+        randomBetween(
+
+          baseSize * .35,
+
+          baseSize * .95
+
+        );
+
+
+      drop.style.width =
+        size + "px";
+
+
+      drop.style.height =
+
+        randomBetween(
+
+          size * .75,
+
+          size * 1.2
+
+        )
+
+        +
+
+        "px";
+
+
+      drop.style.left =
+
+        (
+          Math.cos(
+            angle
+          )
+
+          *
+
+          distance
+        )
+
+        +
+
+        "px";
+
+
+      drop.style.top =
+
+        (
+          Math.sin(
+            angle
+          )
+
+          *
+
+          distance
+        )
+
+        +
+
+        "px";
+
+
+      drop.style.background =
+        splatColor;
+
+
+      wrap.appendChild(
+        drop
+      );
+
+    }
+
+
+    // A few tiny droplets
+    // farther from the main splat
+
+    const farDropCount =
+
+      Math.floor(
+
+        randomBetween(
+          1,
+          4
+        )
+
+      );
+
+
+    for (
+      let i = 0;
+      i < farDropCount;
+      i++
+    ) {
+
+      const drop =
+        document.createElement(
+          "div"
+        );
+
+
+      drop.className =
+        "paintDrop";
+
+
+      const size =
+        randomBetween(
+          5,
+          14
+        );
+
+
+      const angle =
+        randomBetween(
+
+          0,
+
+          Math.PI * 2
+
+        );
+
+
+      const distance =
+        randomBetween(
+
+          baseSize * .95,
+
+          baseSize * 1.45
+
+        );
+
+
+      drop.style.width =
+        size + "px";
+
+
+      drop.style.height =
+        size + "px";
+
+
+      drop.style.left =
+
+        (
+          Math.cos(
+            angle
+          )
+
+          *
+
+          distance
+        )
+
+        +
+
+        "px";
+
+
+      drop.style.top =
+
+        (
+          Math.sin(
+            angle
+          )
+
+          *
+
+          distance
+        )
+
+        +
+
+        "px";
+
+
+      drop.style.background =
+        splatColor;
+
+
+      wrap.appendChild(
+        drop
+      );
+
+    }
+
+
+    game.appendChild(
+      wrap
+    );
+
+
+    // Remove it after its animation
+
+    setTimeout(
+
+      () => {
+
+        wrap.remove();
+
+      },
+
+      lifeMs + 200
+
+    );
+
+  }
+
+
+  // Creates 1–5 splats
+  // within roughly .25 seconds
+
+  function paintSplatBurst(
+    color
+  ) {
+
+    const splatCount =
+
+      Math.floor(
+
+        randomBetween(
+          1,
+          6
+        )
+
+      );
+
+
+    for (
+      let i = 0;
+      i < splatCount;
+      i++
+    ) {
+
+      const delay =
+        randomBetween(
+          0,
+          250
+        );
+
+
+      setTimeout(
+
+        () => {
+
+          createSinglePaintSplat(
+            color
+          );
+
+        },
+
+        delay
+
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // BACKPACK RENDERING
+  // =========================================================
+
+  function renderBackpack() {
+
+    bagContents.innerHTML =
+      "";
+
+
+    Object
+      .keys(
+        bag
+      )
+      .forEach(
+        color => {
+
+          if (
+            bag[color] > 0
+          ) {
+
+            const chip =
+              document.createElement(
+                "div"
+              );
+
+
+            chip.className =
+              "stashChip pickable";
+
+
+            chip.textContent =
+
+              `${colorInfo[color].emoji} ${bag[color]}`;
+
+
+            chip.addEventListener(
+
+              "click",
+
+              () => {
+
+                selectForMixer(
+                  color
+                );
+
+              }
+
+            );
+
+
+            bagContents.appendChild(
+              chip
+            );
+
+          }
+
+        }
+      );
+
+
+    if (
+      bagTotal() === 0
+    ) {
+
+      const empty =
+        document.createElement(
+          "div"
+        );
+
+
+      empty.style.fontSize =
+        "12px";
+
+
+      empty.style.opacity =
+        ".6";
+
+
+      empty.textContent =
+        "Empty";
+
+
+      bagContents.appendChild(
+        empty
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // WAREHOUSE RENDERING
+  // =========================================================
+
+  function renderWarehouse() {
+
+    storageContents.innerHTML =
+      "";
+
+
+    Object
+      .keys(
+        storage
+      )
+      .forEach(
+        color => {
+
+          if (
+            storage[color] > 0
+          ) {
+
+            const chip =
+              document.createElement(
+                "div"
+              );
+
+
+            chip.className =
+              "stashChip";
+
+
+            chip.textContent =
+
+              `${colorInfo[color].emoji} ${colorInfo[color].label} ×${storage[color]}`;
+
+
+            storageContents.appendChild(
+              chip
+            );
+
+          }
+
+        }
+      );
+
+
+    if (
+      storageTotal() === 0
+    ) {
+
+      const empty =
+        document.createElement(
+          "div"
+        );
+
+
+      empty.style.fontSize =
+        "12px";
+
+
+      empty.style.opacity =
+        ".6";
+
+
+      empty.textContent =
+        "Empty";
+
+
+      storageContents.appendChild(
+        empty
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // MIXER RENDERING
+  // =========================================================
+
+  function renderMixChips() {
+
+    mixChips.innerHTML =
+      "";
+
+
+    mixerSlots.forEach(
+
+      (
+        color,
+        index
+      ) => {
+
+        const chip =
+          document.createElement(
+            "span"
+          );
+
+
+        chip.className =
+          "mixChip";
+
+
+        chip.textContent =
+          colorInfo[color].emoji;
+
+
+        chip.addEventListener(
+
+          "click",
+
+          event => {
+
+            event.stopPropagation();
+
+
+            clearMixerSlot(
+              index
+            );
+
+          }
+
+        );
+
+
+        mixChips.appendChild(
+          chip
+        );
+
+      }
+
+    );
+
+  }
+
+
+  // =========================================================
+  // MAIN RENDER
+  // =========================================================
+
+  function renderAll() {
+
+    bagText.textContent =
+
+      `${bagTotal()} / ${bagCapacity}`;
+
+
+    storageText.textContent =
+
+      `${storageTotal()} / ${storageCapacity}`;
+
+
+    coinsEl.textContent =
+      coins;
+
+
+    const orderInfo =
+      colorInfo[
+        currentOrder.color
+      ];
+
+
+    orderTarget.textContent =
+
+      `${orderInfo.emoji} ${orderInfo.label} ×1`;
+
+
+    rewardEl.textContent =
+      currentOrder.reward;
+
+
+    renderBackpack();
+
+    renderWarehouse();
+
+    renderMixChips();
+
+    renderQuest();
+
+
+    storeBadge.style.display =
+
+      cheapestAffordableExists()
+
+        ? "grid"
+
+        : "none";
+
+
+    if (
+
+      document
+        .querySelector(
+          "#storeOverlay"
+        )
+        .classList
+        .contains(
+          "open"
+        )
+
+    ) {
+
+      renderStore();
+
+    }
+
+  }
+
+
+  // =========================================================
+  // FLOATING +1 EFFECT
+  // =========================================================
+
+  function spawnFloater(
+    source,
+    text
+  ) {
+
+    const rect =
+      source
+        .getBoundingClientRect();
+
+
+    const fieldRect =
+      field
+        .getBoundingClientRect();
+
+
+    const floater =
+      document.createElement(
+        "div"
+      );
+
+
+    floater.className =
+      "floater";
+
+
+    floater.textContent =
+      text;
+
+
+    floater.style.left =
+
+      `${
+
+        rect.left -
+
+        fieldRect.left +
+
+        rect.width / 2 -
+
+        10
+
+      }px`;
+
+
+    floater.style.top =
+
+      `${
+
+        rect.top -
+
+        fieldRect.top
+
+      }px`;
+
+
+    field.appendChild(
+      floater
+    );
+
+
+    setTimeout(
+
+      () =>
+        floater.remove(),
+
+      500
+
+    );
+
+  }
+
+
+  // =========================================================
+  // GATHERING
+  // =========================================================
+
+  function tapSource(
+    source,
+    fromMinion
+  ) {
+
+    if (
+
+      bagTotal() >=
+      bagCapacity
+
+    ) {
+
+      if (
+        !fromMinion
+      ) {
+
+        say(
+          "🎒 Backpack full!"
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    const color =
+      source.dataset.color;
+
+
+    bag[color]++;
+
+
+    totalGathered++;
+
+
+    source
+      .classList
+      .remove(
+        "pop"
+      );
+
+
+    void source.offsetWidth;
+
+
+    source
+      .classList
+      .add(
+        "pop"
+      );
+
+
+    spawnFloater(
+
+      source,
+
+      `+1 ${colorInfo[color].emoji}`
+
+    );
+
+
+    renderAll();
+
+
+    checkQuests();
+
+
+    if (
+
+      !fromMinion &&
+
+      navigator.vibrate
+
+    ) {
+
+      navigator.vibrate(
+        12
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // MIXER SELECTION
+  // =========================================================
+
+  function selectForMixer(
+    color
+  ) {
+
+    if (
+      mixerSlots.length >= 2
+    ) {
+
+      say(
+        "Mixer full — tap a color on the MIX button to remove it"
+      );
+
+
+      return;
+
+    }
+
+
+    if (
+      bag[color] <= 0
+    ) {
+
+      return;
+
+    }
+
+
+    bag[color]--;
+
+
+    mixerSlots.push(
+      color
+    );
+
+
+    renderAll();
+
+
+    if (
+      navigator.vibrate
+    ) {
+
+      navigator.vibrate(
+        10
+      );
+
+    }
+
+  }
+
+
+  function clearMixerSlot(
+    index
+  ) {
+
+    const color =
+      mixerSlots[index];
+
+
+    if (
+      color === undefined
+    ) {
+
+      return;
+
+    }
+
+
+    bag[color]++;
+
+
+    mixerSlots.splice(
+      index,
+      1
+    );
+
+
+    renderAll();
+
+  }
+
+
+  // =========================================================
+  // RAW COLOR BUTTONS
+  // =========================================================
+
+  document
+    .querySelectorAll(
+      ".source"
+    )
+    .forEach(
+      source => {
+
+        source.addEventListener(
+
+          "pointerdown",
+
+          event => {
+
+            event.preventDefault();
+
+
+            tapSource(
+              source,
+              false
+            );
+
+          }
+
+        );
+
+      }
+    );
+
+
+  // =========================================================
+  // MIX BUTTON
+  // =========================================================
+
+  document
+    .querySelector(
+      "#mixBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () => {
+
+        if (
+          mixerSlots.length < 2
+        ) {
+
+          say(
+            "Pick 2 colors from your backpack first"
+          );
+
+
+          return;
+
+        }
+
+
+        const recipe =
+
+          findRecipeForPair(
+
+            mixerSlots[0],
+
+            mixerSlots[1]
+
+          );
+
+
+        if (
+          !recipe
+        ) {
+
+          say(
+            "That combo doesn't mix — returned to backpack"
+          );
+
+
+          bag[
+            mixerSlots[0]
+          ]++;
+
+
+          bag[
+            mixerSlots[1]
+          ]++;
+
+
+          mixerSlots =
+            [];
+
+
+          renderAll();
+
+
+          return;
+
+        }
+
+
+        if (
+
+          storageTotal() >=
+          storageCapacity
+
+        ) {
+
+          say(
+            "📦 Warehouse full!"
+          );
+
+
+          return;
+
+        }
+
+
+        // Create the mixed paint
+
+        storage[
+          recipe.result
+        ]++;
+
+
+        totalMixed++;
+
+
+        mixerSlots =
+          [];
+
+
+        // NEW:
+        // Random 1–5 paint splats
+
+        paintSplatBurst(
+          recipe.result
+        );
+
+
+        say(
+
+          `${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`
+
+        );
+
+
+        renderAll();
+
+
+        checkQuests();
+
+
+        if (
+          navigator.vibrate
+        ) {
+
+          navigator.vibrate(
+            28
+          );
+
+        }
+
+      }
+
+    );
+
+
+  // =========================================================
+  // SELL RAW
+  // =========================================================
+
+  document
+    .querySelector(
+      "#sellBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () => {
+
+        const earned =
+          bagTotal();
+
+
+        if (
+          earned === 0
+        ) {
+
+          say(
+            "No raw colors to sell"
+          );
+
+
+          return;
+
+        }
+
+
+        coins +=
+          earned;
+
+
+        totalSold +=
+          earned;
+
+
+        Object
+          .keys(
+            bag
+          )
+          .forEach(
+            color => {
+
+              bag[color] =
+                0;
+
+            }
+          );
+
+
+        say(
+
+          `🪙 Sold raw colors +${earned}`
+
+        );
+
+
+        renderAll();
+
+
+        checkQuests();
+
+
+        if (
+          navigator.vibrate
+        ) {
+
+          navigator.vibrate(
+            24
+          );
+
+        }
+
+      }
+
+    );
+
+
+  // =========================================================
+  // FULFILL ORDER
+  // =========================================================
+
+  document
+    .querySelector(
+      "#fulfillBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () => {
+
+        const neededColor =
+          currentOrder.color;
+
+
+        if (
+
+          storage[
+            neededColor
+          ] <= 0
+
+        ) {
+
+          say(
+
+            `Need ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label}`
+
+          );
+
+
+          return;
+
+        }
+
+
+        storage[
+          neededColor
+        ]--;
+
+
+        const earnedReward =
+          currentOrder.reward;
+
+
+        coins +=
+          earnedReward;
+
+
+        totalFulfilled++;
+
+
+        const colors =
+          activeOrderColors();
+
+
+        let nextColor;
+
+
+        do {
+
+          nextColor =
+
+            colors[
+
+              Math.floor(
+
+                Math.random() *
+
+                colors.length
+
+              )
+
+            ];
+
+        }
+
+        while (
+
+          colors.length > 1
+
+          &&
+
+          nextColor ===
+          currentOrder.color
+
+        );
+
+
+        currentOrder =
+          makeOrder(
+            nextColor
+          );
+
+
+        say(
+
+          `✅ Order complete! +${earnedReward}`
+
+        );
+
+
+        renderAll();
+
+
+        checkQuests();
+
+
+        if (
+          navigator.vibrate
+        ) {
+
+          navigator.vibrate(
+
+            [
+              25,
+              20,
+              25
+            ]
+
+          );
+
+        }
+
+      }
+
+    );
+
+
+  // =========================================================
+  // STORE OVERLAY
+  // =========================================================
+
+  const storeOverlay =
+    document.querySelector(
+      "#storeOverlay"
+    );
+
+
+  document
+    .querySelector(
+      "#storeBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () => {
+
+        storeOverlay
+          .classList
+          .add(
+            "open"
+          );
+
+
+        renderStore();
+
+      }
+
+    );
+
+
+  document
+    .querySelector(
+      "#storeCloseBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () => {
+
+        storeOverlay
+          .classList
+          .remove(
+            "open"
+          );
+
+      }
+
+    );
+
+
+  document
+    .querySelector(
+      "#storeTabBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () =>
+        setStoreTab(
+          "store"
+        )
+
+    );
+
+
+  document
+    .querySelector(
+      "#upgradeTabBtn"
+    )
+    .addEventListener(
+
+      "click",
+
+      () =>
+        setStoreTab(
+          "upgrades"
+        )
+
+    );
+
+
+  // =========================================================
+  // START GAME
+  // =========================================================
+
+  renderAll();
+
+
+})();
