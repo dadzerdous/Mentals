@@ -148,11 +148,34 @@ button, .source, .stashChip, .mixChip {
 
 /* ---- minions ---- */
 .minion {
-  position: absolute; width: 32px; height: 32px;
-  display: grid; place-items: center; font-size: 22px;
-  pointer-events: none; z-index: 9;
-  transition: left .9s ease, top .9s ease;
-  filter: drop-shadow(0 3px 0 rgba(43,41,39,.35));
+  position: absolute;
+
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  pointer-events: none;
+  z-index: 9;
+
+  transition:
+    left .9s ease,
+    top .9s ease;
+
+  filter: drop-shadow(0 3px 2px rgba(43, 41, 39, .25));
+}
+
+.minion img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .minion.asleep { opacity: .55; }
 .minion.asleep::after {
