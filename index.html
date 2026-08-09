@@ -2,30 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
-/>
-<title>Color Gather v0.08</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Color Gather v0.09</title>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
 <div id="game">
 
   <div class="top">
     <div id="backpackPanel" class="panel">
-      <div class="stashHeader">
-        🎒 <span id="bagText">0 / 8</span>
-      </div>
+      <div class="stashHeader">🎒 <span id="bagText">0 / 8</span></div>
       <div id="bagContents" class="stashContents"></div>
     </div>
-
-    <div class="panel">
-      🪙 <span id="coins">0</span>
-    </div>
+    <div class="panel">🪙 <span id="coins">0</span></div>
   </div>
 
   <div id="quest">
@@ -36,129 +25,66 @@
   <div id="order">
     ORDER
     <div id="orderTarget">🟣 Purple ×1</div>
-    <div style="font-size:12px;font-weight:700;">
-      Reward: 🪙 <span id="reward">10</span>
-    </div>
+    <div style="font-size:12px;font-weight:700;">Reward: 🪙 <span id="reward">10</span></div>
   </div>
 
   <div id="message"></div>
 
   <div id="field">
-
-    <div class="source" id="red" data-color="red">
-      🔴
-      <small>Tap</small>
-    </div>
-
-    <div class="source" id="blue" data-color="blue">
-      🔵
-      <small>Tap</small>
-    </div>
-
-    <div class="source" id="yellow" data-color="yellow">
-      🟡
-      <small>Tap</small>
-    </div>
-
-    <div
-      class="source"
-      id="white"
-      data-color="white"
-      style="display:none;"
-    >
-      ⚪
-      <small>Tap</small>
-    </div>
-
+    <div class="rearrangeDone" id="rearrangeDone">✅ Done Arranging</div>
+    <div class="source" id="red" data-color="red">🔴<small>Tap</small></div>
+    <div class="source" id="blue" data-color="blue">🔵<small>Tap</small></div>
+    <div class="source" id="yellow" data-color="yellow">🟡<small>Tap</small></div>
+    <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
   </div>
 
   <div id="warehouseRow">
     <div id="warehousePanel" class="panel">
-
-      <div class="stashHeader">
-        📦 Warehouse
-        <span id="storageText">0 / 4</span>
-      </div>
-
-      <div
-        id="storageContents"
-        class="stashContents"
-      ></div>
-
+      <div class="stashHeader">📦 Warehouse <span id="storageText">0 / 4</span></div>
+      <div id="storageContents" class="stashContents"></div>
     </div>
   </div>
 
   <div id="actions">
-
     <button id="mixBtn">
       <span id="mixLabel">🎨 MIX</span>
       <span id="mixChips"></span>
     </button>
-
-    <button id="sellBtn">
-      🪙 SELL RAW
-    </button>
-
-    <button id="fulfillBtn">
-      📦 FULFILL
-    </button>
-
+    <button id="sellBtn">🪙 SELL</button>
+    <button id="fulfillBtn">📦 FULFILL</button>
     <button id="storeBtn">
       🏪 STORE
-      <span
-        id="storeBadge"
-        class="storeBadge"
-        style="display:none;"
-      >
-        !
-      </span>
+      <span id="storeBadge" class="storeBadge" style="display:none;">!</span>
     </button>
+  </div>
 
+  <div id="sellOverlay">
+    <div id="sellSheet">
+      <div class="sellHeader">What do you want to sell?</div>
+      <button id="sellRawBtn" class="sellOptionBtn">🎨 Sell Raw Colors (<span id="sellRawCount">0</span>)</button>
+      <button id="sellMixedBtn" class="sellOptionBtn">📦 Sell Mixed Colors (<span id="sellMixedCount">0</span>)</button>
+      <button id="sellCancelBtn" class="sellCancelBtn">Cancel</button>
+    </div>
   </div>
 
   <div id="storeOverlay">
-
     <div id="storeSheet">
-
       <div id="storeHeader">
-
-        <span>
-          🏪 Store &amp; Upgrades
-        </span>
-
-        <button id="storeCloseBtn">
-          Close
-        </button>
-
+        <span>🏪 Store &amp; Upgrades</span>
+        <div id="storeHeaderBtns">
+          <button id="resetBtn">🔄 Reset</button>
+          <button id="storeCloseBtn">Close</button>
+        </div>
       </div>
-
       <div id="storeTabs">
-
-        <button
-          id="storeTabBtn"
-          class="storeTabBtn active"
-        >
-          🛒 Store
-        </button>
-
-        <button
-          id="upgradeTabBtn"
-          class="storeTabBtn"
-        >
-          ⚙️ Upgrades
-        </button>
-
+        <button id="storeTabBtn" class="storeTabBtn active">🛒 Store</button>
+        <button id="upgradeTabBtn" class="storeTabBtn">⚙️ Upgrades</button>
       </div>
-
       <div id="upgradeList"></div>
-
     </div>
-
   </div>
 
 </div>
-
 <script src="game.js"></script>
-
 </body>
 </html>
