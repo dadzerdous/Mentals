@@ -454,27 +454,75 @@
     }, minionTravelMs());
   }
 
-  function spawnMinion() {
-    const element = document.createElement("div");
-    element.className = "minion";
-    const img = document.createElement("img");
-img.src = "images/blob.png";
-img.alt = "Paint Blob";
-img.draggable = false;
+function spawnMinion() {
 
-element.appendChild(img);";
-    field.appendChild(element);
+  const element =
+    document.createElement("div");
 
-    const minion = { el: element, timer: null };
-    minions.push(minion);
+  element.className =
+    "minion";
 
-    const sources = getUnlockedSources();
-    if (sources.length) {
-      positionMinionAt(element, sources[Math.floor(Math.random() * sources.length)], true);
-    }
 
-    scheduleMinionMove(minion);
+  const img =
+    document.createElement("img");
+
+  img.src =
+    "images/blob.png";
+
+  img.alt =
+    "Paint Blob";
+
+  img.draggable =
+    false;
+
+
+  element.appendChild(img);
+
+  field.appendChild(element);
+
+
+  const minion = {
+    el: element,
+    timer: null
+  };
+
+
+  minions.push(
+    minion
+  );
+
+
+  const sources =
+    getUnlockedSources();
+
+
+  if (
+    sources.length
+  ) {
+
+    positionMinionAt(
+
+      element,
+
+      sources[
+        Math.floor(
+          Math.random() *
+          sources.length
+        )
+      ],
+
+      true
+
+    );
+
   }
+
+
+  scheduleMinionMove(
+    minion
+  );
+
+}
 
   // =========================================================
   // DOM REFERENCES
