@@ -102,8 +102,6 @@
   };
 
 
-  // Actual colors used by the paint splat effect
-
   const paintSplatColors = {
 
     purple: "#8e5bd9",
@@ -173,15 +171,11 @@
 
   function activeRecipes() {
 
-    if (whiteUnlocked) {
-
-      return baseRecipes.concat(
-        whiteRecipes
-      );
-
-    }
-
-    return baseRecipes;
+    return whiteUnlocked
+      ? baseRecipes.concat(
+          whiteRecipes
+        )
+      : baseRecipes;
 
   }
 
@@ -212,6 +206,18 @@
   }
 
 
+  function getAvailableRecipes() {
+
+    return activeRecipes().filter(
+      recipe =>
+
+        bag[recipe.a] > 0 &&
+        bag[recipe.b] > 0
+    );
+
+  }
+
+
   // =========================================================
   // ORDERS
   // =========================================================
@@ -224,6 +230,7 @@
       "green"
     ];
 
+
     if (whiteUnlocked) {
 
       colors.push(
@@ -233,6 +240,7 @@
       );
 
     }
+
 
     return colors;
 
@@ -260,7 +268,7 @@
 
     return {
 
-      color: color,
+      color,
 
       reward:
         baseReward[color] || 10
@@ -271,7 +279,9 @@
 
 
   let currentOrder =
-    makeOrder("purple");
+    makeOrder(
+      "purple"
+    );
 
 
   // =========================================================
@@ -329,32 +339,20 @@
   function currentTotalFor(type) {
 
     if (type === "gather") {
-
       return totalGathered;
-
     }
-
 
     if (type === "sell") {
-
       return totalSold;
-
     }
-
 
     if (type === "mix") {
-
       return totalMixed;
-
     }
-
 
     if (type === "fulfill") {
-
       return totalFulfilled;
-
     }
-
 
     return 0;
 
@@ -364,7 +362,8 @@
   function checkQuests() {
 
     if (
-      questIndex >= quests.length
+      questIndex >=
+      quests.length
     ) {
 
       return;
@@ -379,7 +378,8 @@
     if (
       currentTotalFor(
         quest.type
-      ) >= quest.target
+      ) >=
+      quest.target
     ) {
 
       coins +=
@@ -416,7 +416,8 @@
 
 
     if (
-      questIndex >= quests.length
+      questIndex >=
+      quests.length
     ) {
 
       questText.textContent =
@@ -441,14 +442,12 @@
 
 
     questProgress.textContent =
-      `${
-        Math.min(
-          currentTotalFor(
-            quest.type
-          ),
-          quest.target
-        )
-      } / ${quest.target}`;
+      `${Math.min(
+        currentTotalFor(
+          quest.type
+        ),
+        quest.target
+      )} / ${quest.target}`;
 
   }
 
@@ -474,7 +473,6 @@
 
 
       desc: () =>
-
         `Raw color capacity: ${bagCapacity} → ${bagCapacity + 4}`,
 
 
@@ -520,7 +518,6 @@
 
 
       desc: () =>
-
         `Mixed color capacity: ${storageCapacity} → ${storageCapacity + 4}`,
 
 
@@ -568,7 +565,6 @@
 
 
       desc: () =>
-
         "Adds a 4th raw color + 3 new mixable colors (pink, sky blue, cream)",
 
 
@@ -832,19 +828,14 @@
 
 
     if (!item) {
-
       return;
-
     }
 
 
     if (
-
       item.maxLevel &&
-
       item.level >=
       item.maxLevel
-
     ) {
 
       return;
@@ -857,7 +848,8 @@
 
 
     if (
-      coins < cost
+      coins <
+      cost
     ) {
 
       say(
@@ -891,17 +883,13 @@
   ) {
 
     const maxed =
-
       item.maxLevel &&
-
       item.level >=
       item.maxLevel;
 
 
     const locked =
-
       item.requires &&
-
       !item.requires();
 
 
@@ -929,12 +917,9 @@
 
       <div class="upgradeName">
 
-        ${item.name}
-
-        ${maxed ? " (Maxed)" : ""}
+        ${item.name}${maxed ? " (Maxed)" : ""}
 
       </div>
-
 
       <div class="upgradeDesc">
 
@@ -944,8 +929,7 @@
             ? item.lockedNote
 
             : (
-                typeof item.desc ===
-                "function"
+                typeof item.desc === "function"
 
                   ? item.desc()
 
@@ -969,34 +953,24 @@
 
 
     buyBtn.textContent =
-
       maxed
-
         ? "✓"
-
         : `🪙 ${item.cost()}`;
 
 
     buyBtn.disabled =
-
       maxed ||
-
       locked ||
-
-      coins <
-      item.cost();
+      coins < item.cost();
 
 
     buyBtn.addEventListener(
-
       "click",
-
       () =>
         buyFromList(
           list,
           item.id
         )
-
     );
 
 
@@ -1028,7 +1002,6 @@
 
 
     const items =
-
       activeStoreTab ===
       "store"
 
@@ -1045,13 +1018,9 @@
       &&
 
       toolUpgrades.every(
-
         upgrade =>
-
           upgrade.requires &&
-
           !upgrade.requires()
-
       )
 
     ) {
@@ -1158,12 +1127,9 @@
         )
       )
       .filter(
-
         source =>
-
           source.style.display !==
           "none"
-
       );
 
   }
@@ -1186,24 +1152,16 @@
 
 
     const left =
-
       rect.left -
-
       fieldRect.left +
-
       rect.width / 2 -
-
       16;
 
 
     const top =
-
       rect.top -
-
       fieldRect.top +
-
       rect.height / 2 -
-
       16;
 
 
@@ -1234,7 +1192,6 @@
       element
         .style
         .transitionDuration =
-
         `${minionTravelMs()}ms`;
 
 
@@ -1264,14 +1221,11 @@
 
       minion.timer =
         setTimeout(
-
           () =>
             scheduleMinionMove(
               minion
             ),
-
           1000
-
         );
 
 
@@ -1281,34 +1235,23 @@
 
 
     const target =
-
       sources[
-
         Math.floor(
-
           Math.random() *
-
           sources.length
-
         )
-
       ];
 
 
     positionMinionAt(
-
       minion.el,
-
       target,
-
       false
-
     );
 
 
     minion.timer =
       setTimeout(
-
         () => {
 
           tapSource(
@@ -1319,14 +1262,11 @@
 
           minion.timer =
             setTimeout(
-
               () =>
                 scheduleMinionMove(
                   minion
                 ),
-
               minionPauseMs()
-
             );
 
         },
@@ -1386,15 +1326,10 @@
         element,
 
         sources[
-
           Math.floor(
-
             Math.random() *
-
             sources.length
-
           )
-
         ],
 
         true
@@ -1499,7 +1434,6 @@
 
     message._timer =
       setTimeout(
-
         () => {
 
           message
@@ -1524,12 +1458,9 @@
         bag
       )
       .reduce(
-
         (a, b) =>
           a + b,
-
         0
-
       );
 
   }
@@ -1542,12 +1473,9 @@
         storage
       )
       .reduce(
-
         (a, b) =>
           a + b,
-
         0
-
       );
 
   }
@@ -1559,15 +1487,9 @@
   ) {
 
     return (
-
       Math.random() *
-
-      (max - min)
-
-      +
-
+      (max - min) +
       min
-
     );
 
   }
@@ -1588,11 +1510,7 @@
 
 
     const splatColor =
-
-      paintSplatColors[color]
-
-      ||
-
+      paintSplatColors[color] ||
       "#999";
 
 
@@ -1606,84 +1524,46 @@
       "paintSplatWrap";
 
 
-    // Random position
-
     wrap.style.left =
-
       randomBetween(
         15,
         85
-      )
-
-      +
-
-      "%";
+      ) + "%";
 
 
     wrap.style.top =
-
       randomBetween(
         18,
         82
-      )
+      ) + "%";
 
-      +
-
-      "%";
-
-
-    // Random rotations
 
     wrap.style.setProperty(
-
       "--r0",
-
       randomBetween(
         -35,
         -8
-      )
-
-      +
-
-      "deg"
-
+      ) + "deg"
     );
 
 
     wrap.style.setProperty(
-
       "--r1",
-
       randomBetween(
         4,
         22
-      )
-
-      +
-
-      "deg"
-
+      ) + "deg"
     );
 
 
     wrap.style.setProperty(
-
       "--r2",
-
       randomBetween(
         -12,
         12
-      )
-
-      +
-
-      "deg"
-
+      ) + "deg"
     );
 
-
-    // Each splat disappears
-    // at a different speed.
 
     const lifeMs =
       randomBetween(
@@ -1693,19 +1573,10 @@
 
 
     wrap.style.setProperty(
-
       "--life",
-
-      (lifeMs / 1000)
-
-      +
-
-      "s"
-
+      (lifeMs / 1000) + "s"
     );
 
-
-    // Random main splat size
 
     const baseSize =
       randomBetween(
@@ -1729,25 +1600,15 @@
 
 
     main.style.height =
-
       randomBetween(
-
         baseSize * .7,
-
         baseSize * 1.05
-
-      )
-
-      +
-
-      "px";
+      ) + "px";
 
 
     main.style.background =
       splatColor;
 
-
-    // Irregular blob shape
 
     main.style.borderRadius =
 
@@ -1773,17 +1634,12 @@
     );
 
 
-    // Nearby paint droplets
-
     const dropCount =
-
       Math.floor(
-
         randomBetween(
           6,
           12
         )
-
       );
 
 
@@ -1812,21 +1668,15 @@
 
       const angle =
         randomBetween(
-
           0,
-
           Math.PI * 2
-
         );
 
 
       const distance =
         randomBetween(
-
           baseSize * .35,
-
           baseSize * .95
-
         );
 
 
@@ -1835,52 +1685,28 @@
 
 
       drop.style.height =
-
         randomBetween(
-
           size * .75,
-
           size * 1.2
-
-        )
-
-        +
-
-        "px";
+        ) + "px";
 
 
       drop.style.left =
-
         (
           Math.cos(
             angle
-          )
-
-          *
-
+          ) *
           distance
-        )
-
-        +
-
-        "px";
+        ) + "px";
 
 
       drop.style.top =
-
         (
           Math.sin(
             angle
-          )
-
-          *
-
+          ) *
           distance
-        )
-
-        +
-
-        "px";
+        ) + "px";
 
 
       drop.style.background =
@@ -1894,18 +1720,12 @@
     }
 
 
-    // A few tiny droplets
-    // farther from the main splat
-
     const farDropCount =
-
       Math.floor(
-
         randomBetween(
           1,
           4
         )
-
       );
 
 
@@ -1934,21 +1754,15 @@
 
       const angle =
         randomBetween(
-
           0,
-
           Math.PI * 2
-
         );
 
 
       const distance =
         randomBetween(
-
           baseSize * .95,
-
           baseSize * 1.45
-
         );
 
 
@@ -1961,37 +1775,21 @@
 
 
       drop.style.left =
-
         (
           Math.cos(
             angle
-          )
-
-          *
-
+          ) *
           distance
-        )
-
-        +
-
-        "px";
+        ) + "px";
 
 
       drop.style.top =
-
         (
           Math.sin(
             angle
-          )
-
-          *
-
+          ) *
           distance
-        )
-
-        +
-
-        "px";
+        ) + "px";
 
 
       drop.style.background =
@@ -2010,10 +1808,7 @@
     );
 
 
-    // Remove it after its animation
-
     setTimeout(
-
       () => {
 
         wrap.remove();
@@ -2027,22 +1822,16 @@
   }
 
 
-  // Creates 1–5 splats
-  // within roughly .25 seconds
-
   function paintSplatBurst(
     color
   ) {
 
     const splatCount =
-
       Math.floor(
-
         randomBetween(
           1,
           6
         )
-
       );
 
 
@@ -2060,7 +1849,6 @@
 
 
       setTimeout(
-
         () => {
 
           createSinglePaintSplat(
@@ -2079,7 +1867,7 @@
 
 
   // =========================================================
-  // BACKPACK RENDERING
+  // BACKPACK
   // =========================================================
 
   function renderBackpack() {
@@ -2110,14 +1898,11 @@
 
 
             chip.textContent =
-
               `${colorInfo[color].emoji} ${bag[color]}`;
 
 
             chip.addEventListener(
-
               "click",
-
               () => {
 
                 selectForMixer(
@@ -2125,7 +1910,6 @@
                 );
 
               }
-
             );
 
 
@@ -2171,7 +1955,7 @@
 
 
   // =========================================================
-  // WAREHOUSE RENDERING
+  // WAREHOUSE
   // =========================================================
 
   function renderWarehouse() {
@@ -2202,7 +1986,6 @@
 
 
             chip.textContent =
-
               `${colorInfo[color].emoji} ${colorInfo[color].label} ×${storage[color]}`;
 
 
@@ -2248,7 +2031,7 @@
 
 
   // =========================================================
-  // MIXER RENDERING
+  // MIXER DISPLAY
   // =========================================================
 
   function renderMixChips() {
@@ -2258,7 +2041,6 @@
 
 
     mixerSlots.forEach(
-
       (
         color,
         index
@@ -2279,9 +2061,7 @@
 
 
         chip.addEventListener(
-
           "click",
-
           event => {
 
             event.stopPropagation();
@@ -2292,7 +2072,6 @@
             );
 
           }
-
         );
 
 
@@ -2301,7 +2080,6 @@
         );
 
       }
-
     );
 
   }
@@ -2314,12 +2092,10 @@
   function renderAll() {
 
     bagText.textContent =
-
       `${bagTotal()} / ${bagCapacity}`;
 
 
     storageText.textContent =
-
       `${storageTotal()} / ${storageCapacity}`;
 
 
@@ -2334,7 +2110,6 @@
 
 
     orderTarget.textContent =
-
       `${orderInfo.emoji} ${orderInfo.label} ×1`;
 
 
@@ -2352,16 +2127,12 @@
 
 
     storeBadge.style.display =
-
       cheapestAffordableExists()
-
         ? "grid"
-
         : "none";
 
 
     if (
-
       document
         .querySelector(
           "#storeOverlay"
@@ -2370,7 +2141,6 @@
         .contains(
           "open"
         )
-
     ) {
 
       renderStore();
@@ -2381,7 +2151,7 @@
 
 
   // =========================================================
-  // FLOATING +1 EFFECT
+  // FLOATING +1
   // =========================================================
 
   function spawnFloater(
@@ -2414,28 +2184,18 @@
 
 
     floater.style.left =
-
       `${
-
         rect.left -
-
         fieldRect.left +
-
         rect.width / 2 -
-
         10
-
       }px`;
 
 
     floater.style.top =
-
       `${
-
         rect.top -
-
         fieldRect.top
-
       }px`;
 
 
@@ -2445,12 +2205,9 @@
 
 
     setTimeout(
-
       () =>
         floater.remove(),
-
       500
-
     );
 
   }
@@ -2466,10 +2223,8 @@
   ) {
 
     if (
-
       bagTotal() >=
       bagCapacity
-
     ) {
 
       if (
@@ -2481,7 +2236,6 @@
         );
 
       }
-
 
       return;
 
@@ -2516,26 +2270,19 @@
 
 
     spawnFloater(
-
       source,
-
       `+1 ${colorInfo[color].emoji}`
-
     );
 
 
     renderAll();
 
-
     checkQuests();
 
 
     if (
-
       !fromMinion &&
-
       navigator.vibrate
-
     ) {
 
       navigator.vibrate(
@@ -2560,9 +2307,8 @@
     ) {
 
       say(
-        "Mixer full — tap a color on the MIX button to remove it"
+        "Mixer full — tap a selected color to remove it"
       );
-
 
       return;
 
@@ -2634,7 +2380,7 @@
 
 
   // =========================================================
-  // RAW COLOR BUTTONS
+  // RAW COLOR INPUT
   // =========================================================
 
   document
@@ -2645,9 +2391,7 @@
       source => {
 
         source.addEventListener(
-
           "pointerdown",
-
           event => {
 
             event.preventDefault();
@@ -2659,7 +2403,6 @@
             );
 
           }
-
         );
 
       }
@@ -2667,7 +2410,7 @@
 
 
   // =========================================================
-  // MIX BUTTON
+  // MIX
   // =========================================================
 
   document
@@ -2675,33 +2418,104 @@
       "#mixBtn"
     )
     .addEventListener(
-
       "click",
-
       () => {
 
+        let colorA;
+        let colorB;
+
+        let automaticMix =
+          false;
+
+
+        // -----------------------------------------
+        // TWO MANUALLY SELECTED COLORS
+        // -----------------------------------------
+
         if (
-          mixerSlots.length < 2
+          mixerSlots.length === 2
+        ) {
+
+          colorA =
+            mixerSlots[0];
+
+          colorB =
+            mixerSlots[1];
+
+        }
+
+
+        // -----------------------------------------
+        // ONE SELECTED COLOR
+        // -----------------------------------------
+
+        else if (
+          mixerSlots.length === 1
         ) {
 
           say(
-            "Pick 2 colors from your backpack first"
+            "Pick one more color"
           );
-
 
           return;
 
         }
 
 
+        // -----------------------------------------
+        // ZERO SELECTED = AUTO MIX
+        // -----------------------------------------
+
+        else {
+
+          const available =
+            getAvailableRecipes();
+
+
+          if (
+            available.length === 0
+          ) {
+
+            say(
+              "No mixable colors available"
+            );
+
+            return;
+
+          }
+
+
+          const randomRecipe =
+            available[
+              Math.floor(
+                Math.random() *
+                available.length
+              )
+            ];
+
+
+          colorA =
+            randomRecipe.a;
+
+
+          colorB =
+            randomRecipe.b;
+
+
+          automaticMix =
+            true;
+
+        }
+
+
+        // -----------------------------------------
+        // FIND RECIPE
+        // -----------------------------------------
+
         const recipe =
-
           findRecipeForPair(
-
-            mixerSlots[0],
-
-            mixerSlots[1]
-
+            colorA,
+            colorB
           );
 
 
@@ -2710,18 +2524,19 @@
         ) {
 
           say(
-            "That combo doesn't mix — returned to backpack"
+            "That combo doesn't mix"
           );
 
 
-          bag[
-            mixerSlots[0]
-          ]++;
+          if (
+            mixerSlots.length === 2
+          ) {
 
+            bag[colorA]++;
 
-          bag[
-            mixerSlots[1]
-          ]++;
+            bag[colorB]++;
+
+          }
 
 
           mixerSlots =
@@ -2730,30 +2545,49 @@
 
           renderAll();
 
-
           return;
 
         }
 
 
-        if (
+        // -----------------------------------------
+        // CHECK WAREHOUSE FIRST
+        // -----------------------------------------
 
+        if (
           storageTotal() >=
           storageCapacity
-
         ) {
 
           say(
             "📦 Warehouse full!"
           );
 
-
           return;
 
         }
 
 
-        // Create the mixed paint
+        // -----------------------------------------
+        // REMOVE AUTO-MIX COLORS NOW
+        // MANUAL COLORS WERE REMOVED
+        // WHEN PLACED INTO MIXER SLOTS
+        // -----------------------------------------
+
+        if (
+          automaticMix
+        ) {
+
+          bag[colorA]--;
+
+          bag[colorB]--;
+
+        }
+
+
+        // -----------------------------------------
+        // CREATE MIXED COLOR
+        // -----------------------------------------
 
         storage[
           recipe.result
@@ -2767,23 +2601,17 @@
           [];
 
 
-        // NEW:
-        // Random 1–5 paint splats
-
         paintSplatBurst(
           recipe.result
         );
 
 
         say(
-
           `${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`
-
         );
 
 
         renderAll();
-
 
         checkQuests();
 
@@ -2799,7 +2627,6 @@
         }
 
       }
-
     );
 
 
@@ -2812,9 +2639,7 @@
       "#sellBtn"
     )
     .addEventListener(
-
       "click",
-
       () => {
 
         const earned =
@@ -2828,7 +2653,6 @@
           say(
             "No raw colors to sell"
           );
-
 
           return;
 
@@ -2858,14 +2682,11 @@
 
 
         say(
-
           `🪙 Sold raw colors +${earned}`
-
         );
 
 
         renderAll();
-
 
         checkQuests();
 
@@ -2881,12 +2702,11 @@
         }
 
       }
-
     );
 
 
   // =========================================================
-  // FULFILL ORDER
+  // FULFILL
   // =========================================================
 
   document
@@ -2894,9 +2714,7 @@
       "#fulfillBtn"
     )
     .addEventListener(
-
       "click",
-
       () => {
 
         const neededColor =
@@ -2904,19 +2722,14 @@
 
 
         if (
-
           storage[
             neededColor
           ] <= 0
-
         ) {
 
           say(
-
             `Need ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label}`
-
           );
-
 
           return;
 
@@ -2949,17 +2762,11 @@
         do {
 
           nextColor =
-
             colors[
-
               Math.floor(
-
                 Math.random() *
-
                 colors.length
-
               )
-
             ];
 
         }
@@ -2983,14 +2790,11 @@
 
 
         say(
-
           `✅ Order complete! +${earnedReward}`
-
         );
 
 
         renderAll();
-
 
         checkQuests();
 
@@ -3000,19 +2804,16 @@
         ) {
 
           navigator.vibrate(
-
             [
               25,
               20,
               25
             ]
-
           );
 
         }
 
       }
-
     );
 
 
@@ -3031,9 +2832,7 @@
       "#storeBtn"
     )
     .addEventListener(
-
       "click",
-
       () => {
 
         storeOverlay
@@ -3046,7 +2845,6 @@
         renderStore();
 
       }
-
     );
 
 
@@ -3055,9 +2853,7 @@
       "#storeCloseBtn"
     )
     .addEventListener(
-
       "click",
-
       () => {
 
         storeOverlay
@@ -3067,7 +2863,6 @@
           );
 
       }
-
     );
 
 
@@ -3076,14 +2871,11 @@
       "#storeTabBtn"
     )
     .addEventListener(
-
       "click",
-
       () =>
         setStoreTab(
           "store"
         )
-
     );
 
 
@@ -3092,19 +2884,51 @@
       "#upgradeTabBtn"
     )
     .addEventListener(
-
       "click",
-
       () =>
         setStoreTab(
           "upgrades"
         )
-
     );
 
 
   // =========================================================
-  // START GAME
+  // IOS RAPID-TAP PROTECTION
+  // =========================================================
+
+  let lastTouchEnd = 0;
+
+  document.addEventListener(
+    "touchend",
+    event => {
+
+      const now =
+        Date.now();
+
+
+      if (
+        now -
+        lastTouchEnd <=
+        300
+      ) {
+
+        event.preventDefault();
+
+      }
+
+
+      lastTouchEnd =
+        now;
+
+    },
+    {
+      passive: false
+    }
+  );
+
+
+  // =========================================================
+  // START
   // =========================================================
 
   renderAll();
