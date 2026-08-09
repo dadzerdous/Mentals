@@ -414,8 +414,8 @@
   function positionMinionAt(element, sourceElement, instant) {
     const rect = sourceElement.getBoundingClientRect();
     const fieldRect = field.getBoundingClientRect();
-    const left = rect.left - fieldRect.left + rect.width / 2 - 16;
-    const top = rect.top - fieldRect.top + rect.height / 2 - 16;
+    const left = rect.left - fieldRect.left + rect.width / 2 - 19;
+    const top = rect.top - fieldRect.top + rect.height / 2 - 19;
 
     if (instant) {
       element.style.transition = "none";
