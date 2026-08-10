@@ -237,8 +237,8 @@
     }
   ];
 
-  function minionTravelMs() { return Math.max(400, 900 - minionSpeedLevel * 100); }
-  function minionPauseMs() { return Math.max(120, 300 - minionSpeedLevel * 30); }
+  function minionTravelMs() { return Math.max(1400, 3800 - minionSpeedLevel * 400); }
+  function minionPauseMs() { return Math.max(500, 1200 - minionSpeedLevel * 100); }
 
   // =========================================================
   // STORE LOGIC
@@ -442,9 +442,11 @@
     }
 
     const target = sources[Math.floor(Math.random() * sources.length)];
+    minion.el.classList.add("moving");
     positionMinionAt(minion.el, target, false);
 
     minion.timer = setTimeout(() => {
+      minion.el.classList.remove("moving");
       tapSource(target, true);
       minion.timer = setTimeout(() => scheduleMinionMove(minion), minionPauseMs());
     }, minionTravelMs());
@@ -821,7 +823,10 @@ function spawnMinion() {
     renderAll();
     checkQuests();
 
-    if (!fromMinion && navigator.vibrate) navigator.vibrate(12);
+    if (!fromMinion) {
+      playSplatSound();
+      if (navigator.vibrate) navigator.vibrate(12);
+    }
   }
 
   // =========================================================
@@ -860,6 +865,7 @@ function spawnMinion() {
   document.querySelectorAll(".source").forEach(source => {
     source.addEventListener("pointerdown", event => {
       event.preventDefault();
+      source.classList.add("pressed");
 
       const startX = event.clientX;
       const startY = event.clientY;
@@ -870,6 +876,7 @@ function spawnMinion() {
         longPressFired = true;
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
+        source.classList.remove("pressed");
         beginDragSource(source, event);
       }, 450);
 
@@ -886,6 +893,7 @@ function spawnMinion() {
         clearTimeout(holdTimer);
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
+        source.classList.remove("pressed");
         if (!longPressFired && !moved) {
           tapSource(source, false);
         }
