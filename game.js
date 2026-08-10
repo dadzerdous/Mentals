@@ -563,6 +563,24 @@ function spawnMinion() {
   }
 
   // =========================================================
+  // SOUND
+  // =========================================================
+
+  const splatSoundSrc = "sounds/splat.mp3";
+
+  function playSplatSound() {
+    try {
+      const sound = new Audio(splatSoundSrc);
+      sound.volume = 0.7;
+      sound.play().catch(() => {
+        // browser blocked autoplay until the user interacts with the page — safe to ignore
+      });
+    } catch (e) {
+      // audio unsupported — fail silently
+    }
+  }
+
+  // =========================================================
   // PAINT SPLAT EFFECT
   // =========================================================
 
@@ -871,6 +889,7 @@ function spawnMinion() {
     mixerSlots = [];
 
     paintSplatBurst(recipe.result);
+    playSplatSound();
     say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
     renderAll();
     checkQuests();
