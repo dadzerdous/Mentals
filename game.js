@@ -23,7 +23,8 @@
 
   function weightOf(color) { return colorWeight[color] || 1; }
 
-  let mixerSlots = [];
+  let dropperArmed = false;
+  let dropperIngredients = []; // [{ color, source: 'field'|'tube' }, ...] up to 2
 
   let whiteUnlocked = false;
 
@@ -95,10 +96,6 @@
     return activeRecipes().find(r =>
       (r.a === colorA && r.b === colorB) || (r.a === colorB && r.b === colorA)
     );
-  }
-
-  function getAvailableRecipes() {
-    return activeRecipes().filter(r => colorTotalInTubes(r.a) > 0 && colorTotalInTubes(r.b) > 0);
   }
 
   // =========================================================
@@ -538,7 +535,8 @@ function spawnMinion() {
   const orderTarget = document.querySelector("#orderTarget");
   const rewardEl = document.querySelector("#reward");
   const message = document.querySelector("#message");
-  const mixChips = document.querySelector("#mixChips");
+  const dropperToggle = document.querySelector("#dropperToggle");
+  const dropperChips = document.querySelector("#dropperChips");
   const storeBadge = document.querySelector("#storeBadge");
 
   // =========================================================
@@ -717,9 +715,9 @@ function spawnMinion() {
     tubes.forEach((tube, index) => {
       const chip = document.createElement("div");
       if (tube.color) {
-        chip.className = "stashChip pickable";
+        chip.className = "stashChip" + (dropperArmed ? " pickable" : "");
         chip.textContent = `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube}`;
-        chip.addEventListener("click", () => selectForMixerFromTube(index));
+        chip.addEventListener("click", () => feedDropperFromTube(index));
       } else {
         chip.className = "stashChip empty";
         chip.textContent = "🧪 Empty";
@@ -743,17 +741,16 @@ function spawnMinion() {
     });
   }
 
-  function renderMixChips() {
-    mixChips.innerHTML = "";
-    mixerSlots.forEach((color, index) => {
+  function renderDropper() {
+    dropperToggle.textContent = dropperArmed ? "❌" : "💧";
+    dropperToggle.classList.toggle("armed", dropperArmed);
+
+    dropperChips.innerHTML = "";
+    dropperIngredients.forEach(ingredient => {
       const chip = document.createElement("span");
       chip.className = "mixChip";
-      chip.textContent = colorInfo[color].emoji;
-      chip.addEventListener("click", event => {
-        event.stopPropagation();
-        clearMixerSlot(index);
-      });
-      mixChips.appendChild(chip);
+      chip.textContent = colorInfo[ingredient.color].emoji;
+      dropperChips.appendChild(chip);
     });
   }
 
@@ -768,7 +765,7 @@ function spawnMinion() {
 
     renderBackpack();
     renderWarehouse();
-    renderMixChips();
+    renderDropper();
     renderQuest();
 
     storeBadge.style.display = cheapestAffordableExists() ? "grid" : "none";
@@ -826,11 +823,26 @@ function spawnMinion() {
   }
 
   // =========================================================
-  // MIXER SELECTION
+  // DROPPER — pick it up, tap 2 colors (bucket or tube), it mixes itself
   // =========================================================
 
-  function selectForMixerFromTube(index) {
-    if (mixerSlots.length >= 2) { say("Mixer full — tap a selected color to remove it"); return; }
+  function toggleDropper() {
+    if (dropperArmed) {
+      // cancelling: hand back anything pulled from a tube (field-collected drops are just lost)
+      dropperIngredients.forEach(ingredient => {
+        if (ingredient.source === "tube") addToSlots(tubes, ingredient.color, 1, bagCapacityPerTube);
+      });
+      dropperArmed = false;
+      dropperIngredients = [];
+    } else {
+      dropperArmed = true;
+      dropperIngredients = [];
+    }
+    renderAll();
+  }
+
+  function feedDropperFromTube(index) {
+    if (!dropperArmed) return;
 
     const tube = tubes[index];
     if (!tube.color || tube.amount <= 0) return;
@@ -839,20 +851,69 @@ function spawnMinion() {
     tube.amount--;
     if (tube.amount === 0) tube.color = null;
 
-    mixerSlots.push(color);
+    addIngredientToDropper(color, "tube");
+  }
+
+  function feedDropperFromField(source) {
+    if (!dropperArmed) return;
+    addIngredientToDropper(source.dataset.color, "field");
+    spawnFloater(source, `💧 ${colorInfo[source.dataset.color].emoji}`);
+  }
+
+  function addIngredientToDropper(color, source) {
+    dropperIngredients.push({ color, source });
     renderAll();
 
     if (navigator.vibrate) navigator.vibrate(10);
+
+    if (dropperIngredients.length === 2) resolveDropperMix();
   }
 
-  function clearMixerSlot(index) {
-    const color = mixerSlots[index];
-    if (color === undefined) return;
+  function resolveDropperMix() {
+    const [first, second] = dropperIngredients;
+    const recipe = findRecipeForPair(first.color, second.color);
 
-    addToSlots(tubes, color, 1, bagCapacityPerTube);
-    mixerSlots.splice(index, 1);
+    function returnTubeIngredients() {
+      dropperIngredients.forEach(ingredient => {
+        if (ingredient.source === "tube") addToSlots(tubes, ingredient.color, 1, bagCapacityPerTube);
+      });
+    }
+
+    if (!recipe) {
+      say("That combo doesn't mix");
+      returnTubeIngredients();
+      dropperArmed = false;
+      dropperIngredients = [];
+      renderAll();
+      return;
+    }
+
+    const weight = weightOf(recipe.result);
+
+    if (!canAddToSlots(vials, recipe.result, weight, storageCapacityPerVial)) {
+      say(`🧪 ${colorInfo[recipe.result].label} vial full!`);
+      returnTubeIngredients();
+      dropperArmed = false;
+      dropperIngredients = [];
+      renderAll();
+      return;
+    }
+
+    addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
+    totalMixed++;
+    dropperArmed = false;
+    dropperIngredients = [];
+
+    paintSplatBurst(recipe.result);
+    playSplatSound();
+    say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
     renderAll();
+    checkQuests();
+
+    if (navigator.vibrate) navigator.vibrate(28);
   }
+
+  dropperToggle.addEventListener("click", toggleDropper);
 
   // =========================================================
   // RAW COLOR INPUT — tap to gather, hold to rearrange
@@ -891,74 +952,17 @@ function spawnMinion() {
         window.removeEventListener("pointerup", onUp);
         source.classList.remove("pressed");
         if (!longPressFired && !moved) {
-          tapSource(source, false);
+          if (dropperArmed) {
+            feedDropperFromField(source);
+          } else {
+            tapSource(source, false);
+          }
         }
       }
 
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     });
-  });
-
-  // =========================================================
-  // MIX
-  // =========================================================
-
-  document.querySelector("#mixBtn").addEventListener("click", () => {
-    let colorA, colorB;
-    let automaticMix = false;
-
-    if (mixerSlots.length === 2) {
-      colorA = mixerSlots[0];
-      colorB = mixerSlots[1];
-    } else if (mixerSlots.length === 1) {
-      say("Pick one more color");
-      return;
-    } else {
-      const available = getAvailableRecipes();
-      if (available.length === 0) { say("No mixable colors available"); return; }
-      const randomRecipe = available[Math.floor(Math.random() * available.length)];
-      colorA = randomRecipe.a;
-      colorB = randomRecipe.b;
-      automaticMix = true;
-    }
-
-    const recipe = findRecipeForPair(colorA, colorB);
-
-    if (!recipe) {
-      say("That combo doesn't mix");
-      if (mixerSlots.length === 2) {
-        addToSlots(tubes, colorA, 1, bagCapacityPerTube);
-        addToSlots(tubes, colorB, 1, bagCapacityPerTube);
-      }
-      mixerSlots = [];
-      renderAll();
-      return;
-    }
-
-    const weight = weightOf(recipe.result);
-
-    if (!canAddToSlots(vials, recipe.result, weight, storageCapacityPerVial)) {
-      say(`🧪 ${colorInfo[recipe.result].label} vial full!`);
-      return; // manual selections stay staged in the mixer — sell/fulfill a vial, then hit MIX again
-    }
-
-    if (automaticMix) {
-      removeFromSlots(tubes, colorA, 1);
-      removeFromSlots(tubes, colorB, 1);
-    }
-
-    addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
-    totalMixed++;
-    mixerSlots = [];
-
-    paintSplatBurst(recipe.result);
-    playSplatSound();
-    say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
-    renderAll();
-    checkQuests();
-
-    if (navigator.vibrate) navigator.vibrate(28);
   });
 
   // =========================================================

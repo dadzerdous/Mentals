@@ -185,7 +185,7 @@ button, .source, .stashChip, .mixChip {
 /* ---- action buttons ---- */
 #actions {
   position: absolute; left: 10px; right: 10px; bottom: 16px;
-  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
 }
 
 button {
@@ -196,9 +196,15 @@ button {
 button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(43,41,39,.15); }
 button:disabled { opacity: .4; }
 
-#mixBtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; }
-#mixLabel { font-size: 13px; }
-#mixChips { display: flex; gap: 3px; min-height: 20px; }
+.dropperToggle {
+  display: inline-grid; place-items: center;
+  width: 26px; height: 26px; margin-left: 6px;
+  background: #fff; border: 2px solid #2b2927; border-radius: 999px;
+  font-size: 14px; cursor: pointer;
+}
+.dropperToggle.armed { background: #ffdcdc; }
+
+.dropperChips { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
 .mixChip {
   background: #fff8e6; border: 2px solid #2b2927; border-radius: 999px;
   width: 22px; height: 22px; font-size: 12px; display: grid; place-items: center; cursor: pointer;
