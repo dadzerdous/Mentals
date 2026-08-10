@@ -427,19 +427,18 @@
   }
 
   function scheduleMinionMove(minion) {
-    if (!anyTubeHasRoom()) {
+    const sources = getUnlockedSources().filter(el => {
+      const color = el.dataset.color;
+      return colorTotalInTubes(color) > 0 && canAddToSlots(tubes, color, 1, bagCapacityPerTube);
+    });
+
+    if (!sources.length) {
       minion.el.classList.add("asleep");
       minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
       return;
     }
 
     minion.el.classList.remove("asleep");
-
-    const sources = getUnlockedSources().filter(el => canAddToSlots(tubes, el.dataset.color, 1, bagCapacityPerTube));
-    if (!sources.length) {
-      minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
-      return;
-    }
 
     const nonRepeat = sources.filter(el => el.dataset.color !== minion.lastColor);
     const pool = nonRepeat.length ? nonRepeat : sources;
@@ -606,20 +605,12 @@ function spawnMinion() {
     return vials.reduce((sum, v) => sum + v.amount, 0);
   }
 
-  function bagMaxTotal() {
-    return TUBE_COUNT * bagCapacityPerTube;
-  }
-
   function storageMaxTotal() {
     return VIAL_COUNT * storageCapacityPerVial;
   }
 
   function unlockedRawColors() {
     return whiteUnlocked ? ["red", "blue", "yellow", "white"] : ["red", "blue", "yellow"];
-  }
-
-  function anyTubeHasRoom() {
-    return unlockedRawColors().some(color => canAddToSlots(tubes, color, 1, bagCapacityPerTube));
   }
 
   function randomBetween(min, max) {
@@ -767,7 +758,7 @@ function spawnMinion() {
   }
 
   function renderAll() {
-    bagText.textContent = `${tubesUsedTotal()} / ${bagMaxTotal()}`;
+    bagText.textContent = `${tubes.filter(t => t.color !== null).length} / ${TUBE_COUNT}`;
     storageText.textContent = `${vialsUsedTotal()} / ${storageMaxTotal()}`;
     coinsEl.textContent = coins;
 
