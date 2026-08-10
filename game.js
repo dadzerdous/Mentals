@@ -7,10 +7,10 @@
   let coins = 0;
 
   const bag = { red: 0, blue: 0, yellow: 0, white: 0 };
-  let bagCapacity = 8;
+  let bagCapacityPerTube = 4;
 
   const storage = { purple: 0, orange: 0, green: 0, pink: 0, skyblue: 0, cream: 0 };
-  let storageCapacity = 4;
+  let storageCapacityPerVial = 4;
 
   let mixerSlots = [];
 
@@ -195,23 +195,23 @@
   const toolUpgrades = [
     {
       id: "backpack",
-      name: "Bigger Backpack",
+      name: "Bigger Tubes",
       level: 0,
       baseCost: 20,
       growth: 1.6,
-      desc: () => `Raw color capacity: ${bagCapacity} → ${bagCapacity + 4}`,
+      desc: () => `Each color tube holds: ${bagCapacityPerTube} → ${bagCapacityPerTube + 4}`,
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { bagCapacity += 4; this.level++; }
+      buy: function () { bagCapacityPerTube += 4; this.level++; }
     },
     {
       id: "storage",
-      name: "Bigger Warehouse",
+      name: "Bigger Vials",
       level: 0,
       baseCost: 25,
       growth: 1.6,
-      desc: () => `Mixed color capacity: ${storageCapacity} → ${storageCapacity + 4}`,
+      desc: () => `Each color vial holds: ${storageCapacityPerVial} → ${storageCapacityPerVial + 4}`,
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { storageCapacity += 4; this.level++; }
+      buy: function () { storageCapacityPerVial += 4; this.level++; }
     },
     {
       id: "minionSpeed",
@@ -431,7 +431,7 @@
   }
 
   function scheduleMinionMove(minion) {
-    if (bagTotal() >= bagCapacity) {
+    if (!anyTubeHasRoom()) {
       minion.el.classList.add("asleep");
       minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
       return;
@@ -439,7 +439,7 @@
 
     minion.el.classList.remove("asleep");
 
-    const sources = getUnlockedSources();
+    const sources = getUnlockedSources().filter(el => bag[el.dataset.color] < bagCapacityPerTube);
     if (!sources.length) {
       minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
       return;
@@ -558,6 +558,26 @@ function spawnMinion() {
     return Object.values(storage).reduce((a, b) => a + b, 0);
   }
 
+  function unlockedRawColors() {
+    return whiteUnlocked ? ["red", "blue", "yellow", "white"] : ["red", "blue", "yellow"];
+  }
+
+  function unlockedMixedColors() {
+    return activeOrderColors();
+  }
+
+  function bagMaxTotal() {
+    return unlockedRawColors().length * bagCapacityPerTube;
+  }
+
+  function storageMaxTotal() {
+    return unlockedMixedColors().length * storageCapacityPerVial;
+  }
+
+  function anyTubeHasRoom() {
+    return unlockedRawColors().some(color => bag[color] < bagCapacityPerTube);
+  }
+
   function randomBetween(min, max) {
     return Math.random() * (max - min) + min;
   }
@@ -659,41 +679,25 @@ function spawnMinion() {
 
   function renderBackpack() {
     bagContents.innerHTML = "";
-    Object.keys(bag).forEach(color => {
-      if (bag[color] > 0) {
-        const chip = document.createElement("div");
-        chip.className = "stashChip pickable";
-        chip.textContent = `${colorInfo[color].emoji} ${bag[color]}`;
-        chip.addEventListener("click", () => selectForMixer(color));
-        bagContents.appendChild(chip);
-      }
+    unlockedRawColors().forEach(color => {
+      const filled = bag[color];
+      const chip = document.createElement("div");
+      chip.className = "stashChip" + (filled > 0 ? " pickable" : " empty");
+      chip.textContent = `${colorInfo[color].emoji} ${filled}/${bagCapacityPerTube}`;
+      if (filled > 0) chip.addEventListener("click", () => selectForMixer(color));
+      bagContents.appendChild(chip);
     });
-    if (bagTotal() === 0) {
-      const empty = document.createElement("div");
-      empty.style.fontSize = "12px";
-      empty.style.opacity = ".6";
-      empty.textContent = "Empty";
-      bagContents.appendChild(empty);
-    }
   }
 
   function renderWarehouse() {
     storageContents.innerHTML = "";
-    Object.keys(storage).forEach(color => {
-      if (storage[color] > 0) {
-        const chip = document.createElement("div");
-        chip.className = "stashChip";
-        chip.textContent = `${colorInfo[color].emoji} ${colorInfo[color].label} ×${storage[color]}`;
-        storageContents.appendChild(chip);
-      }
+    unlockedMixedColors().forEach(color => {
+      const filled = storage[color];
+      const chip = document.createElement("div");
+      chip.className = "stashChip" + (filled === 0 ? " empty" : "");
+      chip.textContent = `${colorInfo[color].emoji} ${colorInfo[color].label} ${filled}/${storageCapacityPerVial}`;
+      storageContents.appendChild(chip);
     });
-    if (storageTotal() === 0) {
-      const empty = document.createElement("div");
-      empty.style.fontSize = "12px";
-      empty.style.opacity = ".6";
-      empty.textContent = "Empty";
-      storageContents.appendChild(empty);
-    }
   }
 
   function renderMixChips() {
@@ -711,8 +715,8 @@ function spawnMinion() {
   }
 
   function renderAll() {
-    bagText.textContent = `${bagTotal()} / ${bagCapacity}`;
-    storageText.textContent = `${storageTotal()} / ${storageCapacity}`;
+    bagText.textContent = `${bagTotal()} / ${bagMaxTotal()}`;
+    storageText.textContent = `${storageTotal()} / ${storageMaxTotal()}`;
     coinsEl.textContent = coins;
 
     const orderInfo = colorInfo[currentOrder.color];
@@ -754,12 +758,13 @@ function spawnMinion() {
   // =========================================================
 
   function tapSource(source, fromMinion) {
-    if (bagTotal() >= bagCapacity) {
-      if (!fromMinion) say("🎒 Backpack full!");
+    const color = source.dataset.color;
+
+    if (bag[color] >= bagCapacityPerTube) {
+      if (!fromMinion) say(`🧪 ${colorInfo[color].label} tube full!`);
       return;
     }
 
-    const color = source.dataset.color;
     bag[color]++;
     totalGathered++;
 
@@ -880,7 +885,10 @@ function spawnMinion() {
       return;
     }
 
-    if (storageTotal() >= storageCapacity) { say("📦 Warehouse full!"); return; }
+    if (storage[recipe.result] >= storageCapacityPerVial) {
+      say(`🧪 ${colorInfo[recipe.result].label} vial full!`);
+      return;
+    }
 
     if (automaticMix) { bag[colorA]--; bag[colorB]--; }
 
@@ -1007,7 +1015,7 @@ function spawnMinion() {
   function saveState() {
     try {
       const data = {
-        coins, bag, bagCapacity, storage, storageCapacity,
+        coins, bag, bagCapacityPerTube, storage, storageCapacityPerVial,
         whiteUnlocked, minionCount, minionSpeedLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         questIndex, currentOrder, sourcePositions,
@@ -1028,9 +1036,9 @@ function spawnMinion() {
 
       coins = data.coins ?? coins;
       Object.assign(bag, data.bag || {});
-      bagCapacity = data.bagCapacity ?? bagCapacity;
+      bagCapacityPerTube = data.bagCapacityPerTube ?? bagCapacityPerTube;
       Object.assign(storage, data.storage || {});
-      storageCapacity = data.storageCapacity ?? storageCapacity;
+      storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
       whiteUnlocked = data.whiteUnlocked ?? whiteUnlocked;
       minionCount = data.minionCount ?? minionCount;
       minionSpeedLevel = data.minionSpeedLevel ?? minionSpeedLevel;

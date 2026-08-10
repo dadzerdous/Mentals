@@ -58,6 +58,7 @@ button, .source, .stashChip, .mixChip {
 }
 .stashChip.pickable { cursor: pointer; }
 .stashChip.pickable:active { transform: translateY(1px); }
+.stashChip.empty { opacity: .45; }
 
 /* ---- quest ---- */
 #quest {
