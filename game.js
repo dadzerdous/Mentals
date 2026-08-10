@@ -237,8 +237,8 @@
     }
   ];
 
-  function minionTravelMs() { return Math.max(1400, 3800 - minionSpeedLevel * 400); }
-  function minionPauseMs() { return Math.max(500, 1200 - minionSpeedLevel * 100); }
+  function minionTravelMs() { return Math.max(2200, 5500 - minionSpeedLevel * 500); }
+  function minionPauseMs() { return Math.max(800, 1800 - minionSpeedLevel * 150); }
 
   // =========================================================
   // STORE LOGIC
@@ -441,7 +441,11 @@
       return;
     }
 
-    const target = sources[Math.floor(Math.random() * sources.length)];
+    const nonRepeat = sources.filter(el => el.dataset.color !== minion.lastColor);
+    const pool = nonRepeat.length ? nonRepeat : sources;
+
+    const target = pool[Math.floor(Math.random() * pool.length)];
+    minion.lastColor = target.dataset.color;
     minion.el.classList.add("moving");
     positionMinionAt(minion.el, target, false);
 
@@ -481,7 +485,8 @@ function spawnMinion() {
 
   const minion = {
     el: element,
-    timer: null
+    timer: null,
+    lastColor: null
   };
 
 
