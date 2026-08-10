@@ -38,8 +38,6 @@
 
   let activeStoreTab = "store";
 
-  let rearrangeModeActive = false;
-
   const GRID = 30;
 
   const defaultPositionFractions = {
@@ -321,7 +319,6 @@
   // =========================================================
 
   const field = document.querySelector("#field");
-  const rearrangeDone = document.querySelector("#rearrangeDone");
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -353,22 +350,6 @@
     return Array.from(document.querySelectorAll(".source")).filter(el => el.style.display !== "none");
   }
 
-  function enterRearrangeMode() {
-    if (rearrangeModeActive) return;
-    rearrangeModeActive = true;
-    document.querySelectorAll(".source").forEach(el => el.classList.add("jiggling"));
-    rearrangeDone.classList.add("visible");
-    if (navigator.vibrate) navigator.vibrate(20);
-  }
-
-  function exitRearrangeMode() {
-    rearrangeModeActive = false;
-    document.querySelectorAll(".source").forEach(el => el.classList.remove("jiggling"));
-    rearrangeDone.classList.remove("visible");
-  }
-
-  rearrangeDone.addEventListener("click", exitRearrangeMode);
-
   function beginDragSource(sourceEl, startEvent) {
     const color = sourceEl.dataset.color;
     const fieldRect = field.getBoundingClientRect();
@@ -378,8 +359,11 @@
     const startX = startEvent.clientX;
     const startY = startEvent.clientY;
 
+    sourceEl.classList.add("jiggling");
     sourceEl.classList.add("dragging");
     sourceEl.style.transition = "none";
+
+    if (navigator.vibrate) navigator.vibrate(20);
 
     function onDragMove(e) {
       const dx = e.clientX - startX;
@@ -397,6 +381,7 @@
       window.removeEventListener("pointerup", onDragEnd);
 
       sourceEl.classList.remove("dragging");
+      sourceEl.classList.remove("jiggling");
       sourceEl.style.transition = "";
 
       const rawLeft = parseFloat(sourceEl.style.left) || 0;
@@ -876,11 +861,6 @@ function spawnMinion() {
     source.addEventListener("pointerdown", event => {
       event.preventDefault();
 
-      if (rearrangeModeActive) {
-        beginDragSource(source, event);
-        return;
-      }
-
       const startX = event.clientX;
       const startY = event.clientY;
       let longPressFired = false;
@@ -890,7 +870,6 @@ function spawnMinion() {
         longPressFired = true;
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
-        enterRearrangeMode();
         beginDragSource(source, event);
       }, 450);
 
