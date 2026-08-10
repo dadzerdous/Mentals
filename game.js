@@ -6,8 +6,8 @@
 
   let coins = 0;
 
-  const TUBE_COUNT = 4;
-  const VIAL_COUNT = 4;
+  let TUBE_COUNT = 2;
+  let VIAL_COUNT = 1;
 
   let tubes = [];   // [{ color: null|string, amount: number }, ...] length TUBE_COUNT
   let vials = [];   // [{ color: null|string, amount: number }, ...] length VIAL_COUNT
@@ -167,6 +167,26 @@
   // =========================================================
 
   const storeItems = [
+    {
+      id: "tubeSlot",
+      name: "Buy a Tube",
+      level: 0,
+      baseCost: 15,
+      growth: 2,
+      desc: function () { return `Adds another tube to your toolbelt. You have ${TUBE_COUNT} now.`; },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { tubes.push({ color: null, amount: 0 }); TUBE_COUNT++; this.level++; }
+    },
+    {
+      id: "vialSlot",
+      name: "Buy a Container",
+      level: 0,
+      baseCost: 20,
+      growth: 2,
+      desc: function () { return `Adds another container to the Warehouse. You have ${VIAL_COUNT} now.`; },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { vials.push({ color: null, amount: 0 }); VIAL_COUNT++; this.level++; }
+    },
     {
       id: "white",
       name: "Unlock White Source",
@@ -1106,9 +1126,15 @@ function spawnMinion() {
       const data = JSON.parse(raw);
 
       coins = data.coins ?? coins;
-      if (Array.isArray(data.tubes) && data.tubes.length === TUBE_COUNT) tubes = data.tubes;
+      if (Array.isArray(data.tubes) && data.tubes.length > 0) {
+        tubes = data.tubes;
+        TUBE_COUNT = tubes.length;
+      }
       bagCapacityPerTube = data.bagCapacityPerTube ?? bagCapacityPerTube;
-      if (Array.isArray(data.vials) && data.vials.length === VIAL_COUNT) vials = data.vials;
+      if (Array.isArray(data.vials) && data.vials.length > 0) {
+        vials = data.vials;
+        VIAL_COUNT = vials.length;
+      }
       storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
       whiteUnlocked = data.whiteUnlocked ?? whiteUnlocked;
       minionCount = data.minionCount ?? minionCount;
