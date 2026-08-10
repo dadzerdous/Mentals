@@ -30,6 +30,7 @@
 
   let minionCount = 0;
   let minionSpeedLevel = 0;
+  let minionCarryLevel = 0;
   const minions = [];
 
   let totalGathered = 0;
@@ -251,11 +252,25 @@
       desc: function () { return `Minions gather quicker. Speed level ${this.level} / ${this.maxLevel}`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { minionSpeedLevel++; this.level++; }
+    },
+    {
+      id: "minionCarry",
+      name: "Bigger Scoops",
+      level: 0,
+      maxLevel: 3,
+      baseCost: 35,
+      growth: 1.8,
+      requires: () => minionCount > 0,
+      lockedNote: "Hire a minion in the Store tab first",
+      desc: function () { return `Minions collect more per visit. Currently ${1 + this.level} at a time.`; },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () { minionCarryLevel++; this.level++; }
     }
   ];
 
-  function minionTravelMs() { return Math.max(2200, 5500 - minionSpeedLevel * 500); }
-  function minionPauseMs() { return Math.max(800, 1800 - minionSpeedLevel * 150); }
+  function minionTravelMs() { return Math.max(3000, 8000 - minionSpeedLevel * 900); }
+  function minionPauseMs() { return Math.max(1000, 2600 - minionSpeedLevel * 250); }
+  function minionCarryAmount() { return 1 + minionCarryLevel; }
 
   // =========================================================
   // STORE LOGIC
@@ -467,9 +482,18 @@
 
     minion.timer = setTimeout(() => {
       minion.el.classList.remove("moving");
-      tapSource(target, true);
-      minion.timer = setTimeout(() => scheduleMinionMove(minion), minionPauseMs());
+      collectMinionScoops(minion, target, minionCarryAmount());
     }, minionTravelMs());
+  }
+
+  function collectMinionScoops(minion, target, scoopsLeft) {
+    if (scoopsLeft <= 0) {
+      minion.timer = setTimeout(() => scheduleMinionMove(minion), minionPauseMs());
+      return;
+    }
+
+    tapSource(target, true);
+    minion.timer = setTimeout(() => collectMinionScoops(minion, target, scoopsLeft - 1), 220);
   }
 
 function spawnMinion() {
@@ -776,11 +800,19 @@ function spawnMinion() {
     });
   }
 
+  function positionDropperFloaterAtPoint(x, y) {
+    dropperFloaterEl.style.left = x + "px";
+    dropperFloaterEl.style.top = y + "px";
+  }
+
   function positionDropperFloaterAtElement(el) {
     const rect = el.getBoundingClientRect();
-    dropperFloaterEl.style.left = (rect.left + rect.width / 2) + "px";
-    dropperFloaterEl.style.top = (rect.top + rect.height / 2) + "px";
+    positionDropperFloaterAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
   }
+
+  document.addEventListener("pointermove", event => {
+    if (dropperArmed) positionDropperFloaterAtPoint(event.clientX, event.clientY);
+  });
 
   function renderAll() {
     bagText.textContent = `${tubes.filter(t => t.color !== null).length} / ${TUBE_COUNT}`;
@@ -1107,7 +1139,7 @@ function spawnMinion() {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
-        whiteUnlocked, minionCount, minionSpeedLevel,
+        whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         questIndex, currentOrder, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
@@ -1139,6 +1171,7 @@ function spawnMinion() {
       whiteUnlocked = data.whiteUnlocked ?? whiteUnlocked;
       minionCount = data.minionCount ?? minionCount;
       minionSpeedLevel = data.minionSpeedLevel ?? minionSpeedLevel;
+      minionCarryLevel = data.minionCarryLevel ?? minionCarryLevel;
       totalGathered = data.totalGathered ?? totalGathered;
       totalSold = data.totalSold ?? totalSold;
       totalMixed = data.totalMixed ?? totalMixed;
