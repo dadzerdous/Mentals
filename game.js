@@ -6,11 +6,22 @@
 
   let coins = 0;
 
-  const bag = { red: 0, blue: 0, yellow: 0, white: 0 };
-  let bagCapacityPerTube = 4;
+  const TUBE_COUNT = 4;
+  const VIAL_COUNT = 4;
 
-  const storage = { purple: 0, orange: 0, green: 0, pink: 0, skyblue: 0, cream: 0 };
+  let tubes = [];   // [{ color: null|string, amount: number }, ...] length TUBE_COUNT
+  let vials = [];   // [{ color: null|string, amount: number }, ...] length VIAL_COUNT
+  let bagCapacityPerTube = 4;
   let storageCapacityPerVial = 4;
+
+  // how many "parts" one item of a mixed color takes up in a vial —
+  // secondary colors (2 raw ingredients) take 2 parts; raw colors are implicitly 1.
+  // tertiary colors (3-ingredient mixes) would go here as 3 once those exist.
+  const colorWeight = {
+    purple: 2, orange: 2, green: 2, pink: 2, skyblue: 2, cream: 2
+  };
+
+  function weightOf(color) { return colorWeight[color] || 1; }
 
   let mixerSlots = [];
 
@@ -89,7 +100,7 @@
   }
 
   function getAvailableRecipes() {
-    return activeRecipes().filter(r => bag[r.a] > 0 && bag[r.b] > 0);
+    return activeRecipes().filter(r => colorTotalInTubes(r.a) > 0 && colorTotalInTubes(r.b) > 0);
   }
 
   // =========================================================
@@ -439,7 +450,7 @@
 
     minion.el.classList.remove("asleep");
 
-    const sources = getUnlockedSources().filter(el => bag[el.dataset.color] < bagCapacityPerTube);
+    const sources = getUnlockedSources().filter(el => canAddToSlots(tubes, el.dataset.color, 1, bagCapacityPerTube));
     if (!sources.length) {
       minion.timer = setTimeout(() => scheduleMinionMove(minion), 1000);
       return;
@@ -550,32 +561,73 @@ function spawnMinion() {
     message._timer = setTimeout(() => message.classList.remove("show"), 950);
   }
 
-  function bagTotal() {
-    return Object.values(bag).reduce((a, b) => a + b, 0);
+  function initTubes() {
+    tubes = [];
+    for (let i = 0; i < TUBE_COUNT; i++) tubes.push({ color: null, amount: 0 });
   }
 
-  function storageTotal() {
-    return Object.values(storage).reduce((a, b) => a + b, 0);
+  function initVials() {
+    vials = [];
+    for (let i = 0; i < VIAL_COUNT; i++) vials.push({ color: null, amount: 0 });
+  }
+
+  // find a slot that can take `amount` more of `color` (existing matching slot with
+  // room, or an empty slot) and add it. Returns true if it fit, false if no room anywhere.
+  function addToSlots(slots, color, amount, capacityPerSlot) {
+    let target = slots.find(s => s.color === color && s.amount + amount <= capacityPerSlot);
+    if (!target) target = slots.find(s => s.color === null);
+    if (!target) return false;
+    target.color = color;
+    target.amount += amount;
+    return true;
+  }
+
+  // true if addToSlots would succeed, without actually mutating anything
+  function canAddToSlots(slots, color, amount, capacityPerSlot) {
+    if (slots.some(s => s.color === color && s.amount + amount <= capacityPerSlot)) return true;
+    return slots.some(s => s.color === null);
+  }
+
+  // remove `amount` of `color` from a single slot that holds enough of it.
+  // (items aren't split across slots — one slot must cover the whole amount.)
+  function removeFromSlots(slots, color, amount) {
+    const target = slots.find(s => s.color === color && s.amount >= amount);
+    if (!target) return false;
+    target.amount -= amount;
+    if (target.amount === 0) target.color = null;
+    return true;
+  }
+
+  function colorTotalInTubes(color) {
+    return tubes.filter(t => t.color === color).reduce((sum, t) => sum + t.amount, 0);
+  }
+
+  function colorTotalInVials(color) {
+    return vials.filter(v => v.color === color).reduce((sum, v) => sum + v.amount, 0);
+  }
+
+  function tubesUsedTotal() {
+    return tubes.reduce((sum, t) => sum + t.amount, 0);
+  }
+
+  function vialsUsedTotal() {
+    return vials.reduce((sum, v) => sum + v.amount, 0);
+  }
+
+  function bagMaxTotal() {
+    return TUBE_COUNT * bagCapacityPerTube;
+  }
+
+  function storageMaxTotal() {
+    return VIAL_COUNT * storageCapacityPerVial;
   }
 
   function unlockedRawColors() {
     return whiteUnlocked ? ["red", "blue", "yellow", "white"] : ["red", "blue", "yellow"];
   }
 
-  function unlockedMixedColors() {
-    return activeOrderColors();
-  }
-
-  function bagMaxTotal() {
-    return unlockedRawColors().length * bagCapacityPerTube;
-  }
-
-  function storageMaxTotal() {
-    return unlockedMixedColors().length * storageCapacityPerVial;
-  }
-
   function anyTubeHasRoom() {
-    return unlockedRawColors().some(color => bag[color] < bagCapacityPerTube);
+    return unlockedRawColors().some(color => canAddToSlots(tubes, color, 1, bagCapacityPerTube));
   }
 
   function randomBetween(min, max) {
@@ -679,23 +731,31 @@ function spawnMinion() {
 
   function renderBackpack() {
     bagContents.innerHTML = "";
-    unlockedRawColors().forEach(color => {
-      const filled = bag[color];
+    tubes.forEach((tube, index) => {
       const chip = document.createElement("div");
-      chip.className = "stashChip" + (filled > 0 ? " pickable" : " empty");
-      chip.textContent = `${colorInfo[color].emoji} ${filled}/${bagCapacityPerTube}`;
-      if (filled > 0) chip.addEventListener("click", () => selectForMixer(color));
+      if (tube.color) {
+        chip.className = "stashChip pickable";
+        chip.textContent = `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube}`;
+        chip.addEventListener("click", () => selectForMixerFromTube(index));
+      } else {
+        chip.className = "stashChip empty";
+        chip.textContent = "🧪 Empty";
+      }
       bagContents.appendChild(chip);
     });
   }
 
   function renderWarehouse() {
     storageContents.innerHTML = "";
-    unlockedMixedColors().forEach(color => {
-      const filled = storage[color];
+    vials.forEach(vial => {
       const chip = document.createElement("div");
-      chip.className = "stashChip" + (filled === 0 ? " empty" : "");
-      chip.textContent = `${colorInfo[color].emoji} ${colorInfo[color].label} ${filled}/${storageCapacityPerVial}`;
+      if (vial.color) {
+        chip.className = "stashChip";
+        chip.textContent = `${colorInfo[vial.color].emoji} ${colorInfo[vial.color].label} ${vial.amount}/${storageCapacityPerVial}`;
+      } else {
+        chip.className = "stashChip empty";
+        chip.textContent = "🧪 Empty";
+      }
       storageContents.appendChild(chip);
     });
   }
@@ -715,8 +775,8 @@ function spawnMinion() {
   }
 
   function renderAll() {
-    bagText.textContent = `${bagTotal()} / ${bagMaxTotal()}`;
-    storageText.textContent = `${storageTotal()} / ${storageMaxTotal()}`;
+    bagText.textContent = `${tubesUsedTotal()} / ${bagMaxTotal()}`;
+    storageText.textContent = `${vialsUsedTotal()} / ${storageMaxTotal()}`;
     coinsEl.textContent = coins;
 
     const orderInfo = colorInfo[currentOrder.color];
@@ -760,12 +820,12 @@ function spawnMinion() {
   function tapSource(source, fromMinion) {
     const color = source.dataset.color;
 
-    if (bag[color] >= bagCapacityPerTube) {
-      if (!fromMinion) say(`🧪 ${colorInfo[color].label} tube full!`);
+    const placed = addToSlots(tubes, color, 1, bagCapacityPerTube);
+    if (!placed) {
+      if (!fromMinion) say("🧪 No tube space left!");
       return;
     }
 
-    bag[color]++;
     totalGathered++;
 
     source.classList.remove("pop");
@@ -783,11 +843,16 @@ function spawnMinion() {
   // MIXER SELECTION
   // =========================================================
 
-  function selectForMixer(color) {
+  function selectForMixerFromTube(index) {
     if (mixerSlots.length >= 2) { say("Mixer full — tap a selected color to remove it"); return; }
-    if (bag[color] <= 0) return;
 
-    bag[color]--;
+    const tube = tubes[index];
+    if (!tube.color || tube.amount <= 0) return;
+
+    const color = tube.color;
+    tube.amount--;
+    if (tube.amount === 0) tube.color = null;
+
     mixerSlots.push(color);
     renderAll();
 
@@ -798,7 +863,7 @@ function spawnMinion() {
     const color = mixerSlots[index];
     if (color === undefined) return;
 
-    bag[color]++;
+    addToSlots(tubes, color, 1, bagCapacityPerTube);
     mixerSlots.splice(index, 1);
     renderAll();
   }
@@ -879,20 +944,28 @@ function spawnMinion() {
 
     if (!recipe) {
       say("That combo doesn't mix");
-      if (mixerSlots.length === 2) { bag[colorA]++; bag[colorB]++; }
+      if (mixerSlots.length === 2) {
+        addToSlots(tubes, colorA, 1, bagCapacityPerTube);
+        addToSlots(tubes, colorB, 1, bagCapacityPerTube);
+      }
       mixerSlots = [];
       renderAll();
       return;
     }
 
-    if (storage[recipe.result] >= storageCapacityPerVial) {
+    const weight = weightOf(recipe.result);
+
+    if (!canAddToSlots(vials, recipe.result, weight, storageCapacityPerVial)) {
       say(`🧪 ${colorInfo[recipe.result].label} vial full!`);
-      return;
+      return; // manual selections stay staged in the mixer — sell/fulfill a vial, then hit MIX again
     }
 
-    if (automaticMix) { bag[colorA]--; bag[colorB]--; }
+    if (automaticMix) {
+      removeFromSlots(tubes, colorA, 1);
+      removeFromSlots(tubes, colorB, 1);
+    }
 
-    storage[recipe.result]++;
+    addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
     totalMixed++;
     mixerSlots = [];
 
@@ -914,8 +987,8 @@ function spawnMinion() {
   const sellMixedCount = document.querySelector("#sellMixedCount");
 
   document.querySelector("#sellBtn").addEventListener("click", () => {
-    sellRawCount.textContent = bagTotal();
-    sellMixedCount.textContent = storageTotal();
+    sellRawCount.textContent = tubesUsedTotal();
+    sellMixedCount.textContent = vialsUsedTotal();
     sellOverlay.classList.add("open");
   });
 
@@ -924,14 +997,14 @@ function spawnMinion() {
   });
 
   document.querySelector("#sellRawBtn").addEventListener("click", () => {
-    const earned = bagTotal();
+    const earned = tubesUsedTotal();
     sellOverlay.classList.remove("open");
 
     if (earned === 0) { say("No raw colors to sell"); return; }
 
     coins += earned;
     totalSold += earned;
-    Object.keys(bag).forEach(color => bag[color] = 0);
+    initTubes();
 
     say(`🪙 Sold raw colors +${earned}`);
     renderAll();
@@ -941,14 +1014,14 @@ function spawnMinion() {
   });
 
   document.querySelector("#sellMixedBtn").addEventListener("click", () => {
-    const earned = storageTotal();
+    const earned = vialsUsedTotal();
     sellOverlay.classList.remove("open");
 
     if (earned === 0) { say("No mixed colors to sell"); return; }
 
     coins += earned;
     totalSold += earned;
-    Object.keys(storage).forEach(color => storage[color] = 0);
+    initVials();
 
     say(`🪙 Sold mixed colors +${earned}`);
     renderAll();
@@ -963,13 +1036,13 @@ function spawnMinion() {
 
   document.querySelector("#fulfillBtn").addEventListener("click", () => {
     const neededColor = currentOrder.color;
+    const weight = weightOf(neededColor);
 
-    if (storage[neededColor] <= 0) {
+    if (!removeFromSlots(vials, neededColor, weight)) {
       say(`Need ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label}`);
       return;
     }
 
-    storage[neededColor]--;
     const earnedReward = currentOrder.reward;
     coins += earnedReward;
     totalFulfilled++;
@@ -1015,7 +1088,7 @@ function spawnMinion() {
   function saveState() {
     try {
       const data = {
-        coins, bag, bagCapacityPerTube, storage, storageCapacityPerVial,
+        coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
         whiteUnlocked, minionCount, minionSpeedLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         questIndex, currentOrder, sourcePositions,
@@ -1035,9 +1108,9 @@ function spawnMinion() {
       const data = JSON.parse(raw);
 
       coins = data.coins ?? coins;
-      Object.assign(bag, data.bag || {});
+      if (Array.isArray(data.tubes) && data.tubes.length === TUBE_COUNT) tubes = data.tubes;
       bagCapacityPerTube = data.bagCapacityPerTube ?? bagCapacityPerTube;
-      Object.assign(storage, data.storage || {});
+      if (Array.isArray(data.vials) && data.vials.length === VIAL_COUNT) vials = data.vials;
       storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
       whiteUnlocked = data.whiteUnlocked ?? whiteUnlocked;
       minionCount = data.minionCount ?? minionCount;
@@ -1087,6 +1160,8 @@ function spawnMinion() {
   // START
   // =========================================================
 
+  initTubes();
+  initVials();
   loadState();
   initSourcePositions();
   applySourcePositions();
