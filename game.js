@@ -537,6 +537,7 @@ function spawnMinion() {
   const message = document.querySelector("#message");
   const dropperToggle = document.querySelector("#dropperToggle");
   const dropperChips = document.querySelector("#dropperChips");
+  const dropperFloaterEl = document.querySelector("#dropperFloater");
   const storeBadge = document.querySelector("#storeBadge");
 
   // =========================================================
@@ -717,7 +718,7 @@ function spawnMinion() {
       if (tube.color) {
         chip.className = "stashChip" + (dropperArmed ? " pickable" : "");
         chip.textContent = `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube}`;
-        chip.addEventListener("click", () => feedDropperFromTube(index));
+        chip.addEventListener("click", event => feedDropperFromTube(index, event));
       } else {
         chip.className = "stashChip empty";
         chip.textContent = "🧪 Empty";
@@ -744,6 +745,7 @@ function spawnMinion() {
   function renderDropper() {
     dropperToggle.textContent = dropperArmed ? "❌" : "💧";
     dropperToggle.classList.toggle("armed", dropperArmed);
+    dropperFloaterEl.classList.toggle("visible", dropperArmed);
 
     dropperChips.innerHTML = "";
     dropperIngredients.forEach(ingredient => {
@@ -752,6 +754,12 @@ function spawnMinion() {
       chip.textContent = colorInfo[ingredient.color].emoji;
       dropperChips.appendChild(chip);
     });
+  }
+
+  function positionDropperFloaterAtElement(el) {
+    const rect = el.getBoundingClientRect();
+    dropperFloaterEl.style.left = (rect.left + rect.width / 2) + "px";
+    dropperFloaterEl.style.top = (rect.top + rect.height / 2) + "px";
   }
 
   function renderAll() {
@@ -826,7 +834,7 @@ function spawnMinion() {
   // DROPPER — pick it up, tap 2 colors (bucket or tube), it mixes itself
   // =========================================================
 
-  function toggleDropper() {
+  function toggleDropper(event) {
     if (dropperArmed) {
       // cancelling: hand back anything pulled from a tube (field-collected drops are just lost)
       dropperIngredients.forEach(ingredient => {
@@ -837,11 +845,12 @@ function spawnMinion() {
     } else {
       dropperArmed = true;
       dropperIngredients = [];
+      if (event && event.currentTarget) positionDropperFloaterAtElement(event.currentTarget);
     }
     renderAll();
   }
 
-  function feedDropperFromTube(index) {
+  function feedDropperFromTube(index, event) {
     if (!dropperArmed) return;
 
     const tube = tubes[index];
@@ -851,11 +860,13 @@ function spawnMinion() {
     tube.amount--;
     if (tube.amount === 0) tube.color = null;
 
+    if (event && event.currentTarget) positionDropperFloaterAtElement(event.currentTarget);
     addIngredientToDropper(color, "tube");
   }
 
   function feedDropperFromField(source) {
     if (!dropperArmed) return;
+    positionDropperFloaterAtElement(source);
     addIngredientToDropper(source.dataset.color, "field");
     spawnFloater(source, `💧 ${colorInfo[source.dataset.color].emoji}`);
   }

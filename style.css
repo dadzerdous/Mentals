@@ -204,7 +204,28 @@ button:disabled { opacity: .4; }
 }
 .dropperToggle.armed { background: #ffdcdc; }
 
+.dropperLabel { font-size: 10px; opacity: .6; margin-left: 3px; }
+
 .dropperChips { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+
+.dropperFloater {
+  position: fixed;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -140%);
+  font-size: 30px;
+  pointer-events: none;
+  z-index: 50;
+  display: none;
+  filter: drop-shadow(0 4px 2px rgba(43,41,39,.3));
+  animation: dropperBob 1s ease-in-out infinite;
+}
+.dropperFloater.visible { display: block; }
+
+@keyframes dropperBob {
+  0%   { transform: translate(-50%, -140%) rotate(-8deg) scale(1); }
+  50%  { transform: translate(-50%, -150%) rotate(8deg) scale(1.08); }
+  100% { transform: translate(-50%, -140%) rotate(-8deg) scale(1); }
+}
 .mixChip {
   background: #fff8e6; border: 2px solid #2b2927; border-radius: 999px;
   width: 22px; height: 22px; font-size: 12px; display: grid; place-items: center; cursor: pointer;
