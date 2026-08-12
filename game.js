@@ -127,9 +127,14 @@
   // =========================================================
 
   const quests = [
-    { id: "collect5", desc: "Collect 5 raw colors", type: "gather", target: 5, reward: 15 },
-    { id: "sell5", desc: "Sell 5 raw colors", type: "sell", target: 5, reward: 20 },
-    { id: "mix3", desc: "Mix 3 colors together", type: "mix", target: 3, reward: 25 },
+    { id: "collect4", desc: "Collect 4 red paint (fill your first tube)", type: "gather", target: 4, reward: 5 },
+    { id: "sell4", desc: "Sell some red paint", type: "sell", target: 4, reward: 8 },
+    { id: "buyYellow", desc: "Buy Yellow at the Store", type: "yellow", target: 1, reward: 10 },
+    { id: "buyMixer", desc: "Buy the Mixer at the Store", type: "mixerUnlock", target: 1, reward: 10 },
+    { id: "firstMix", desc: "Mix your first color", type: "mix", target: 1, reward: 15 },
+    { id: "buyVial2", desc: "Buy a second Warehouse container", type: "vial2", target: 1, reward: 15 },
+    { id: "buyBlue", desc: "Buy Blue at the Store", type: "blue", target: 1, reward: 15 },
+    { id: "buyOrders", desc: "Buy Orders at the Store", type: "orders", target: 1, reward: 20 },
     { id: "fulfill3", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
     { id: "collect20", desc: "Collect 20 raw colors total", type: "gather", target: 20, reward: 40 }
   ];
@@ -140,6 +145,11 @@
     if (type === "sell") return totalSold;
     if (type === "mix") return totalMixed;
     if (type === "fulfill") return totalFulfilled;
+    if (type === "yellow") return yellowUnlocked ? 1 : 0;
+    if (type === "mixerUnlock") return mixerUnlocked ? 1 : 0;
+    if (type === "blue") return blueUnlocked ? 1 : 0;
+    if (type === "vial2") return VIAL_COUNT >= 2 ? 1 : 0;
+    if (type === "orders") return ordersUnlocked ? 1 : 0;
     return 0;
   }
 
@@ -245,7 +255,7 @@
       level: 0,
       baseCost: 15,
       growth: 2,
-      visible: () => ordersUnlocked,
+      visible: () => yellowUnlocked,
       desc: function () { return `Adds another tube to your toolbelt. You have ${TUBE_COUNT} now.`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { tubes.push({ color: null, amount: 0 }); TUBE_COUNT++; this.level++; }
@@ -256,7 +266,7 @@
       level: 0,
       baseCost: 20,
       growth: 2,
-      visible: () => ordersUnlocked,
+      visible: () => mixerUnlocked,
       desc: function () { return `Adds another container to the Warehouse. You have ${VIAL_COUNT} now.`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { vials.push({ color: null, amount: 0 }); VIAL_COUNT++; this.level++; }
