@@ -10,7 +10,9 @@
   let VIAL_COUNT = 1;
 
   // onboarding gates — teach one thing at a time before the full game opens up
-  let yellowBucketPurchased = false;
+  let primaryBucketSlots = 0;      // purchased extra primary buckets
+  let primaryBucketColors = [];    // colors currently occupying those buckets
+  let firstPrimaryChoice = null;   // "yellow" or "blue"
   let yellowUnlocked = false;
   let mixerUnlocked = false;
   let blueUnlocked = false;
@@ -44,6 +46,7 @@
   let totalSold = 0;
   let totalMixed = 0;
   let totalFulfilled = 0;
+  let studioEarningsBonus = 0;
 
   let activeStoreTab = "store";
   let sellMode = false;
@@ -132,6 +135,7 @@
   let currentProcessIndex = 0;
   let followedStepId = "gatherRed";
   let completedJournalSteps = {};
+  let completedProcessRewards = {};
   let colorGuideUnlocked = false;
   let activeJournalTab = "processes";
   const discoveredColors = {};
@@ -141,46 +145,52 @@
       id: "firstPaint",
       title: "Process 1 — My First Paint",
       description: "Learn the basics of gathering and selling paint.",
+      completionText: "Store unlocked!",
       steps: [
-        { id: "gatherRed", desc: "Gather 4 Red paint", target: 4, reward: 5, progress: () => Math.min(totalGathered, 4) },
-        { id: "sellRed", desc: "Sell 4 paint", target: 4, reward: 8, progress: () => Math.min(totalSold, 4) }
+        { id: "gatherRed", desc: "Gather 4 Red paint", target: 4, progress: () => Math.min(totalGathered, 4) },
+        { id: "sellRed", desc: "Sell 4 paint", target: 4, progress: () => Math.min(totalSold, 4) }
       ]
     },
     {
       id: "yellowBucket",
       title: "Process 2 — Add a Primary",
       description: "Add another permanent primary bucket, then stock it with Yellow paint.",
+      completionText: "Primary production expanded!",
       steps: [
-        { id: "buyPrimaryBucket", desc: "Buy a Primary Bucket", target: 1, reward: 5, progress: () => yellowBucketPurchased ? 1 : 0 },
-        { id: "buyYellow", desc: "Buy Yellow paint for the bucket", target: 1, reward: 8, progress: () => yellowUnlocked ? 1 : 0 }
+        { id: "buyPrimaryBucket", desc: "Buy a Primary Bucket", target: 1, progress: () => primaryBucketSlots >= 1 ? 1 : 0 },
+        { id: "buyNewColor", desc: "Buy a new primary color", target: 1, progress: () => (yellowUnlocked || blueUnlocked) ? 1 : 0 }
       ]
     },
     {
       id: "experiment",
       title: "Process 3 — Experiment",
       description: "Set up the tools you need to begin mixing paint.",
+      completionText: "Mixing production established!",
       steps: [
-        { id: "buyMixer", desc: "Buy the Mixer", target: 1, reward: 10, progress: () => mixerUnlocked ? 1 : 0 },
-        { id: "firstMix", desc: "Create your first mixed color", target: 1, reward: 15, progress: () => Math.min(totalMixed, 1) },
-        { id: "buyVial2", desc: "Buy a second Warehouse container", target: 1, reward: 15, progress: () => VIAL_COUNT >= 2 ? 1 : 0 }
+        { id: "buyMixer", desc: "Buy the Mixer", target: 1, progress: () => mixerUnlocked ? 1 : 0 },
+        { id: "firstMix", desc: "Create your first mixed color", target: 1, progress: () => Math.min(totalMixed, 1) },
+        { id: "buyVial2", desc: "Buy a second Warehouse container", target: 1, progress: () => VIAL_COUNT >= 2 ? 1 : 0 }
       ]
     },
     {
       id: "primaries",
       title: "Process 4 — Complete the Primaries",
       description: "Bring the third primary into the studio and begin working with customers.",
+      completionText: "Orders unlocked!",
       steps: [
-        { id: "buyBlue", desc: "Buy the Blue bucket", target: 1, reward: 15, progress: () => blueUnlocked ? 1 : 0 },
-        { id: "buyOrders", desc: "Open Orders", target: 1, reward: 20, progress: () => ordersUnlocked ? 1 : 0 }
+        { id: "buyPrimaryBucket2", desc: "Buy another Primary Bucket", target: 1, progress: () => primaryBucketSlots >= 2 ? 1 : 0 },
+        { id: "buyRemainingPrimary", desc: "Buy the remaining primary color", target: 1, progress: () => (yellowUnlocked && blueUnlocked) ? 1 : 0 },
+        { id: "buyOrders", desc: "Open Orders", target: 1, progress: () => ordersUnlocked ? 1 : 0 }
       ]
     },
     {
       id: "workingArtist",
       title: "Process 5 — Working Artist",
       description: "Put the studio to work.",
+      completionText: "Studio earnings boosted!",
       steps: [
-        { id: "fulfill3", desc: "Fulfill 3 orders", target: 3, reward: 30, progress: () => Math.min(totalFulfilled, 3) },
-        { id: "collect20", desc: "Gather 20 paint total", target: 20, reward: 40, progress: () => Math.min(totalGathered, 20) }
+        { id: "fulfill3", desc: "Fulfill 3 orders", target: 3, progress: () => Math.min(totalFulfilled, 3) },
+        { id: "collect20", desc: "Gather 20 paint total", target: 20, progress: () => Math.min(totalGathered, 20) }
       ]
     }
   ];
@@ -219,35 +229,68 @@
     }
   }
 
+  function awardProcessCompletion(process) {
+    if (!process || completedProcessRewards[process.id]) return;
+    completedProcessRewards[process.id] = true;
+
+    // Process rewards are progression rewards, not little coin payouts.
+    if (process.id === "firstPaint") {
+      // Completing Process 1 unlocks the Store.
+      say("🎉 Process complete — Store unlocked!");
+    } else if (process.id === "yellowBucket") {
+      // Strong incremental reward: make the first tube roomier.
+      bagCapacityPerTube += 2;
+      say("🎉 Process complete — Paint Case capacity increased!");
+    } else if (process.id === "experiment") {
+      // Strong incremental reward: increase mixed storage capacity.
+      storageCapacityPerVial += 2;
+      say("🎉 Process complete — Vial capacity increased!");
+    } else if (process.id === "primaries") {
+      say("🎉 Process complete — Customer work established!");
+    } else if (process.id === "workingArtist") {
+      // Simple earnings milestone for now: future order payouts get boosted.
+      studioEarningsBonus += 1;
+      say("🎉 Process complete — Studio earnings +1!");
+    }
+
+    saveState();
+  }
+
   function advanceCompletedProcesses() {
     while (
       currentProcessIndex < processes.length - 1 &&
       isProcessComplete(processes[currentProcessIndex])
     ) {
+      const completed = processes[currentProcessIndex];
+      awardProcessCompletion(completed);
       currentProcessIndex++;
       followedStepId = firstIncompleteStep(getCurrentProcess()).id;
-      say(`📖 ${getCurrentProcess().title} started`);
+    }
+
+    if (
+      currentProcessIndex === processes.length - 1 &&
+      isProcessComplete(processes[currentProcessIndex])
+    ) {
+      awardProcessCompletion(processes[currentProcessIndex]);
     }
   }
 
   function checkJournalSteps() {
-    let rewarded = false;
+    let changed = false;
     const current = getCurrentProcess();
 
     current.steps.forEach(step => {
       if (!isStepComplete(step) && step.progress() >= step.target) {
         completedJournalSteps[step.id] = true;
-        coins += step.reward;
-        pulseCoins(step.reward);
-        rewarded = true;
-        say(`✅ Step complete! +${step.reward}`);
+        changed = true;
+        say("✅ Step complete!");
       }
     });
 
     advanceCompletedProcesses();
     ensureFollowedStep();
 
-    if (rewarded) {
+    if (changed) {
       renderAll();
     } else {
       renderJournalTeaser();
@@ -453,6 +496,63 @@
     setJournalTab(activeJournalTab);
   }
 
+  function emptyPrimaryBucketCount() {
+    return Math.max(0, primaryBucketSlots - primaryBucketColors.length);
+  }
+
+  function primaryColorOwned(color) {
+    return color === "yellow" ? yellowUnlocked : color === "blue" ? blueUnlocked : false;
+  }
+
+  function primaryColorPrice(color) {
+    // First extra primary is cheap. The unchosen primary gets more expensive.
+    if (!firstPrimaryChoice) return 5;
+    if (firstPrimaryChoice === color) return 5;
+    return 12;
+  }
+
+  function canPurchasePrimaryColor(color) {
+    if (primaryColorOwned(color)) return false;
+    return emptyPrimaryBucketCount() > 0;
+  }
+
+  function purchasePrimaryColor(color) {
+    if (primaryColorOwned(color)) {
+      say(`${colorInfo[color].label} is already in a bucket`);
+      return false;
+    }
+
+    if (emptyPrimaryBucketCount() <= 0) {
+      say(`🚫 No empty bucket for ${colorInfo[color].label}!`);
+      return false;
+    }
+
+    const price = primaryColorPrice(color);
+    if (coins < price) {
+      say("Not enough coins");
+      return false;
+    }
+
+    coins -= price;
+    primaryBucketColors.push(color);
+
+    if (!firstPrimaryChoice) firstPrimaryChoice = color;
+
+    if (color === "yellow") {
+      yellowUnlocked = true;
+      document.querySelector("#yellow").style.display = "grid";
+    } else if (color === "blue") {
+      blueUnlocked = true;
+      document.querySelector("#blue").style.display = "grid";
+    }
+
+    say(`${colorInfo[color].emoji} ${colorInfo[color].label} added to your new bucket!`);
+    renderAll();
+    checkJournalSteps();
+    saveState();
+    return true;
+  }
+
   // =========================================================
   // STORE ITEMS (one-time / repeatable tool purchases)
   // =========================================================
@@ -462,65 +562,56 @@
       id: "buyPrimaryBucket",
       name: "Buy a Primary Bucket",
       level: 0,
-      maxLevel: 1,
+      maxLevel: 2,
       baseCost: 10,
-      growth: 1,
-      visible: () => currentProcessIndex >= 1 && !yellowBucketPurchased,
-      desc: () => "Adds an empty permanent primary bucket to your studio",
-      cost: function () { return this.baseCost; },
+      growth: 2,
+      visible: () => {
+        if (currentProcessIndex < 1) return false;
+        // First extra primary bucket is available in Process 2.
+        if (primaryBucketSlots === 0) return true;
+        // Second becomes available after the first mixed-color discovery / Process 4.
+        return currentProcessIndex >= 3 && primaryBucketSlots < 2;
+      },
+      desc: function () {
+        return primaryBucketSlots === 0
+          ? "Adds one empty permanent primary bucket to your studio"
+          : "Adds another empty permanent primary bucket to your studio";
+      },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () {
-        yellowBucketPurchased = true;
-        this.level = 1;
+        primaryBucketSlots++;
+        this.level++;
       }
     },
     {
       id: "unlockYellow",
-      name: "Buy Yellow Paint",
+      name: "Yellow Paint",
       level: 0,
       maxLevel: 1,
       baseCost: 5,
       growth: 1,
-      visible: () => currentProcessIndex >= 1 && yellowBucketPurchased && !yellowUnlocked,
-      desc: () => "Stocks your new permanent primary bucket with Yellow paint",
-      cost: function () { return this.baseCost; },
-      buy: function () {
-        yellowUnlocked = true;
-        yellowBucketPurchased = true;
-        this.level = 1;
-        document.querySelector("#yellow").style.display = "grid";
-      }
-    },
-    {
-      id: "unlockMixer",
-      name: "Unlock Mixer",
-      level: 0,
-      maxLevel: 1,
-      baseCost: 20,
-      growth: 1,
-      visible: () => currentProcessIndex >= 2 && yellowUnlocked && !mixerUnlocked,
-      desc: () => "Unlocks the Warehouse and the mixing dropper",
-      cost: function () { return this.baseCost; },
-      buy: function () {
-        mixerUnlocked = true;
-        this.level = 1;
-        document.querySelector("#warehouseRow").style.display = "block";
-      }
+      visible: () => currentProcessIndex >= 1 && !yellowUnlocked,
+      desc: () => emptyPrimaryBucketCount() > 0
+        ? `Fill an empty primary bucket with Yellow`
+        : `No empty primary bucket available`,
+      cost: function () { return primaryColorPrice("yellow"); },
+      customBuy: () => purchasePrimaryColor("yellow"),
+      buy: function () {}
     },
     {
       id: "unlockBlue",
-      name: "Unlock Blue",
+      name: "Blue Paint",
       level: 0,
       maxLevel: 1,
-      baseCost: 30,
+      baseCost: 5,
       growth: 1,
-      visible: () => mixerUnlocked && !blueUnlocked,
-      desc: () => "Adds the Blue paint bucket to your field",
-      cost: function () { return this.baseCost; },
-      buy: function () {
-        blueUnlocked = true;
-        this.level = 1;
-        document.querySelector("#blue").style.display = "grid";
-      }
+      visible: () => currentProcessIndex >= 1 && !blueUnlocked,
+      desc: () => emptyPrimaryBucketCount() > 0
+        ? `Fill an empty primary bucket with Blue`
+        : `No empty primary bucket available`,
+      cost: function () { return primaryColorPrice("blue"); },
+      customBuy: () => purchasePrimaryColor("blue"),
+      buy: function () {}
     },
     {
       id: "unlockOrders",
@@ -529,7 +620,7 @@
       maxLevel: 1,
       baseCost: 40,
       growth: 1,
-      visible: () => blueUnlocked && !ordersUnlocked,
+      visible: () => yellowUnlocked && blueUnlocked && !ordersUnlocked,
       desc: () => "Customers start placing paint orders for coins",
       cost: function () { return this.baseCost; },
       buy: function () {
@@ -669,11 +760,17 @@
     const item = list.find(i => i.id === id);
     if (!item) return;
     if (item.maxLevel && item.level >= item.maxLevel) return;
+
+    if (item.customBuy) {
+      item.customBuy();
+      return;
+    }
+
     const cost = item.cost();
     if (coins < cost) { say("Not enough coins"); return; }
     coins -= cost;
     item.buy();
-    say(`${item.name} upgraded!`);
+    say(`${item.name} purchased!`);
     renderAll();
     checkJournalSteps();
   }
@@ -681,6 +778,8 @@
   function renderUpgradeCard(item, list) {
     const maxed = item.maxLevel && item.level >= item.maxLevel;
     const locked = item.requires && !item.requires();
+    const primaryPaintItem = item.id === "unlockYellow" || item.id === "unlockBlue";
+    const primaryPaintPreBucketLocked = primaryPaintItem && primaryBucketSlots === 0;
 
     const card = document.createElement("div");
     card.className = "upgradeCard";
@@ -695,7 +794,8 @@
     const buyBtn = document.createElement("button");
     buyBtn.className = "upgradeBuyBtn";
     buyBtn.textContent = maxed ? "✓" : `🪙 ${item.cost()}`;
-    buyBtn.disabled = maxed || locked || coins < item.cost();
+    buyBtn.disabled = maxed || locked || primaryPaintPreBucketLocked || coins < item.cost();
+    if (primaryPaintPreBucketLocked) card.classList.add("storeItemLocked");
     buyBtn.addEventListener("click", () => buyFromList(list, item.id));
 
     card.appendChild(info);
@@ -996,7 +1096,7 @@ function spawnMinion() {
 
   function showSellHint(dimmed = false) {
     clearTimeout(message._timer);
-    message.textContent = "Tap a tube to sell paint • Tap a vial to sell the whole vial";
+    message.textContent = "Tap a bucket, tube, or vial to sell paint";
     message.classList.add("show");
     message.classList.toggle("dimmed", dimmed);
   }
@@ -1448,14 +1548,23 @@ function spawnMinion() {
         source.classList.remove("pressed");
         if (!longPressFired && !moved) {
           if (sellMode) {
+            const color = source.dataset.color;
+            const earned = 1 + studioEarningsBonus;
+            coins += earned;
+            totalSold += 1;
+
             source.classList.remove("sellBucketHint");
             void source.offsetWidth;
             source.classList.add("sellBucketHint");
+            pulseCoins(earned);
             showSellHint(false);
+
             setTimeout(() => {
               source.classList.remove("sellBucketHint");
               showSellHint(true);
             }, 650);
+
+            checkJournalSteps();
           } else if (dropperArmed) {
             feedDropperFromField(source);
           } else {
@@ -1528,7 +1637,7 @@ function spawnMinion() {
     if (!tube || !tube.color || tube.amount <= 0) return;
 
     const color = tube.color;
-    const earned = tube.amount;
+    const earned = tube.amount + studioEarningsBonus;
 
     coins += earned;
     totalSold += tube.amount;
@@ -1657,7 +1766,7 @@ function spawnMinion() {
       return;
     }
 
-    const earnedReward = currentOrder.reward;
+    const earnedReward = currentOrder.reward + studioEarningsBonus;
     coins += earnedReward;
     pulseCoins(earnedReward);
     totalFulfilled++;
@@ -1725,9 +1834,9 @@ function spawnMinion() {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
-        yellowBucketPurchased, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
+        primaryBucketSlots, primaryBucketColors, firstPrimaryChoice, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
-        totalGathered, totalSold, totalMixed, totalFulfilled,
+        totalGathered, totalSold, totalMixed, totalFulfilled, studioEarningsBonus,
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
         currentOrder, sourcePositions,
@@ -1758,6 +1867,9 @@ function spawnMinion() {
       }
       storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
       yellowBucketPurchased = data.yellowBucketPurchased ?? data.yellowUnlocked ?? yellowBucketPurchased;
+      primaryBucketSlots = data.primaryBucketSlots ?? primaryBucketSlots;
+      primaryBucketColors = Array.isArray(data.primaryBucketColors) ? data.primaryBucketColors : primaryBucketColors;
+      firstPrimaryChoice = data.firstPrimaryChoice ?? firstPrimaryChoice;
       yellowUnlocked = data.yellowUnlocked ?? yellowUnlocked;
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
@@ -1781,6 +1893,7 @@ function spawnMinion() {
       totalSold = data.totalSold ?? totalSold;
       totalMixed = data.totalMixed ?? totalMixed;
       totalFulfilled = data.totalFulfilled ?? totalFulfilled;
+      studioEarningsBonus = data.studioEarningsBonus ?? studioEarningsBonus;
       if (typeof data.currentProcessIndex === "number") currentProcessIndex = data.currentProcessIndex;
       followedStepId = data.followedStepId ?? followedStepId;
 

@@ -543,3 +543,33 @@ button:disabled { opacity: .4; }
   border-radius: 14px;
   font-size: 12px;
 }
+
+
+/* ---- v0.18 tools rail sell row ---- */
+.toolRailRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  width: max-content;
+}
+
+.toolRailRow #sellAllBtn {
+  width: 58px;
+  min-height: 54px;
+}
+
+/* While Sell All is visible, it sits immediately to the right of Sell. */
+#sellAllBtn {
+  margin: 0;
+}
+
+
+/* ---- v0.19 primary bucket / color choice ---- */
+.upgradeCard.storeItemLocked {
+  opacity: .45;
+  filter: grayscale(.7);
+}
+
+.upgradeCard.storeItemLocked .upgradeBuyBtn {
+  cursor: not-allowed;
+}
