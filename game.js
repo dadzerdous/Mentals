@@ -1526,18 +1526,23 @@ function spawnMinion() {
   function sellOneFromTube(index) {
     const tube = tubes[index];
     if (!tube || !tube.color || tube.amount <= 0) return;
-    const chipEl = bagContents.children[index];
+
     const color = tube.color;
-    tube.amount--;
-    if (tube.amount === 0) tube.color = null;
-    coins += 1;
-    totalSold += 1;
-    sellImpactAt(chipEl, "+1");
-    pulseCoins(1);
+    const earned = tube.amount;
+
+    coins += earned;
+    totalSold += tube.amount;
+
+    tube.color = null;
+    tube.amount = 0;
+
+    coinBurstFromElement(bagContents.children[index], earned);
     renderAll();
     showSellHint(true);
+
     checkQuests();
-    if (navigator.vibrate) navigator.vibrate(16);
+
+    if (navigator.vibrate) navigator.vibrate(24);
   }
 
   function sellOneFromVial(index) {
@@ -1827,7 +1832,7 @@ function spawnMinion() {
 
   const resetConfirmOverlay = document.querySelector("#resetConfirmOverlay");
 
-  document.querySelector("#resetBtn").addEventListener("click", () => {
+  document.querySelector("#journalResetBtn").addEventListener("click", () => {
     resetConfirmOverlay.classList.add("open");
   });
 

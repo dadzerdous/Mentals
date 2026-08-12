@@ -533,3 +533,14 @@ button:disabled { opacity: .4; }
   35% { transform: scale(.94); box-shadow: 0 0 0 7px rgba(255,183,0,.22); }
   100% { transform: scale(1); }
 }
+
+
+/* ---- v0.17 journal reset ---- */
+.journalResetBtn {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  background: #ffdcdc;
+  border-radius: 14px;
+  font-size: 12px;
+}
