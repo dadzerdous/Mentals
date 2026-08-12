@@ -747,3 +747,17 @@ button:disabled { opacity: .4; }
     transform: scale(1.02);
   }
 }
+
+
+/* ---- v0.25 store affordability cleanup ---- */
+.upgradeCard:not(.affordable):not(.storeItemLocked):not(.soldOut) {
+  background: #fff;
+  box-shadow: none;
+}
+
+.upgradeBuyBtn:not(.affordable) {
+  background: #fff;
+}
+
+.canvasTapSplatMain { opacity: .8; }
+.canvasTapDrop { opacity: .72; }

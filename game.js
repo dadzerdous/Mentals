@@ -13,6 +13,7 @@
   let primaryBucketSlots = 0;      // purchased extra primary buckets
   let primaryBucketColors = [];    // colors currently occupying those buckets
   let firstPrimaryChoice = null;   // "yellow" or "blue"
+  let pendingPrimaryBucketPosition = null;
   let yellowUnlocked = false;
   let mixerUnlocked = false;
   let blueUnlocked = false;
@@ -545,14 +546,27 @@
 
     if (color === "yellow") {
       yellowUnlocked = true;
-      document.querySelector("#yellow").style.display = "grid";
+      const el = document.querySelector("#yellow");
+      el.style.display = "grid";
+      if (pendingPrimaryBucketPosition) {
+        el.style.left = pendingPrimaryBucketPosition.left + "px";
+        el.style.top = pendingPrimaryBucketPosition.top + "px";
+        sourcePositions.yellow = { ...pendingPrimaryBucketPosition };
+      }
     } else if (color === "blue") {
       blueUnlocked = true;
-      document.querySelector("#blue").style.display = "grid";
+      const el = document.querySelector("#blue");
+      el.style.display = "grid";
+      if (pendingPrimaryBucketPosition) {
+        el.style.left = pendingPrimaryBucketPosition.left + "px";
+        el.style.top = pendingPrimaryBucketPosition.top + "px";
+        sourcePositions.blue = { ...pendingPrimaryBucketPosition };
+      }
     }
 
     const emptyBucketEl = document.querySelector("#emptyPrimaryBucket");
     if (emptyBucketEl) emptyBucketEl.dataset.placed = "false";
+    pendingPrimaryBucketPosition = null;
     refreshPrimaryBucketVisual();
     say(`${colorInfo[color].emoji} ${colorInfo[color].label} added to your new bucket!`);
     renderAll();
@@ -637,6 +651,7 @@
     emptyBucket.style.left = chosen.left + "px";
     emptyBucket.style.top = chosen.top + "px";
     emptyBucket.dataset.placed = "true";
+    pendingPrimaryBucketPosition = { left: chosen.left, top: chosen.top };
   }
 
   // =========================================================
@@ -1370,14 +1385,17 @@ function spawnMinion() {
     const centerX = sourceRect.left - gameRect.left + sourceRect.width / 2;
     const centerY = sourceRect.top - gameRect.top + sourceRect.height / 2;
 
-    const offsetX = randomBetween(-24, 24);
-    const offsetY = randomBetween(-18, 18);
+    // Start just outside the bucket edge so the paint reads as hitting the canvas.
+    const angle = randomBetween(0, Math.PI * 2);
+    const edgeDistance = randomBetween(sourceRect.width * .58, sourceRect.width * .88);
+    const offsetX = Math.cos(angle) * edgeDistance;
+    const offsetY = Math.sin(angle) * edgeDistance;
 
     wrap.style.left = `${centerX + offsetX}px`;
     wrap.style.top = `${centerY + offsetY}px`;
 
     const splatColor = paintSplatColors[color] || "#999";
-    const size = randomBetween(20, 42);
+    const size = randomBetween(26, 48);
 
     const main = document.createElement("div");
     main.className = "canvasTapSplatMain";
@@ -1441,7 +1459,7 @@ function paintSplatBurst(color) {
         });
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧪 Empty";
+        chip.textContent = "🧪 Empty Vial";
       }
       bagContents.appendChild(chip);
     });
@@ -1460,7 +1478,7 @@ function paintSplatBurst(color) {
         if (sellMode) chip.addEventListener("click", () => sellOneFromVial(index));
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧪 Empty";
+        chip.textContent = "🧪 Empty Vial";
       }
       storageContents.appendChild(chip);
     });
@@ -1508,6 +1526,12 @@ function paintSplatBurst(color) {
     renderDropper();
     renderQuest();
     refreshPrimaryBucketVisual();
+
+    const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
+    if (mixerToolBtnEl) mixerToolBtnEl.style.display = mixerUnlocked ? "flex" : "none";
+
+    const warehouseRowEl = document.querySelector("#warehouseRow");
+    if (warehouseRowEl) warehouseRowEl.style.display = mixerUnlocked ? "block" : "none";
 
     const storeBtnElForHighlight = document.querySelector("#storeBtn");
     if (storeBtnElForHighlight) {
@@ -1680,6 +1704,17 @@ function paintSplatBurst(color) {
   }
 
   dropperToggle.addEventListener("click", toggleDropper);
+
+
+  field.addEventListener("pointerdown", event => {
+    const choices = document.querySelector("#sellAllChoices");
+    if (!choices || !choices.classList.contains("open")) return;
+
+    // Clicking the open canvas closes only the Sell All submenu.
+    if (!event.target.closest(".source") && !event.target.closest(".toolRailBtn") && !event.target.closest(".toolRailChoiceBtn")) {
+      choices.classList.remove("open");
+    }
+  });
 
   // =========================================================
   // RAW COLOR INPUT — tap to gather, hold to rearrange
@@ -2025,7 +2060,7 @@ function paintSplatBurst(color) {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
-        primaryBucketSlots, primaryBucketColors, firstPrimaryChoice, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
+        primaryBucketSlots, primaryBucketColors, firstPrimaryChoice, pendingPrimaryBucketPosition, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled, studioEarningsBonus,
         currentProcessIndex, followedStepId, completedJournalSteps,
@@ -2061,6 +2096,7 @@ function paintSplatBurst(color) {
       primaryBucketSlots = data.primaryBucketSlots ?? primaryBucketSlots;
       primaryBucketColors = Array.isArray(data.primaryBucketColors) ? data.primaryBucketColors : primaryBucketColors;
       firstPrimaryChoice = data.firstPrimaryChoice ?? firstPrimaryChoice;
+      pendingPrimaryBucketPosition = data.pendingPrimaryBucketPosition ?? pendingPrimaryBucketPosition;
       yellowUnlocked = data.yellowUnlocked ?? yellowUnlocked;
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
