@@ -45,6 +45,9 @@
   let totalFulfilled = 0;
 
   let activeStoreTab = "store";
+  let activeJournalTab = "processes";
+  let colorGuideUnlocked = false;
+  const discoveredColors = new Set(["red"]);
 
   const GRID = 30;
 
@@ -127,16 +130,16 @@
   // =========================================================
 
   const quests = [
-    { id: "collect4", desc: "Collect 4 red paint (fill your first tube)", type: "gather", target: 4, reward: 5 },
-    { id: "sell4", desc: "Sell some red paint", type: "sell", target: 4, reward: 8 },
-    { id: "buyYellow", desc: "Buy Yellow at the Store", type: "yellow", target: 1, reward: 10 },
-    { id: "buyMixer", desc: "Buy the Mixer at the Store", type: "mixerUnlock", target: 1, reward: 10 },
-    { id: "firstMix", desc: "Mix your first color", type: "mix", target: 1, reward: 15 },
-    { id: "buyVial2", desc: "Buy a second Warehouse container", type: "vial2", target: 1, reward: 15 },
-    { id: "buyBlue", desc: "Buy Blue at the Store", type: "blue", target: 1, reward: 15 },
-    { id: "buyOrders", desc: "Buy Orders at the Store", type: "orders", target: 1, reward: 20 },
-    { id: "fulfill3", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
-    { id: "collect20", desc: "Collect 20 raw colors total", type: "gather", target: 20, reward: 40 }
+    { id: "collect4", process: 1, processName: "My First Paint", desc: "Gather 4 Red paint", type: "gather", target: 4, reward: 5 },
+    { id: "sell4", process: 1, processName: "My First Paint", desc: "Sell your Red paint", type: "sell", target: 4, reward: 8 },
+    { id: "buyYellow", process: 2, processName: "Add a Primary", desc: "Buy the Yellow bucket", type: "yellow", target: 1, reward: 10 },
+    { id: "buyMixer", process: 2, processName: "Add a Primary", desc: "Buy the Mixer", type: "mixerUnlock", target: 1, reward: 10 },
+    { id: "firstMix", process: 3, processName: "Experiment", desc: "Mix Red + Yellow", type: "mix", target: 1, reward: 15 },
+    { id: "buyVial2", process: 3, processName: "Experiment", desc: "Buy a second Warehouse container", type: "vial2", target: 1, reward: 15 },
+    { id: "buyBlue", process: 4, processName: "Complete the Primaries", desc: "Buy the Blue bucket", type: "blue", target: 1, reward: 15 },
+    { id: "buyOrders", process: 4, processName: "Complete the Primaries", desc: "Open the studio to Orders", type: "orders", target: 1, reward: 20 },
+    { id: "fulfill3", process: 5, processName: "Working Artist", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
+    { id: "collect20", process: 5, processName: "Working Artist", desc: "Gather 20 paint total", type: "gather", target: 20, reward: 40 }
   ];
   let questIndex = 0;
 
@@ -171,14 +174,92 @@
     const questProgress = document.querySelector("#questProgress");
 
     if (questIndex >= quests.length) {
-      questText.textContent = "All starter quests done! 🎉";
-      questProgress.textContent = "";
+      questText.textContent = "Journal complete — more processes coming soon";
+      questProgress.textContent = "✓";
       return;
     }
 
     const q = quests[questIndex];
-    questText.textContent = `Quest: ${q.desc}`;
+    questText.textContent = `Process ${q.process}: ${q.processName}`;
     questProgress.textContent = `${Math.min(currentTotalFor(q.type), q.target)} / ${q.target}`;
+  }
+
+  function processGroups() {
+    const groups = [];
+    quests.forEach((q, index) => {
+      let group = groups.find(g => g.process === q.process);
+      if (!group) { group = { process: q.process, name: q.processName, steps: [] }; groups.push(group); }
+      group.steps.push({ ...q, index });
+    });
+    return groups;
+  }
+
+  function renderJournal() {
+    const content = document.querySelector("#journalContent");
+    const processBtn = document.querySelector("#processTabBtn");
+    const guideBtn = document.querySelector("#colorGuideTabBtn");
+    processBtn.classList.toggle("active", activeJournalTab === "processes");
+    guideBtn.classList.toggle("active", activeJournalTab === "guide");
+    guideBtn.classList.toggle("locked", !colorGuideUnlocked);
+    guideBtn.textContent = colorGuideUnlocked ? "🎨 Color Guide" : "🔒 Color Guide";
+    content.innerHTML = "";
+
+    if (activeJournalTab === "guide") {
+      if (!colorGuideUnlocked) {
+        content.innerHTML = '<div class="journalNote">Keep experimenting with paint. The Color Guide will appear when you discover your first mixed color.</div>';
+        return;
+      }
+      renderColorGuide(content);
+      return;
+    }
+
+    processGroups().forEach(group => {
+      const first = group.steps[0].index;
+      const last = group.steps[group.steps.length - 1].index;
+      const complete = questIndex > last;
+      const current = questIndex >= first && questIndex <= last;
+      const card = document.createElement("div");
+      card.className = "processCard" + (complete ? " complete" : current ? " current" : "");
+      const title = document.createElement("div");
+      title.className = "processTitle";
+      title.textContent = `${complete ? "✓" : current ? "✦" : "○"} Process ${group.process} — ${group.name}`;
+      card.appendChild(title);
+      group.steps.forEach(step => {
+        const row = document.createElement("div");
+        row.className = "processStep";
+        const done = questIndex > step.index;
+        const active = questIndex === step.index;
+        const progress = Math.min(currentTotalFor(step.type), step.target);
+        row.innerHTML = `<span>${done ? "✓" : active ? "→" : "○"} ${step.desc}</span><span>${done ? "Done" : `${progress}/${step.target}`}</span>`;
+        card.appendChild(row);
+      });
+      const reward = document.createElement("div");
+      reward.className = "processReward";
+      reward.textContent = `Process rewards: 🪙 ${group.steps.reduce((sum, s) => sum + s.reward, 0)}`;
+      card.appendChild(reward);
+      content.appendChild(card);
+    });
+  }
+
+  function renderColorGuide(content) {
+    const sections = [
+      { title: "Primary Colors", colors: ["red", "yellow", "blue"] },
+      { title: "Mixed Colors", colors: ["orange", "purple", "green", "pink", "skyblue", "cream"] }
+    ];
+    const recipes = { orange:"Red + Yellow", purple:"Red + Blue", green:"Blue + Yellow", pink:"Red + White", skyblue:"Blue + White", cream:"Yellow + White" };
+    sections.forEach(section => {
+      const heading = document.createElement("div"); heading.className = "guideSectionTitle"; heading.textContent = section.title; content.appendChild(heading);
+      const grid = document.createElement("div"); grid.className = "guideGrid";
+      section.colors.forEach(color => {
+        const known = discoveredColors.has(color);
+        const card = document.createElement("div"); card.className = "guideCard" + (known ? "" : " unknown");
+        card.innerHTML = known
+          ? `<div class="guideEmoji">${colorInfo[color].emoji}</div><div class="guideName">${colorInfo[color].label}</div><div class="guideRecipe">${recipes[color] || "Primary paint"}</div>`
+          : '<div class="guideEmoji">❔</div><div class="guideName">???</div><div class="guideRecipe">Undiscovered</div>';
+        grid.appendChild(card);
+      });
+      content.appendChild(grid);
+    });
   }
 
   // =========================================================
@@ -198,6 +279,7 @@
       cost: function () { return this.baseCost; },
       buy: function () {
         yellowUnlocked = true;
+        discoveredColors.add("yellow");
         this.level = 1;
         document.querySelector("#yellow").style.display = "grid";
       }
@@ -230,6 +312,7 @@
       cost: function () { return this.baseCost; },
       buy: function () {
         blueUnlocked = true;
+        discoveredColors.add("blue");
         this.level = 1;
         document.querySelector("#blue").style.display = "grid";
       }
@@ -285,6 +368,7 @@
       cost: function () { return this.baseCost; },
       buy: function () {
         whiteUnlocked = true;
+        discoveredColors.add("white");
         this.level = 1;
         document.querySelector("#white").style.display = "grid";
       }
@@ -678,6 +762,7 @@ function spawnMinion() {
   const dropperChips = document.querySelector("#dropperChips");
   const dropperFloaterEl = document.querySelector("#dropperFloater");
   const storeBadge = document.querySelector("#storeBadge");
+  const journalOverlay = document.querySelector("#journalOverlay");
 
   // =========================================================
   // BASIC HELPERS
@@ -928,6 +1013,7 @@ function spawnMinion() {
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
       renderStore();
     }
+    if (journalOverlay.classList.contains("open")) renderJournal();
 
     saveState();
   }
@@ -1059,6 +1145,12 @@ function spawnMinion() {
 
     addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
     totalMixed++;
+    const isNewDiscovery = !discoveredColors.has(recipe.result);
+    discoveredColors.add(recipe.result);
+    if (isNewDiscovery && recipe.result === "orange" && !colorGuideUnlocked) {
+      colorGuideUnlocked = true;
+      setTimeout(() => say("📖 Color Guide added to your Journal!"), 700);
+    }
     dropperArmed = false;
     dropperIngredients = [];
 
@@ -1207,6 +1299,20 @@ function spawnMinion() {
   });
 
   // =========================================================
+  // JOURNAL
+  // =========================================================
+
+  function openJournal() { journalOverlay.classList.add("open"); renderJournal(); }
+  document.querySelector("#journalBtn").addEventListener("click", openJournal);
+  document.querySelector("#journalTeaser").addEventListener("click", openJournal);
+  document.querySelector("#journalCloseBtn").addEventListener("click", () => journalOverlay.classList.remove("open"));
+  document.querySelector("#processTabBtn").addEventListener("click", () => { activeJournalTab = "processes"; renderJournal(); });
+  document.querySelector("#colorGuideTabBtn").addEventListener("click", () => {
+    if (!colorGuideUnlocked) { say("🔒 Discover Orange to unlock the Color Guide"); return; }
+    activeJournalTab = "guide"; renderJournal();
+  });
+
+  // =========================================================
   // STORE OVERLAY
   // =========================================================
 
@@ -1238,6 +1344,7 @@ function spawnMinion() {
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         questIndex, currentOrder, sourcePositions,
+        colorGuideUnlocked, discoveredColors: Array.from(discoveredColors),
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
         toolUpgradeLevels: toolUpgrades.map(i => ({ id: i.id, level: i.level }))
       };
@@ -1268,8 +1375,8 @@ function spawnMinion() {
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
       ordersUnlocked = data.ordersUnlocked ?? ordersUnlocked;
-      if (yellowUnlocked) document.querySelector("#yellow").style.display = "grid";
-      if (blueUnlocked) document.querySelector("#blue").style.display = "grid";
+      if (yellowUnlocked) { document.querySelector("#yellow").style.display = "grid"; discoveredColors.add("yellow"); }
+      if (blueUnlocked) { document.querySelector("#blue").style.display = "grid"; discoveredColors.add("blue"); }
       if (mixerUnlocked) document.querySelector("#warehouseRow").style.display = "block";
       if (ordersUnlocked) {
         document.querySelector("#order").style.display = "block";
@@ -1284,6 +1391,8 @@ function spawnMinion() {
       totalMixed = data.totalMixed ?? totalMixed;
       totalFulfilled = data.totalFulfilled ?? totalFulfilled;
       questIndex = data.questIndex ?? questIndex;
+      colorGuideUnlocked = data.colorGuideUnlocked ?? colorGuideUnlocked;
+      if (Array.isArray(data.discoveredColors)) { discoveredColors.clear(); data.discoveredColors.forEach(c => discoveredColors.add(c)); }
       if (data.currentOrder) currentOrder = data.currentOrder;
       if (data.sourcePositions) Object.assign(sourcePositions, data.sourcePositions);
 

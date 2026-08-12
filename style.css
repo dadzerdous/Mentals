@@ -60,12 +60,13 @@ button, .source, .stashChip, .mixChip {
 .stashChip.pickable:active { transform: translateY(1px); }
 .stashChip.empty { opacity: .45; }
 
-/* ---- quest ---- */
-#quest {
+/* ---- journal teaser ---- */
+.journalTeaser {
   position: absolute; top: 74px; left: 10px; right: 10px;
-  background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
+  min-height: 44px; background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
   padding: 6px 10px; font-size: 13px; font-weight: 800; z-index: 5;
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  box-shadow: 0 3px 0 rgba(43,41,39,.12); text-align: left;
 }
 #questProgress { font-size: 12px; opacity: .75; white-space: nowrap; }
 
@@ -185,7 +186,7 @@ button, .source, .stashChip, .mixChip {
 /* ---- action buttons ---- */
 #actions {
   position: absolute; left: 10px; right: 10px; bottom: 16px;
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
 }
 
 button {
@@ -316,3 +317,38 @@ button:disabled { opacity: .4; }
 .upgradeBuyBtn { min-height: 52px; padding: 0 14px; font-size: 13px; white-space: nowrap; }
 
 #emptyTabNote { font-size: 13px; opacity: .7; text-align: center; padding: 20px 10px; }
+
+
+/* ---- studio journal ---- */
+#journalOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.58);
+  display: none; align-items: flex-end; z-index: 42;
+}
+#journalOverlay.open { display: flex; }
+#journalSheet {
+  width: 100%; max-height: 86%; background: #f4efe8;
+  border-radius: 22px 22px 0 0; border: 3px solid #2b2927; border-bottom: none;
+  padding: 14px; overflow-y: auto;
+}
+#journalHeader { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:18px; font-weight:900; margin-bottom:10px; }
+#journalCloseBtn { min-height:40px; padding:0 14px; border-radius:12px; font-size:13px; }
+#journalTabs { display:flex; gap:8px; margin-bottom:12px; }
+.journalTabBtn { flex:1; min-height:46px; border-radius:12px; background:#fff; }
+.journalTabBtn.active { background:#ffe08a; }
+.journalTabBtn.locked { opacity:.55; }
+.processCard, .guideCard { background:#fff; border:2px solid #2b2927; border-radius:16px; padding:12px; margin-bottom:10px; }
+.processCard.current { background:#fff8e6; border-style:dashed; }
+.processCard.complete { opacity:.68; }
+.processTitle { font-weight:900; font-size:15px; margin-bottom:7px; }
+.processStep { display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0; border-top:1px solid rgba(43,41,39,.10); }
+.processStep:first-of-type { border-top:none; }
+.processReward { font-size:12px; opacity:.7; margin-top:7px; }
+.journalNote { text-align:center; font-size:13px; line-height:1.45; padding:18px 8px; opacity:.75; }
+.guideSectionTitle { font-size:12px; font-weight:900; opacity:.65; margin:14px 2px 7px; text-transform:uppercase; letter-spacing:.06em; }
+.guideGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.guideCard { margin:0; text-align:center; padding:12px 6px; min-height:88px; }
+.guideEmoji { font-size:28px; }
+.guideName { font-size:12px; font-weight:900; margin-top:3px; }
+.guideRecipe { font-size:10px; opacity:.65; margin-top:4px; }
+.guideCard.unknown { opacity:.42; filter:grayscale(1); }
+#journalBtn { background:#fff8e6; }
