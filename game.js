@@ -1556,7 +1556,9 @@ function spawnMinion() {
             source.classList.remove("sellBucketHint");
             void source.offsetWidth;
             source.classList.add("sellBucketHint");
+
             pulseCoins(earned);
+            renderAll();              // updates the visible coin total immediately
             showSellHint(false);
 
             setTimeout(() => {
@@ -1699,6 +1701,7 @@ function spawnMinion() {
     } else {
       clearTimeout(message._timer);
       message.classList.remove("show", "dimmed");
+      document.querySelector("#sellAllChoices")?.classList.remove("open");
     }
 
     renderAll();
@@ -1711,47 +1714,85 @@ function spawnMinion() {
   });
 
   document.querySelector("#sellRawBtn").addEventListener("click", () => {
-    const earned = tubesUsedTotal();
     sellOverlay.classList.remove("open");
-    if (earned === 0) { say("No raw colors to sell"); return; }
-    coins += earned;
-    totalSold += earned;
-    initTubes();
-    say(`🪙 Sold all raw paint +${earned}`);
-    pulseCoins(earned);
-    renderAll();
-    checkQuests();
-    if (navigator.vibrate) navigator.vibrate(24);
+    sellAllTubesNow();
   });
 
   document.querySelector("#sellMixedBtn").addEventListener("click", () => {
-    const earned = vialsUsedTotal();
     sellOverlay.classList.remove("open");
-    if (earned === 0) { say("No mixed colors to sell"); return; }
-    coins += earned;
-    totalSold += earned;
-    initVials();
-    say(`🪙 Sold all mixed paint +${earned}`);
-    pulseCoins(earned);
-    renderAll();
-    checkQuests();
-    if (navigator.vibrate) navigator.vibrate(24);
+    sellAllVialsNow();
   });
 
   document.querySelector("#sellEverythingBtn").addEventListener("click", () => {
-    const earned = tubesUsedTotal() + vialsUsedTotal();
     sellOverlay.classList.remove("open");
-    if (earned === 0) { say("Nothing to sell"); return; }
+    sellEverythingNow();
+  });
+
+
+  function sellAllTubesNow() {
+    const earned = tubesUsedTotal() + studioEarningsBonus;
+    if (tubesUsedTotal() === 0) { say("No tube paint to sell"); return; }
+
+    totalSold += tubesUsedTotal();
     coins += earned;
-    totalSold += earned;
     initTubes();
-    initVials();
-    say(`🪙 Sold everything +${earned}`);
+
     pulseCoins(earned);
     renderAll();
-    checkQuests();
-    if (navigator.vibrate) navigator.vibrate(30);
-  });
+    showSellHint(true);
+    checkJournalSteps();
+    if (navigator.vibrate) navigator.vibrate(24);
+  }
+
+  function sellAllVialsNow() {
+    const base = vialsUsedTotal();
+    if (base === 0) { say("No vial paint to sell"); return; }
+
+    let fullBonus = 0;
+    vials.forEach(v => {
+      if (v.color && v.amount >= storageCapacityPerVial) fullBonus += 1;
+    });
+
+    const earned = base + fullBonus + studioEarningsBonus;
+    totalSold += base;
+    coins += earned;
+    initVials();
+
+    pulseCoins(earned);
+    renderAll();
+    showSellHint(true);
+    checkJournalSteps();
+    if (navigator.vibrate) navigator.vibrate(24);
+  }
+
+  function sellEverythingNow() {
+    const raw = tubesUsedTotal();
+    const mixed = vialsUsedTotal();
+
+    if (raw + mixed === 0) { say("Nothing to sell"); return; }
+
+    let fullBonus = 0;
+    vials.forEach(v => {
+      if (v.color && v.amount >= storageCapacityPerVial) fullBonus += 1;
+    });
+
+    const earned = raw + mixed + fullBonus + studioEarningsBonus;
+    totalSold += raw + mixed;
+    coins += earned;
+
+    initTubes();
+    initVials();
+
+    pulseCoins(earned);
+    renderAll();
+    showSellHint(true);
+    checkJournalSteps();
+    if (navigator.vibrate) navigator.vibrate(28);
+  }
+
+  document.querySelector("#sellRawBtnRail").addEventListener("click", sellAllTubesNow);
+  document.querySelector("#sellMixedBtnRail").addEventListener("click", sellAllVialsNow);
+  document.querySelector("#sellEverythingBtnRail").addEventListener("click", sellEverythingNow);
 
   // =========================================================
   // FULFILL
@@ -1805,6 +1846,10 @@ function spawnMinion() {
 
   document.querySelector("#journalProcessesTab").addEventListener("click", () => setJournalTab("processes"));
   document.querySelector("#journalGuideTab").addEventListener("click", () => setJournalTab("guide"));
+
+  document.querySelector("#sellAllBtn").addEventListener("click", () => {
+    document.querySelector("#sellAllChoices").classList.toggle("open");
+  });
 
   // =========================================================
   // STORE OVERLAY

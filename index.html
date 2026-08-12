@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.19</title>
+<title>Color Gather v0.20</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -50,9 +50,16 @@
 
   <div id="toolsRail" aria-label="Studio tools">
     <button id="journalBtn" class="toolRailBtn">📖<span>Journal</span></button>
-    <div class="toolRailRow">
-      <button id="sellBtn" class="toolRailBtn">🪙<span>Sell</span></button>
-      <button id="sellAllBtn" class="toolRailBtn toolRailMini" style="display:none;">💰<span>Sell All</span></button>
+    <div class="toolRailSellGroup">
+      <div class="toolRailRow">
+        <button id="sellBtn" class="toolRailBtn">🪙<span>Sell</span></button>
+        <button id="sellAllBtn" class="toolRailBtn toolRailMini" style="display:none;">💰<span>Sell All</span></button>
+      </div>
+      <div id="sellAllChoices" class="sellAllChoices">
+        <button id="sellRawBtnRail" class="toolRailChoiceBtn">🎨<span>Tubes</span></button>
+        <button id="sellMixedBtnRail" class="toolRailChoiceBtn">🧪<span>Vials</span></button>
+        <button id="sellEverythingBtnRail" class="toolRailChoiceBtn">🪙<span>Everything</span></button>
+      </div>
     </div>
     <button id="storeBtn" class="toolRailBtn" style="display:none;">
       🏪<span>Store</span>
