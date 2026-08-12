@@ -329,7 +329,7 @@ button:disabled { opacity: .4; }
   transform: translate(-50%, -140%);
   font-size: 30px;
   pointer-events: none;
-  z-index: 50;
+  z-index: 35;
   display: none;
   filter: drop-shadow(0 4px 2px rgba(43,41,39,.3));
   animation: dropperBob 1s ease-in-out infinite;
@@ -381,7 +381,7 @@ button:disabled { opacity: .4; }
 /* ---- reset confirm overlay ---- */
 #resetConfirmOverlay {
   position: absolute; inset: 0; background: rgba(43,41,39,.65);
-  display: none; align-items: flex-end; z-index: 45;
+  display: none; align-items: flex-end; z-index: 47;
 }
 #resetConfirmOverlay.open { display: flex; }
 #resetConfirmSheet {
@@ -415,7 +415,6 @@ button:disabled { opacity: .4; }
 #storeHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 900; font-size: 18px; gap: 8px; }
 #storeHeaderBtns { display: flex; gap: 6px; }
 #storeCloseBtn { min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px; }
-#resetBtn { min-height: 40px; padding: 0 12px; border-radius: 12px; font-size: 12px; background: #ffdcdc; }
 
 #storeTabs { display: flex; gap: 8px; margin-bottom: 10px; }
 .storeTabBtn { flex: 1; min-height: 44px; border-radius: 12px; font-size: 13px; background: #fff; }
