@@ -982,9 +982,23 @@ function spawnMinion() {
 
   function say(text) {
     message.textContent = text;
+    message.classList.remove("dimmed");
     message.classList.add("show");
     clearTimeout(message._timer);
-    message._timer = setTimeout(() => message.classList.remove("show"), 950);
+    message._timer = setTimeout(() => {
+      if (sellMode) {
+        showSellHint(true);
+      } else {
+        message.classList.remove("show", "dimmed");
+      }
+    }, 950);
+  }
+
+  function showSellHint(dimmed = false) {
+    clearTimeout(message._timer);
+    message.textContent = "Tap a tube to sell paint • Tap a vial to sell the whole vial";
+    message.classList.add("show");
+    message.classList.toggle("dimmed", dimmed);
   }
 
   function initTubes() {
@@ -1171,7 +1185,10 @@ function spawnMinion() {
     vials.forEach((vial, index) => {
       const chip = document.createElement("div");
       if (vial.color) {
-        chip.className = "stashChip" + (sellMode ? " sellable" : "");
+        const isFull = vial.amount >= storageCapacityPerVial;
+        chip.className = "stashChip"
+          + (sellMode ? " sellable" : "")
+          + (sellMode && isFull ? " fullVial" : "");
         chip.textContent = `${colorInfo[vial.color].emoji} ${colorInfo[vial.color].label} ${vial.amount}/${storageCapacityPerVial}`;
         if (sellMode) chip.addEventListener("click", () => sellOneFromVial(index));
       } else {
@@ -1235,7 +1252,10 @@ function spawnMinion() {
 
     const sellBtnEl = document.querySelector("#sellBtn");
     const sellAllBtnEl = document.querySelector("#sellAllBtn");
-    if (sellBtnEl) sellBtnEl.innerHTML = sellMode ? "❌<span>Done</span>" : "🪙<span>Sell</span>";
+    if (sellBtnEl) {
+      sellBtnEl.innerHTML = sellMode ? "❌<span>Done</span>" : "🪙<span>Sell</span>";
+      sellBtnEl.classList.toggle("armed", sellMode);
+    }
     if (sellAllBtnEl) sellAllBtnEl.style.display = sellMode ? "flex" : "none";
 
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
@@ -1427,7 +1447,16 @@ function spawnMinion() {
         window.removeEventListener("pointerup", onUp);
         source.classList.remove("pressed");
         if (!longPressFired && !moved) {
-          if (dropperArmed) {
+          if (sellMode) {
+            source.classList.remove("sellBucketHint");
+            void source.offsetWidth;
+            source.classList.add("sellBucketHint");
+            showSellHint(false);
+            setTimeout(() => {
+              source.classList.remove("sellBucketHint");
+              showSellHint(true);
+            }, 650);
+          } else if (dropperArmed) {
             feedDropperFromField(source);
           } else {
             tapSource(source, false);
@@ -1505,8 +1534,8 @@ function spawnMinion() {
     totalSold += 1;
     sellImpactAt(chipEl, "+1");
     pulseCoins(1);
-    say(`🪙 Sold 1 ${colorInfo[color].label} +1`);
     renderAll();
+    showSellHint(true);
     checkQuests();
     if (navigator.vibrate) navigator.vibrate(16);
   }
@@ -1528,12 +1557,8 @@ function spawnMinion() {
 
     sellImpactAt(chipEl, fullBonus ? `+${earned} FULL!` : `+${earned}`);
     pulseCoins(earned);
-    say(fullBonus
-      ? `🪙 Sold full ${colorInfo[color].label} vial +${earned} (includes +1 full-vial bonus!)`
-      : `🪙 Sold ${colorInfo[color].label} vial +${earned}`
-    );
-
     renderAll();
+    showSellHint(true);
     checkQuests();
     if (navigator.vibrate) navigator.vibrate([18, 18, 28]);
   }
@@ -1553,7 +1578,14 @@ function spawnMinion() {
       dropperArmed = false;
       dropperIngredients = [];
     }
-    say(sellMode ? "🪙 Tap a tube to sell 1 paint, or tap a vial to sell the whole vial" : "Selling finished");
+
+    if (sellMode) {
+      showSellHint(false);
+    } else {
+      clearTimeout(message._timer);
+      message.classList.remove("show", "dimmed");
+    }
+
     renderAll();
   });
 

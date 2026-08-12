@@ -302,9 +302,6 @@ button, .source, .stashChip, .mixChip {
   box-shadow: inset 0 0 0 2px rgba(255, 183, 0, .35);
 }
 
-.stashChip.sellable::after {
-  content: " 🪙";
-}
 
 button {
   min-height: 72px; border: 3px solid #2b2927; border-radius: 18px;
@@ -365,6 +362,7 @@ button:disabled { opacity: .4; }
   pointer-events: none; z-index: 31; white-space: nowrap;
 }
 #message.show { opacity: 1; }
+#message.dimmed { opacity: .42; }
 
 /* ---- sell overlay ---- */
 #sellOverlay {
@@ -500,4 +498,38 @@ button:disabled { opacity: .4; }
   #quest { left: 74px; }
   #order { margin-left: 28px; width: min(76vw, 390px); }
   #warehouseRow { left: 74px; }
+}
+
+
+/* ---- v0.16 sell-mode polish ---- */
+#sellBtn.armed {
+  animation: sellModePulse 1.05s ease-in-out infinite;
+}
+
+@keyframes sellModePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 0 rgba(255,183,0,.28); }
+  50% { transform: scale(1.045); box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 7px rgba(255,183,0,0); }
+}
+
+.stashChip.sellable.fullVial {
+  background: #ffe79a;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 156, 0, .55),
+    0 0 0 3px rgba(255, 214, 74, .28);
+  animation: fullVialPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes fullVialPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.055); }
+}
+
+.source.sellBucketHint {
+  animation: sellBucketHint .62s ease-out;
+}
+
+@keyframes sellBucketHint {
+  0% { transform: scale(1); }
+  35% { transform: scale(.94); box-shadow: 0 0 0 7px rgba(255,183,0,.22); }
+  100% { transform: scale(1); }
 }
