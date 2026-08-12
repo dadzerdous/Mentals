@@ -219,22 +219,83 @@ button, .source, .stashChip, .mixChip {
   background: #ffdcdc;
 }
 
+.toolRailMini {
+  min-height: 42px;
+  background: #fff8d6;
+  font-size: 16px;
+}
+
+.coinImpact {
+  animation: coinImpact .34s ease-out;
+}
+
+@keyframes coinImpact {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16) rotate(-2deg); }
+  70% { transform: scale(.96) rotate(1deg); }
+  100% { transform: scale(1); }
+}
+
+.coinGainFloater {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 120;
+  pointer-events: none;
+  font-weight: 1000;
+  font-size: 17px;
+  animation: coinGainFloat .9s ease-out forwards;
+  text-shadow: 0 2px 0 #fff;
+}
+
+@keyframes coinGainFloat {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.7); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -34px) scale(1); }
+}
+
+.sellImpact {
+  animation: sellImpact .36s ease-out;
+}
+
+@keyframes sellImpact {
+  0% { transform: scale(1); }
+  40% { transform: scale(.82) rotate(-4deg); }
+  75% { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1); }
+}
+
+.sellCoinBurst,
+.sellLabelBurst {
+  position: fixed;
+  z-index: 119;
+  pointer-events: none;
+}
+
+.sellCoinBurst {
+  transform: translate(-50%, -50%);
+  animation: sellCoinBurst .62s ease-out forwards;
+}
+
+@keyframes sellCoinBurst {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(.6); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25); }
+}
+
+.sellLabelBurst {
+  transform: translate(-50%, -100%);
+  font-weight: 1000;
+  font-size: 14px;
+  animation: sellLabelBurst .72s ease-out forwards;
+  text-shadow: 0 2px 0 #fff;
+}
+
+@keyframes sellLabelBurst {
+  0% { opacity: 0; transform: translate(-50%, -60%) scale(.7); }
+  20% { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -170%) scale(1); }
+}
+
 /* ---- selling controls ---- */
-#sellBar {
-  position: absolute;
-  left: 74px;
-  right: 10px;
-  bottom: 16px;
-  z-index: 16;
-  display: flex;
-  gap: 7px;
-}
-
-#sellBar > button {
-  flex: 1 1 0;
-  min-height: 64px;
-}
-
 .stashChip.sellable {
   cursor: pointer;
   background: #fff4c7;

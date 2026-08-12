@@ -47,6 +47,7 @@
 
   let activeStoreTab = "store";
   let sellMode = false;
+  let rearrangeUnlocked = false;
 
   const GRID = 30;
 
@@ -237,6 +238,7 @@
       if (!isStepComplete(step) && step.progress() >= step.target) {
         completedJournalSteps[step.id] = true;
         coins += step.reward;
+        pulseCoins(step.reward);
         rewarded = true;
         say(`✅ Step complete! +${step.reward}`);
       }
@@ -743,10 +745,15 @@
     Object.keys(defaultPositionFractions).forEach(color => {
       if (!sourcePositions[color]) {
         const frac = defaultPositionFractions[color];
-        sourcePositions[color] = {
-          left: Math.round(frac.x * fieldRect.width),
-          top: Math.round(frac.y * fieldRect.height)
-        };
+        sourcePositions[color] = color === "red"
+          ? {
+              left: Math.round((fieldRect.width - 78) / 2),
+              top: Math.round((fieldRect.height - 78) / 2)
+            }
+          : {
+              left: Math.round(frac.x * fieldRect.width),
+              top: Math.round(frac.y * fieldRect.height)
+            };
       }
     });
   }
@@ -765,6 +772,8 @@
   }
 
   function beginDragSource(sourceEl, startEvent) {
+    if (!rearrangeUnlocked) return;
+
     const color = sourceEl.dataset.color;
     const fieldRect = field.getBoundingClientRect();
 
@@ -1226,8 +1235,8 @@ function spawnMinion() {
 
     const sellBtnEl = document.querySelector("#sellBtn");
     const sellAllBtnEl = document.querySelector("#sellAllBtn");
-    if (sellBtnEl) sellBtnEl.textContent = sellMode ? "❌ DONE SELLING" : "🪙 SELL";
-    if (sellAllBtnEl) sellAllBtnEl.style.display = sellMode ? "block" : "none";
+    if (sellBtnEl) sellBtnEl.innerHTML = sellMode ? "❌<span>Done</span>" : "🪙<span>Sell</span>";
+    if (sellAllBtnEl) sellAllBtnEl.style.display = sellMode ? "flex" : "none";
 
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
       renderStore();
@@ -1395,6 +1404,7 @@ function spawnMinion() {
       let moved = false;
 
       const holdTimer = setTimeout(() => {
+        if (!rearrangeUnlocked) return;
         longPressFired = true;
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
@@ -1438,33 +1448,94 @@ function spawnMinion() {
   const sellRawCount = document.querySelector("#sellRawCount");
   const sellMixedCount = document.querySelector("#sellMixedCount");
 
+  function pulseCoins(amount) {
+    const coinPanel = coinsEl.closest(".panel") || coinsEl;
+    coinPanel.classList.remove("coinImpact");
+    void coinPanel.offsetWidth;
+    coinPanel.classList.add("coinImpact");
+
+    const rect = coinPanel.getBoundingClientRect();
+    const pop = document.createElement("div");
+    pop.className = "coinGainFloater";
+    pop.textContent = `+${amount} 🪙`;
+    pop.style.left = `${rect.left + rect.width / 2}px`;
+    pop.style.top = `${rect.bottom + 4}px`;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 900);
+  }
+
+  function sellImpactAt(element, label) {
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    element.classList.remove("sellImpact");
+    void element.offsetWidth;
+    element.classList.add("sellImpact");
+
+    for (let i = 0; i < 5; i++) {
+      const coin = document.createElement("div");
+      coin.className = "sellCoinBurst";
+      coin.textContent = i % 2 ? "✨" : "🪙";
+      coin.style.left = `${rect.left + rect.width / 2}px`;
+      coin.style.top = `${rect.top + rect.height / 2}px`;
+      coin.style.setProperty("--dx", `${randomBetween(-42, 42)}px`);
+      coin.style.setProperty("--dy", `${randomBetween(-55, -18)}px`);
+      document.body.appendChild(coin);
+      setTimeout(() => coin.remove(), 650);
+    }
+
+    if (label) {
+      const text = document.createElement("div");
+      text.className = "sellLabelBurst";
+      text.textContent = label;
+      text.style.left = `${rect.left + rect.width / 2}px`;
+      text.style.top = `${rect.top}px`;
+      document.body.appendChild(text);
+      setTimeout(() => text.remove(), 750);
+    }
+  }
+
   function sellOneFromTube(index) {
     const tube = tubes[index];
     if (!tube || !tube.color || tube.amount <= 0) return;
+    const chipEl = bagContents.children[index];
     const color = tube.color;
     tube.amount--;
     if (tube.amount === 0) tube.color = null;
     coins += 1;
     totalSold += 1;
+    sellImpactAt(chipEl, "+1");
+    pulseCoins(1);
     say(`🪙 Sold 1 ${colorInfo[color].label} +1`);
     renderAll();
     checkQuests();
-    if (navigator.vibrate) navigator.vibrate(12);
+    if (navigator.vibrate) navigator.vibrate(16);
   }
 
   function sellOneFromVial(index) {
     const vial = vials[index];
     if (!vial || !vial.color || vial.amount <= 0) return;
+
+    const chipEl = storageContents.children[index];
     const color = vial.color;
-    const amount = Math.min(weightOf(color), vial.amount);
-    vial.amount -= amount;
-    if (vial.amount === 0) vial.color = null;
-    coins += amount;
+    const amount = vial.amount;
+    const fullBonus = amount >= storageCapacityPerVial ? 1 : 0;
+    const earned = amount + fullBonus;
+
+    vial.color = null;
+    vial.amount = 0;
+    coins += earned;
     totalSold += amount;
-    say(`🪙 Sold 1 ${colorInfo[color].label} +${amount}`);
+
+    sellImpactAt(chipEl, fullBonus ? `+${earned} FULL!` : `+${earned}`);
+    pulseCoins(earned);
+    say(fullBonus
+      ? `🪙 Sold full ${colorInfo[color].label} vial +${earned} (includes +1 full-vial bonus!)`
+      : `🪙 Sold ${colorInfo[color].label} vial +${earned}`
+    );
+
     renderAll();
     checkQuests();
-    if (navigator.vibrate) navigator.vibrate(12);
+    if (navigator.vibrate) navigator.vibrate([18, 18, 28]);
   }
 
   function openSellAllPicker() {
@@ -1482,7 +1553,7 @@ function spawnMinion() {
       dropperArmed = false;
       dropperIngredients = [];
     }
-    say(sellMode ? "🪙 Tap paint in your Paint Case or Paint Vials to sell it" : "Selling finished");
+    say(sellMode ? "🪙 Tap a tube to sell 1 paint, or tap a vial to sell the whole vial" : "Selling finished");
     renderAll();
   });
 
@@ -1500,6 +1571,7 @@ function spawnMinion() {
     totalSold += earned;
     initTubes();
     say(`🪙 Sold all raw paint +${earned}`);
+    pulseCoins(earned);
     renderAll();
     checkQuests();
     if (navigator.vibrate) navigator.vibrate(24);
@@ -1513,6 +1585,7 @@ function spawnMinion() {
     totalSold += earned;
     initVials();
     say(`🪙 Sold all mixed paint +${earned}`);
+    pulseCoins(earned);
     renderAll();
     checkQuests();
     if (navigator.vibrate) navigator.vibrate(24);
@@ -1527,6 +1600,7 @@ function spawnMinion() {
     initTubes();
     initVials();
     say(`🪙 Sold everything +${earned}`);
+    pulseCoins(earned);
     renderAll();
     checkQuests();
     if (navigator.vibrate) navigator.vibrate(30);
@@ -1547,6 +1621,7 @@ function spawnMinion() {
 
     const earnedReward = currentOrder.reward;
     coins += earnedReward;
+    pulseCoins(earnedReward);
     totalFulfilled++;
 
     const colors = activeOrderColors();
@@ -1612,7 +1687,7 @@ function spawnMinion() {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
-        yellowBucketPurchased, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked,
+        yellowBucketPurchased, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         currentProcessIndex, followedStepId, completedJournalSteps,
@@ -1649,6 +1724,7 @@ function spawnMinion() {
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
       ordersUnlocked = data.ordersUnlocked ?? ordersUnlocked;
+      rearrangeUnlocked = data.rearrangeUnlocked ?? rearrangeUnlocked;
       if (yellowUnlocked) {
         yellowBucketPurchased = true;
         document.querySelector("#yellow").style.display = "grid";
