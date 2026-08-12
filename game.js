@@ -10,6 +10,7 @@
   let VIAL_COUNT = 1;
 
   // onboarding gates — teach one thing at a time before the full game opens up
+  let yellowBucketPurchased = false;
   let yellowUnlocked = false;
   let mixerUnlocked = false;
   let blueUnlocked = false;
@@ -45,6 +46,7 @@
   let totalFulfilled = 0;
 
   let activeStoreTab = "store";
+  let sellMode = false;
 
   const GRID = 30;
 
@@ -146,9 +148,10 @@
     {
       id: "yellowBucket",
       title: "Process 2 — Add a Primary",
-      description: "Expand the studio with your second permanent primary bucket.",
+      description: "Add another permanent primary bucket, then stock it with Yellow paint.",
       steps: [
-        { id: "buyYellow", desc: "Buy the Yellow bucket", target: 1, reward: 10, progress: () => yellowUnlocked ? 1 : 0 }
+        { id: "buyPrimaryBucket", desc: "Buy a Primary Bucket", target: 1, reward: 5, progress: () => yellowBucketPurchased ? 1 : 0 },
+        { id: "buyYellow", desc: "Buy Yellow paint for the bucket", target: 1, reward: 8, progress: () => yellowUnlocked ? 1 : 0 }
       ]
     },
     {
@@ -454,17 +457,33 @@
 
   const storeItems = [
     {
-      id: "unlockYellow",
-      name: "Buy Yellow Bucket",
+      id: "buyPrimaryBucket",
+      name: "Buy a Primary Bucket",
       level: 0,
       maxLevel: 1,
       baseCost: 10,
       growth: 1,
-      visible: () => !yellowUnlocked,
-      desc: () => "Adds a permanent Yellow primary bucket to your studio",
+      visible: () => currentProcessIndex >= 1 && !yellowBucketPurchased,
+      desc: () => "Adds an empty permanent primary bucket to your studio",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        yellowBucketPurchased = true;
+        this.level = 1;
+      }
+    },
+    {
+      id: "unlockYellow",
+      name: "Buy Yellow Paint",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 5,
+      growth: 1,
+      visible: () => currentProcessIndex >= 1 && yellowBucketPurchased && !yellowUnlocked,
+      desc: () => "Stocks your new permanent primary bucket with Yellow paint",
       cost: function () { return this.baseCost; },
       buy: function () {
         yellowUnlocked = true;
+        yellowBucketPurchased = true;
         this.level = 1;
         document.querySelector("#yellow").style.display = "grid";
       }
@@ -476,7 +495,7 @@
       maxLevel: 1,
       baseCost: 20,
       growth: 1,
-      visible: () => yellowUnlocked && !mixerUnlocked,
+      visible: () => currentProcessIndex >= 2 && yellowUnlocked && !mixerUnlocked,
       desc: () => "Unlocks the Warehouse and the mixing dropper",
       cost: function () { return this.baseCost; },
       buy: function () {
@@ -525,7 +544,7 @@
       baseCost: 15,
       growth: 2,
       visible: () => yellowUnlocked,
-      desc: function () { return `Adds another tube to your toolbelt. You have ${TUBE_COUNT} now.`; },
+      desc: function () { return `Adds another tube to your Paint Case. You have ${TUBE_COUNT} now.`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { tubes.push({ color: null, amount: 0 }); TUBE_COUNT++; this.level++; }
     },
@@ -942,7 +961,7 @@ function spawnMinion() {
   const orderTarget = document.querySelector("#orderTarget");
   const rewardEl = document.querySelector("#reward");
   const message = document.querySelector("#message");
-  const dropperToggle = document.querySelector("#dropperToggle");
+  const dropperToggle = document.querySelector("#mixerToolBtn");
   const dropperChips = document.querySelector("#dropperChips");
   const dropperFloaterEl = document.querySelector("#dropperFloater");
   const storeBadge = document.querySelector("#storeBadge");
@@ -1124,9 +1143,12 @@ function spawnMinion() {
     tubes.forEach((tube, index) => {
       const chip = document.createElement("div");
       if (tube.color) {
-        chip.className = "stashChip" + (dropperArmed ? " pickable" : "");
+        chip.className = "stashChip" + (dropperArmed ? " pickable" : "") + (sellMode ? " sellable" : "");
         chip.textContent = `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube}`;
-        chip.addEventListener("click", event => feedDropperFromTube(index, event));
+        chip.addEventListener("click", event => {
+          if (sellMode) sellOneFromTube(index);
+          else feedDropperFromTube(index, event);
+        });
       } else {
         chip.className = "stashChip empty";
         chip.textContent = "🧪 Empty";
@@ -1137,11 +1159,12 @@ function spawnMinion() {
 
   function renderWarehouse() {
     storageContents.innerHTML = "";
-    vials.forEach(vial => {
+    vials.forEach((vial, index) => {
       const chip = document.createElement("div");
       if (vial.color) {
-        chip.className = "stashChip";
+        chip.className = "stashChip" + (sellMode ? " sellable" : "");
         chip.textContent = `${colorInfo[vial.color].emoji} ${colorInfo[vial.color].label} ${vial.amount}/${storageCapacityPerVial}`;
+        if (sellMode) chip.addEventListener("click", () => sellOneFromVial(index));
       } else {
         chip.className = "stashChip empty";
         chip.textContent = "🧪 Empty";
@@ -1151,7 +1174,7 @@ function spawnMinion() {
   }
 
   function renderDropper() {
-    dropperToggle.textContent = dropperArmed ? "❌" : "💧";
+    dropperToggle.innerHTML = dropperArmed ? "❌<span>Done</span>" : "💧<span>Mix</span>";
     dropperToggle.classList.toggle("armed", dropperArmed);
     dropperFloaterEl.classList.toggle("visible", dropperArmed);
 
@@ -1193,6 +1216,18 @@ function spawnMinion() {
     renderQuest();
 
     storeBadge.style.display = cheapestAffordableExists() ? "grid" : "none";
+
+    const storeBtnEl = document.querySelector("#storeBtn");
+    const mixerBtnEl = document.querySelector("#mixerToolBtn");
+    const fulfillBtnEl = document.querySelector("#fulfillBtn");
+    if (storeBtnEl) storeBtnEl.style.display = currentProcessIndex >= 1 ? "flex" : "none";
+    if (mixerBtnEl) mixerBtnEl.style.display = mixerUnlocked ? "flex" : "none";
+    if (fulfillBtnEl) fulfillBtnEl.style.display = ordersUnlocked ? "flex" : "none";
+
+    const sellBtnEl = document.querySelector("#sellBtn");
+    const sellAllBtnEl = document.querySelector("#sellAllBtn");
+    if (sellBtnEl) sellBtnEl.textContent = sellMode ? "❌ DONE SELLING" : "🪙 SELL";
+    if (sellAllBtnEl) sellAllBtnEl.style.display = sellMode ? "block" : "none";
 
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
       renderStore();
@@ -1251,6 +1286,8 @@ function spawnMinion() {
   // =========================================================
 
   function toggleDropper(event) {
+    if (!mixerUnlocked) return;
+    if (sellMode) sellMode = false;
     if (dropperArmed) {
       // cancelling: hand back anything pulled from a tube (field-collected drops are just lost)
       dropperIngredients.forEach(ingredient => {
@@ -1394,18 +1431,62 @@ function spawnMinion() {
   });
 
   // =========================================================
-  // SELL (raw vs mixed picker)
+  // SELL — selective selling, with Sell All as a convenience
   // =========================================================
 
   const sellOverlay = document.querySelector("#sellOverlay");
   const sellRawCount = document.querySelector("#sellRawCount");
   const sellMixedCount = document.querySelector("#sellMixedCount");
 
-  document.querySelector("#sellBtn").addEventListener("click", () => {
+  function sellOneFromTube(index) {
+    const tube = tubes[index];
+    if (!tube || !tube.color || tube.amount <= 0) return;
+    const color = tube.color;
+    tube.amount--;
+    if (tube.amount === 0) tube.color = null;
+    coins += 1;
+    totalSold += 1;
+    say(`🪙 Sold 1 ${colorInfo[color].label} +1`);
+    renderAll();
+    checkQuests();
+    if (navigator.vibrate) navigator.vibrate(12);
+  }
+
+  function sellOneFromVial(index) {
+    const vial = vials[index];
+    if (!vial || !vial.color || vial.amount <= 0) return;
+    const color = vial.color;
+    const amount = Math.min(weightOf(color), vial.amount);
+    vial.amount -= amount;
+    if (vial.amount === 0) vial.color = null;
+    coins += amount;
+    totalSold += amount;
+    say(`🪙 Sold 1 ${colorInfo[color].label} +${amount}`);
+    renderAll();
+    checkQuests();
+    if (navigator.vibrate) navigator.vibrate(12);
+  }
+
+  function openSellAllPicker() {
     sellRawCount.textContent = tubesUsedTotal();
     sellMixedCount.textContent = vialsUsedTotal();
     sellOverlay.classList.add("open");
+  }
+
+  document.querySelector("#sellBtn").addEventListener("click", () => {
+    sellMode = !sellMode;
+    if (sellMode && dropperArmed) {
+      dropperIngredients.forEach(ingredient => {
+        if (ingredient.source === "tube") addToSlots(tubes, ingredient.color, 1, bagCapacityPerTube);
+      });
+      dropperArmed = false;
+      dropperIngredients = [];
+    }
+    say(sellMode ? "🪙 Tap paint in your Paint Case or Paint Vials to sell it" : "Selling finished");
+    renderAll();
   });
+
+  document.querySelector("#sellAllBtn").addEventListener("click", openSellAllPicker);
 
   document.querySelector("#sellCancelBtn").addEventListener("click", () => {
     sellOverlay.classList.remove("open");
@@ -1414,35 +1495,41 @@ function spawnMinion() {
   document.querySelector("#sellRawBtn").addEventListener("click", () => {
     const earned = tubesUsedTotal();
     sellOverlay.classList.remove("open");
-
     if (earned === 0) { say("No raw colors to sell"); return; }
-
     coins += earned;
     totalSold += earned;
     initTubes();
-
-    say(`🪙 Sold raw colors +${earned}`);
+    say(`🪙 Sold all raw paint +${earned}`);
     renderAll();
     checkQuests();
-
     if (navigator.vibrate) navigator.vibrate(24);
   });
 
   document.querySelector("#sellMixedBtn").addEventListener("click", () => {
     const earned = vialsUsedTotal();
     sellOverlay.classList.remove("open");
-
     if (earned === 0) { say("No mixed colors to sell"); return; }
-
     coins += earned;
     totalSold += earned;
     initVials();
-
-    say(`🪙 Sold mixed colors +${earned}`);
+    say(`🪙 Sold all mixed paint +${earned}`);
     renderAll();
     checkQuests();
-
     if (navigator.vibrate) navigator.vibrate(24);
+  });
+
+  document.querySelector("#sellEverythingBtn").addEventListener("click", () => {
+    const earned = tubesUsedTotal() + vialsUsedTotal();
+    sellOverlay.classList.remove("open");
+    if (earned === 0) { say("Nothing to sell"); return; }
+    coins += earned;
+    totalSold += earned;
+    initTubes();
+    initVials();
+    say(`🪙 Sold everything +${earned}`);
+    renderAll();
+    checkQuests();
+    if (navigator.vibrate) navigator.vibrate(30);
   });
 
   // =========================================================
@@ -1525,7 +1612,7 @@ function spawnMinion() {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
-        yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked,
+        yellowBucketPurchased, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         currentProcessIndex, followedStepId, completedJournalSteps,
@@ -1557,11 +1644,15 @@ function spawnMinion() {
         VIAL_COUNT = vials.length;
       }
       storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
+      yellowBucketPurchased = data.yellowBucketPurchased ?? data.yellowUnlocked ?? yellowBucketPurchased;
       yellowUnlocked = data.yellowUnlocked ?? yellowUnlocked;
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
       ordersUnlocked = data.ordersUnlocked ?? ordersUnlocked;
-      if (yellowUnlocked) document.querySelector("#yellow").style.display = "grid";
+      if (yellowUnlocked) {
+        yellowBucketPurchased = true;
+        document.querySelector("#yellow").style.display = "grid";
+      }
       if (blueUnlocked) document.querySelector("#blue").style.display = "grid";
       if (mixerUnlocked) document.querySelector("#warehouseRow").style.display = "block";
       if (ordersUnlocked) {

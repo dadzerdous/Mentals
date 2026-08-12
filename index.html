@@ -11,7 +11,7 @@
 
   <div class="top">
     <div id="backpackPanel" class="panel">
-      <div class="stashHeader">🧰 Toolbelt <span id="bagText">0 / 1</span></div>
+      <div class="stashHeader">🎨 Paint Case <span id="bagText">0 / 1</span></div>
       <div id="bagContents" class="stashContents"></div>
     </div>
     <div class="panel">🪙 <span id="coins">0</span></div>
@@ -41,23 +41,26 @@
   <div id="warehouseRow" style="display:none;">
     <div id="warehousePanel" class="panel">
       <div class="stashHeader">
-        📦 Warehouse <span id="storageText">0 / 1</span>
-        <span id="dropperToggle" class="dropperToggle">💧</span>
-        <span class="dropperLabel">Mixer</span>
+        📦 Paint Vials <span id="storageText">0 / 1</span>
         <span id="dropperChips" class="dropperChips"></span>
       </div>
       <div id="storageContents" class="stashContents"></div>
     </div>
   </div>
 
-  <div id="actions">
-    <button id="journalBtn">📖 JOURNAL</button>
-    <button id="sellBtn">🪙 SELL</button>
-    <button id="fulfillBtn" style="display:none;">📦 FULFILL</button>
-    <button id="storeBtn">
-      🏪 STORE
+  <div id="toolsRail" aria-label="Studio tools">
+    <button id="journalBtn" class="toolRailBtn">📖<span>Journal</span></button>
+    <button id="storeBtn" class="toolRailBtn" style="display:none;">
+      🏪<span>Store</span>
       <span id="storeBadge" class="storeBadge" style="display:none;">!</span>
     </button>
+    <button id="mixerToolBtn" class="toolRailBtn" style="display:none;">💧<span>Mix</span></button>
+    <button id="fulfillBtn" class="toolRailBtn" style="display:none;">📦<span>Order</span></button>
+  </div>
+
+  <div id="sellBar">
+    <button id="sellBtn">🪙 SELL</button>
+    <button id="sellAllBtn" style="display:none;">🪙 SELL ALL</button>
   </div>
 
 
@@ -83,9 +86,10 @@
 
   <div id="sellOverlay">
     <div id="sellSheet">
-      <div class="sellHeader">What do you want to sell?</div>
+      <div class="sellHeader">Sell all of which paint?</div>
       <button id="sellRawBtn" class="sellOptionBtn">🎨 Sell Raw Colors (<span id="sellRawCount">0</span>)</button>
       <button id="sellMixedBtn" class="sellOptionBtn">📦 Sell Mixed Colors (<span id="sellMixedCount">0</span>)</button>
+      <button id="sellEverythingBtn" class="sellOptionBtn">🪙 Sell Everything</button>
       <button id="sellCancelBtn" class="sellCancelBtn">Cancel</button>
     </div>
   </div>

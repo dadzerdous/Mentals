@@ -184,17 +184,65 @@ button, .source, .stashChip, .mixChip {
 /* ---- warehouse ---- */
 #warehouseRow { position: absolute; left: 10px; right: 10px; bottom: 96px; z-index: 5; }
 
-/* ---- action buttons ---- */
-#actions {
-  position: absolute; left: 10px; right: 10px; bottom: 16px;
-  display: flex; gap: 6px;
+/* ---- left-side studio tools ---- */
+#toolsRail {
+  position: absolute;
+  left: 8px;
+  top: 118px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 58px;
 }
 
-#actions > button {
+.toolRailBtn {
+  position: relative;
+  width: 58px;
+  min-height: 54px;
+  padding: 5px 2px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 20px;
+}
+
+.toolRailBtn span:not(.storeBadge) {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.toolRailBtn.armed {
+  background: #ffdcdc;
+}
+
+/* ---- selling controls ---- */
+#sellBar {
+  position: absolute;
+  left: 74px;
+  right: 10px;
+  bottom: 16px;
+  z-index: 16;
+  display: flex;
+  gap: 7px;
+}
+
+#sellBar > button {
   flex: 1 1 0;
-  min-width: 0;
-  padding-left: 5px;
-  padding-right: 5px;
+  min-height: 64px;
+}
+
+.stashChip.sellable {
+  cursor: pointer;
+  background: #fff4c7;
+  box-shadow: inset 0 0 0 2px rgba(255, 183, 0, .35);
+}
+
+.stashChip.sellable::after {
+  content: " 🪙";
 }
 
 button {
@@ -383,3 +431,12 @@ button:disabled { opacity: .4; }
 .guideColorEmoji { font-size: 26px; }
 .guideColorName { font-size: 12px; font-weight: 900; margin-top: 3px; }
 .guideRecipe { margin-top: 3px; font-size: 10px; opacity: .68; }
+
+
+/* ---- room for the vertical tools rail ---- */
+@media (max-width: 700px) {
+  #field { left: 66px; }
+  #quest { left: 74px; }
+  #order { margin-left: 28px; width: min(76vw, 390px); }
+  #warehouseRow { left: 74px; }
+}
