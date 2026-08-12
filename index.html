@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.14 Journal</title>
+<title>Color Gather v0.13</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,10 +17,10 @@
     <div class="panel">🪙 <span id="coins">0</span></div>
   </div>
 
-  <button id="journalTeaser" class="journalTeaser">
-    <span>📖 <strong id="questText">Process 1: My First Paint</strong></span>
+  <div id="quest" role="button" aria-label="Open Journal">
+    <span id="questText">📖 Process 1 — My First Paint: Gather 4 Red paint</span>
     <span id="questProgress">0 / 4</span>
-  </button>
+  </div>
 
   <div id="order" style="display:none;">
     ORDER
@@ -60,17 +60,24 @@
     </button>
   </div>
 
+
   <div id="journalOverlay">
     <div id="journalSheet">
       <div id="journalHeader">
-        <span>📖 Studio Journal</span>
+        <div>
+          <div id="journalTitle">📖 Studio Journal</div>
+          <div id="journalSubtitle">Choose what you want to work on.</div>
+        </div>
         <button id="journalCloseBtn">Close</button>
       </div>
+
       <div id="journalTabs">
-        <button id="processTabBtn" class="journalTabBtn active">📝 Processes</button>
-        <button id="colorGuideTabBtn" class="journalTabBtn locked">🔒 Color Guide</button>
+        <button id="journalProcessesTab" class="journalTabBtn active">📋 Processes</button>
+        <button id="journalGuideTab" class="journalTabBtn" style="display:none;">🎨 Color Guide</button>
       </div>
-      <div id="journalContent"></div>
+
+      <div id="journalProcessList"></div>
+      <div id="colorGuidePanel" style="display:none;"></div>
     </div>
   </div>
 

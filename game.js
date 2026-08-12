@@ -45,9 +45,6 @@
   let totalFulfilled = 0;
 
   let activeStoreTab = "store";
-  let activeJournalTab = "processes";
-  let colorGuideUnlocked = false;
-  const discoveredColors = new Set(["red"]);
 
   const GRID = 30;
 
@@ -126,140 +123,329 @@
   let currentOrder = makeOrder("purple");
 
   // =========================================================
-  // QUESTS
+  // JOURNAL / PROCESSES
   // =========================================================
 
-  const quests = [
-    { id: "collect4", process: 1, processName: "My First Paint", desc: "Gather 4 Red paint", type: "gather", target: 4, reward: 5 },
-    { id: "sell4", process: 1, processName: "My First Paint", desc: "Sell your Red paint", type: "sell", target: 4, reward: 8 },
-    { id: "buyYellow", process: 2, processName: "Add a Primary", desc: "Buy the Yellow bucket", type: "yellow", target: 1, reward: 10 },
-    { id: "buyMixer", process: 2, processName: "Add a Primary", desc: "Buy the Mixer", type: "mixerUnlock", target: 1, reward: 10 },
-    { id: "firstMix", process: 3, processName: "Experiment", desc: "Mix Red + Yellow", type: "mix", target: 1, reward: 15 },
-    { id: "buyVial2", process: 3, processName: "Experiment", desc: "Buy a second Warehouse container", type: "vial2", target: 1, reward: 15 },
-    { id: "buyBlue", process: 4, processName: "Complete the Primaries", desc: "Buy the Blue bucket", type: "blue", target: 1, reward: 15 },
-    { id: "buyOrders", process: 4, processName: "Complete the Primaries", desc: "Open the studio to Orders", type: "orders", target: 1, reward: 20 },
-    { id: "fulfill3", process: 5, processName: "Working Artist", desc: "Fulfill 3 orders", type: "fulfill", target: 3, reward: 30 },
-    { id: "collect20", process: 5, processName: "Working Artist", desc: "Gather 20 paint total", type: "gather", target: 20, reward: 40 }
-  ];
-  let questIndex = 0;
+  let currentProcessIndex = 0;
+  let followedStepId = "gatherRed";
+  let completedJournalSteps = {};
+  let colorGuideUnlocked = false;
+  let activeJournalTab = "processes";
+  const discoveredColors = {};
 
-  function currentTotalFor(type) {
-    if (type === "gather") return totalGathered;
-    if (type === "sell") return totalSold;
-    if (type === "mix") return totalMixed;
-    if (type === "fulfill") return totalFulfilled;
-    if (type === "yellow") return yellowUnlocked ? 1 : 0;
-    if (type === "mixerUnlock") return mixerUnlocked ? 1 : 0;
-    if (type === "blue") return blueUnlocked ? 1 : 0;
-    if (type === "vial2") return VIAL_COUNT >= 2 ? 1 : 0;
-    if (type === "orders") return ordersUnlocked ? 1 : 0;
-    return 0;
+  const processes = [
+    {
+      id: "firstPaint",
+      title: "Process 1 — My First Paint",
+      description: "Learn the basics of gathering and selling paint.",
+      steps: [
+        { id: "gatherRed", desc: "Gather 4 Red paint", target: 4, reward: 5, progress: () => Math.min(totalGathered, 4) },
+        { id: "sellRed", desc: "Sell 4 paint", target: 4, reward: 8, progress: () => Math.min(totalSold, 4) }
+      ]
+    },
+    {
+      id: "yellowBucket",
+      title: "Process 2 — Add a Primary",
+      description: "Expand the studio with your second permanent primary bucket.",
+      steps: [
+        { id: "buyYellow", desc: "Buy the Yellow bucket", target: 1, reward: 10, progress: () => yellowUnlocked ? 1 : 0 }
+      ]
+    },
+    {
+      id: "experiment",
+      title: "Process 3 — Experiment",
+      description: "Set up the tools you need to begin mixing paint.",
+      steps: [
+        { id: "buyMixer", desc: "Buy the Mixer", target: 1, reward: 10, progress: () => mixerUnlocked ? 1 : 0 },
+        { id: "firstMix", desc: "Create your first mixed color", target: 1, reward: 15, progress: () => Math.min(totalMixed, 1) },
+        { id: "buyVial2", desc: "Buy a second Warehouse container", target: 1, reward: 15, progress: () => VIAL_COUNT >= 2 ? 1 : 0 }
+      ]
+    },
+    {
+      id: "primaries",
+      title: "Process 4 — Complete the Primaries",
+      description: "Bring the third primary into the studio and begin working with customers.",
+      steps: [
+        { id: "buyBlue", desc: "Buy the Blue bucket", target: 1, reward: 15, progress: () => blueUnlocked ? 1 : 0 },
+        { id: "buyOrders", desc: "Open Orders", target: 1, reward: 20, progress: () => ordersUnlocked ? 1 : 0 }
+      ]
+    },
+    {
+      id: "workingArtist",
+      title: "Process 5 — Working Artist",
+      description: "Put the studio to work.",
+      steps: [
+        { id: "fulfill3", desc: "Fulfill 3 orders", target: 3, reward: 30, progress: () => Math.min(totalFulfilled, 3) },
+        { id: "collect20", desc: "Gather 20 paint total", target: 20, reward: 40, progress: () => Math.min(totalGathered, 20) }
+      ]
+    }
+  ];
+
+  function getCurrentProcess() {
+    return processes[Math.min(currentProcessIndex, processes.length - 1)];
+  }
+
+  function findStepById(stepId) {
+    for (const process of processes) {
+      const step = process.steps.find(s => s.id === stepId);
+      if (step) return { process, step };
+    }
+    return null;
+  }
+
+  function isStepComplete(step) {
+    return !!completedJournalSteps[step.id];
+  }
+
+  function isProcessComplete(process) {
+    return process.steps.every(isStepComplete);
+  }
+
+  function firstIncompleteStep(process) {
+    return process.steps.find(step => !isStepComplete(step)) || process.steps[0];
+  }
+
+  function ensureFollowedStep() {
+    const current = getCurrentProcess();
+    const found = findStepById(followedStepId);
+
+    if (!found || found.process.id !== current.id || isStepComplete(found.step)) {
+      const next = firstIncompleteStep(current);
+      followedStepId = next ? next.id : current.steps[0].id;
+    }
+  }
+
+  function advanceCompletedProcesses() {
+    while (
+      currentProcessIndex < processes.length - 1 &&
+      isProcessComplete(processes[currentProcessIndex])
+    ) {
+      currentProcessIndex++;
+      followedStepId = firstIncompleteStep(getCurrentProcess()).id;
+      say(`📖 ${getCurrentProcess().title} started`);
+    }
+  }
+
+  function checkJournalSteps() {
+    let rewarded = false;
+    const current = getCurrentProcess();
+
+    current.steps.forEach(step => {
+      if (!isStepComplete(step) && step.progress() >= step.target) {
+        completedJournalSteps[step.id] = true;
+        coins += step.reward;
+        rewarded = true;
+        say(`✅ Step complete! +${step.reward}`);
+      }
+    });
+
+    advanceCompletedProcesses();
+    ensureFollowedStep();
+
+    if (rewarded) {
+      renderAll();
+    } else {
+      renderJournalTeaser();
+      if (document.querySelector("#journalOverlay")?.classList.contains("open")) {
+        renderJournal();
+      }
+    }
   }
 
   function checkQuests() {
-    if (questIndex >= quests.length) return;
-    const q = quests[questIndex];
-    if (currentTotalFor(q.type) >= q.target) {
-      coins += q.reward;
-      say(`✅ Quest complete! +${q.reward}`);
-      questIndex++;
-      renderAll();
-    } else {
-      renderQuest();
-    }
+    checkJournalSteps();
   }
 
   function renderQuest() {
+    renderJournalTeaser();
+  }
+
+  function renderJournalTeaser() {
     const questText = document.querySelector("#questText");
     const questProgress = document.querySelector("#questProgress");
+    const current = getCurrentProcess();
 
-    if (questIndex >= quests.length) {
-      questText.textContent = "Journal complete — more processes coming soon";
-      questProgress.textContent = "✓";
+    if (currentProcessIndex === processes.length - 1 && isProcessComplete(current)) {
+      questText.textContent = "📖 Starter Processes complete!";
+      questProgress.textContent = "Open Journal";
       return;
     }
 
-    const q = quests[questIndex];
-    questText.textContent = `Process ${q.process}: ${q.processName}`;
-    questProgress.textContent = `${Math.min(currentTotalFor(q.type), q.target)} / ${q.target}`;
+    ensureFollowedStep();
+    const found = findStepById(followedStepId);
+    const step = found ? found.step : firstIncompleteStep(current);
+    const progress = Math.min(step.progress(), step.target);
+
+    questText.textContent = `📖 ${current.title}: ${step.desc}`;
+    questProgress.textContent = `${progress} / ${step.target}`;
   }
 
-  function processGroups() {
-    const groups = [];
-    quests.forEach((q, index) => {
-      let group = groups.find(g => g.process === q.process);
-      if (!group) { group = { process: q.process, name: q.processName, steps: [] }; groups.push(group); }
-      group.steps.push({ ...q, index });
+  function selectJournalStep(stepId) {
+    const found = findStepById(stepId);
+    if (!found || found.process.id !== getCurrentProcess().id || isStepComplete(found.step)) return;
+
+    followedStepId = stepId;
+    renderJournalTeaser();
+    renderJournal();
+    saveState();
+  }
+
+  function isColorDiscovered(color) {
+    if (color === "red") return true;
+    if (color === "yellow") return yellowUnlocked;
+    if (color === "blue") return blueUnlocked;
+    if (color === "white") return whiteUnlocked;
+    return !!discoveredColors[color];
+  }
+
+  function recordColorDiscovery(color) {
+    if (isColorDiscovered(color)) return false;
+
+    discoveredColors[color] = true;
+
+    if (!colorGuideUnlocked) {
+      colorGuideUnlocked = true;
+      activeJournalTab = "guide";
+      setTimeout(() => say("📖 Color Guide added to your Journal!"), 450);
+    }
+
+    saveState();
+    return true;
+  }
+
+  function recipeTextForColor(color) {
+    const recipe = baseRecipes.concat(whiteRecipes).find(r => r.result === color);
+    if (!recipe) return "Primary paint";
+    return `${colorInfo[recipe.a].emoji} + ${colorInfo[recipe.b].emoji}`;
+  }
+
+  function renderJournalProcesses() {
+    const list = document.querySelector("#journalProcessList");
+    list.innerHTML = "";
+
+    processes.forEach((process, index) => {
+      const card = document.createElement("div");
+      card.className = "journalProcessCard";
+
+      if (index < currentProcessIndex || isProcessComplete(process)) card.classList.add("complete");
+      if (index > currentProcessIndex) card.classList.add("future");
+
+      const title = document.createElement("div");
+      title.className = "journalProcessTitle";
+      title.textContent = `${index < currentProcessIndex || isProcessComplete(process) ? "✓ " : ""}${process.title}`;
+      card.appendChild(title);
+
+      const desc = document.createElement("div");
+      desc.className = "journalProcessDesc";
+      desc.textContent = process.description;
+      card.appendChild(desc);
+
+      if (index === currentProcessIndex) {
+        process.steps.forEach(step => {
+          const row = document.createElement("button");
+          row.className = "journalStepBtn";
+
+          const complete = isStepComplete(step);
+          const following = followedStepId === step.id && !complete;
+
+          if (complete) row.classList.add("complete");
+          if (following) row.classList.add("following");
+
+          const progress = Math.min(step.progress(), step.target);
+
+          row.innerHTML = `
+            <span class="journalStepMain">
+              <span class="journalStepMark">${complete ? "✓" : following ? "▶" : "○"}</span>
+              <span>${step.desc}</span>
+            </span>
+            <span class="journalStepProgress">${progress}/${step.target}</span>
+          `;
+
+          row.disabled = complete;
+          row.addEventListener("click", () => selectJournalStep(step.id));
+          card.appendChild(row);
+        });
+
+        const hint = document.createElement("div");
+        hint.className = "journalFollowHint";
+        hint.textContent = "Tap an unfinished step to follow it on the main screen.";
+        card.appendChild(hint);
+      }
+
+      list.appendChild(card);
     });
-    return groups;
+  }
+
+  function renderColorGuide() {
+    const panel = document.querySelector("#colorGuidePanel");
+    panel.innerHTML = "";
+
+    const groups = [
+      { title: "Primary", colors: ["red", "yellow", "blue"] },
+      { title: "Secondary", colors: ["orange", "purple", "green"] },
+      { title: "Light Mixes", colors: ["pink", "skyblue", "cream"] }
+    ];
+
+    groups.forEach(group => {
+      const heading = document.createElement("div");
+      heading.className = "guideGroupTitle";
+      heading.textContent = group.title;
+      panel.appendChild(heading);
+
+      const grid = document.createElement("div");
+      grid.className = "guideGrid";
+
+      group.colors.forEach(color => {
+        const discovered = isColorDiscovered(color);
+        const card = document.createElement("div");
+        card.className = "guideColorCard" + (discovered ? "" : " locked");
+
+        if (discovered) {
+          card.innerHTML = `
+            <div class="guideColorEmoji">${colorInfo[color].emoji}</div>
+            <div class="guideColorName">${colorInfo[color].label}</div>
+            <div class="guideRecipe">${recipeTextForColor(color)}</div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="guideColorEmoji">❔</div>
+            <div class="guideColorName">???</div>
+            <div class="guideRecipe">Undiscovered</div>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+
+      panel.appendChild(grid);
+    });
+  }
+
+  function setJournalTab(tab) {
+    if (tab === "guide" && !colorGuideUnlocked) return;
+
+    activeJournalTab = tab;
+
+    document.querySelector("#journalProcessesTab").classList.toggle("active", tab === "processes");
+    document.querySelector("#journalGuideTab").classList.toggle("active", tab === "guide");
+
+    document.querySelector("#journalProcessList").style.display = tab === "processes" ? "block" : "none";
+    document.querySelector("#colorGuidePanel").style.display = tab === "guide" ? "block" : "none";
+
+    if (tab === "guide") renderColorGuide();
   }
 
   function renderJournal() {
-    const content = document.querySelector("#journalContent");
-    const processBtn = document.querySelector("#processTabBtn");
-    const guideBtn = document.querySelector("#colorGuideTabBtn");
-    processBtn.classList.toggle("active", activeJournalTab === "processes");
-    guideBtn.classList.toggle("active", activeJournalTab === "guide");
-    guideBtn.classList.toggle("locked", !colorGuideUnlocked);
-    guideBtn.textContent = colorGuideUnlocked ? "🎨 Color Guide" : "🔒 Color Guide";
-    content.innerHTML = "";
+    const guideTab = document.querySelector("#journalGuideTab");
+    guideTab.style.display = colorGuideUnlocked ? "block" : "none";
 
-    if (activeJournalTab === "guide") {
-      if (!colorGuideUnlocked) {
-        content.innerHTML = '<div class="journalNote">Keep experimenting with paint. The Color Guide will appear when you discover your first mixed color.</div>';
-        return;
-      }
-      renderColorGuide(content);
-      return;
+    renderJournalProcesses();
+
+    if (!colorGuideUnlocked && activeJournalTab === "guide") {
+      activeJournalTab = "processes";
     }
 
-    processGroups().forEach(group => {
-      const first = group.steps[0].index;
-      const last = group.steps[group.steps.length - 1].index;
-      const complete = questIndex > last;
-      const current = questIndex >= first && questIndex <= last;
-      const card = document.createElement("div");
-      card.className = "processCard" + (complete ? " complete" : current ? " current" : "");
-      const title = document.createElement("div");
-      title.className = "processTitle";
-      title.textContent = `${complete ? "✓" : current ? "✦" : "○"} Process ${group.process} — ${group.name}`;
-      card.appendChild(title);
-      group.steps.forEach(step => {
-        const row = document.createElement("div");
-        row.className = "processStep";
-        const done = questIndex > step.index;
-        const active = questIndex === step.index;
-        const progress = Math.min(currentTotalFor(step.type), step.target);
-        row.innerHTML = `<span>${done ? "✓" : active ? "→" : "○"} ${step.desc}</span><span>${done ? "Done" : `${progress}/${step.target}`}</span>`;
-        card.appendChild(row);
-      });
-      const reward = document.createElement("div");
-      reward.className = "processReward";
-      reward.textContent = `Process rewards: 🪙 ${group.steps.reduce((sum, s) => sum + s.reward, 0)}`;
-      card.appendChild(reward);
-      content.appendChild(card);
-    });
-  }
-
-  function renderColorGuide(content) {
-    const sections = [
-      { title: "Primary Colors", colors: ["red", "yellow", "blue"] },
-      { title: "Mixed Colors", colors: ["orange", "purple", "green", "pink", "skyblue", "cream"] }
-    ];
-    const recipes = { orange:"Red + Yellow", purple:"Red + Blue", green:"Blue + Yellow", pink:"Red + White", skyblue:"Blue + White", cream:"Yellow + White" };
-    sections.forEach(section => {
-      const heading = document.createElement("div"); heading.className = "guideSectionTitle"; heading.textContent = section.title; content.appendChild(heading);
-      const grid = document.createElement("div"); grid.className = "guideGrid";
-      section.colors.forEach(color => {
-        const known = discoveredColors.has(color);
-        const card = document.createElement("div"); card.className = "guideCard" + (known ? "" : " unknown");
-        card.innerHTML = known
-          ? `<div class="guideEmoji">${colorInfo[color].emoji}</div><div class="guideName">${colorInfo[color].label}</div><div class="guideRecipe">${recipes[color] || "Primary paint"}</div>`
-          : '<div class="guideEmoji">❔</div><div class="guideName">???</div><div class="guideRecipe">Undiscovered</div>';
-        grid.appendChild(card);
-      });
-      content.appendChild(grid);
-    });
+    setJournalTab(activeJournalTab);
   }
 
   // =========================================================
@@ -269,17 +455,16 @@
   const storeItems = [
     {
       id: "unlockYellow",
-      name: "Unlock Yellow",
+      name: "Buy Yellow Bucket",
       level: 0,
       maxLevel: 1,
       baseCost: 10,
       growth: 1,
       visible: () => !yellowUnlocked,
-      desc: () => "Adds the Yellow paint bucket to your field",
+      desc: () => "Adds a permanent Yellow primary bucket to your studio",
       cost: function () { return this.baseCost; },
       buy: function () {
         yellowUnlocked = true;
-        discoveredColors.add("yellow");
         this.level = 1;
         document.querySelector("#yellow").style.display = "grid";
       }
@@ -312,7 +497,6 @@
       cost: function () { return this.baseCost; },
       buy: function () {
         blueUnlocked = true;
-        discoveredColors.add("blue");
         this.level = 1;
         document.querySelector("#blue").style.display = "grid";
       }
@@ -368,7 +552,6 @@
       cost: function () { return this.baseCost; },
       buy: function () {
         whiteUnlocked = true;
-        discoveredColors.add("white");
         this.level = 1;
         document.querySelector("#white").style.display = "grid";
       }
@@ -471,6 +654,7 @@
     item.buy();
     say(`${item.name} upgraded!`);
     renderAll();
+    checkJournalSteps();
   }
 
   function renderUpgradeCard(item, list) {
@@ -1013,7 +1197,6 @@ function spawnMinion() {
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
       renderStore();
     }
-    if (journalOverlay.classList.contains("open")) renderJournal();
 
     saveState();
   }
@@ -1145,12 +1328,7 @@ function spawnMinion() {
 
     addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
     totalMixed++;
-    const isNewDiscovery = !discoveredColors.has(recipe.result);
-    discoveredColors.add(recipe.result);
-    if (isNewDiscovery && recipe.result === "orange" && !colorGuideUnlocked) {
-      colorGuideUnlocked = true;
-      setTimeout(() => say("📖 Color Guide added to your Journal!"), 700);
-    }
+    recordColorDiscovery(recipe.result);
     dropperArmed = false;
     dropperIngredients = [];
 
@@ -1299,18 +1477,25 @@ function spawnMinion() {
   });
 
   // =========================================================
-  // JOURNAL
+  // JOURNAL OVERLAY
   // =========================================================
 
-  function openJournal() { journalOverlay.classList.add("open"); renderJournal(); }
-  document.querySelector("#journalBtn").addEventListener("click", openJournal);
-  document.querySelector("#journalTeaser").addEventListener("click", openJournal);
-  document.querySelector("#journalCloseBtn").addEventListener("click", () => journalOverlay.classList.remove("open"));
-  document.querySelector("#processTabBtn").addEventListener("click", () => { activeJournalTab = "processes"; renderJournal(); });
-  document.querySelector("#colorGuideTabBtn").addEventListener("click", () => {
-    if (!colorGuideUnlocked) { say("🔒 Discover Orange to unlock the Color Guide"); return; }
-    activeJournalTab = "guide"; renderJournal();
+  document.querySelector("#journalBtn").addEventListener("click", () => {
+    journalOverlay.classList.add("open");
+    renderJournal();
   });
+
+  document.querySelector("#quest").addEventListener("click", () => {
+    journalOverlay.classList.add("open");
+    renderJournal();
+  });
+
+  document.querySelector("#journalCloseBtn").addEventListener("click", () => {
+    journalOverlay.classList.remove("open");
+  });
+
+  document.querySelector("#journalProcessesTab").addEventListener("click", () => setJournalTab("processes"));
+  document.querySelector("#journalGuideTab").addEventListener("click", () => setJournalTab("guide"));
 
   // =========================================================
   // STORE OVERLAY
@@ -1343,8 +1528,9 @@ function spawnMinion() {
         yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
-        questIndex, currentOrder, sourcePositions,
-        colorGuideUnlocked, discoveredColors: Array.from(discoveredColors),
+        currentProcessIndex, followedStepId, completedJournalSteps,
+        colorGuideUnlocked, activeJournalTab, discoveredColors,
+        currentOrder, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
         toolUpgradeLevels: toolUpgrades.map(i => ({ id: i.id, level: i.level }))
       };
@@ -1375,8 +1561,8 @@ function spawnMinion() {
       mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
       blueUnlocked = data.blueUnlocked ?? blueUnlocked;
       ordersUnlocked = data.ordersUnlocked ?? ordersUnlocked;
-      if (yellowUnlocked) { document.querySelector("#yellow").style.display = "grid"; discoveredColors.add("yellow"); }
-      if (blueUnlocked) { document.querySelector("#blue").style.display = "grid"; discoveredColors.add("blue"); }
+      if (yellowUnlocked) document.querySelector("#yellow").style.display = "grid";
+      if (blueUnlocked) document.querySelector("#blue").style.display = "grid";
       if (mixerUnlocked) document.querySelector("#warehouseRow").style.display = "block";
       if (ordersUnlocked) {
         document.querySelector("#order").style.display = "block";
@@ -1390,9 +1576,37 @@ function spawnMinion() {
       totalSold = data.totalSold ?? totalSold;
       totalMixed = data.totalMixed ?? totalMixed;
       totalFulfilled = data.totalFulfilled ?? totalFulfilled;
-      questIndex = data.questIndex ?? questIndex;
-      colorGuideUnlocked = data.colorGuideUnlocked ?? colorGuideUnlocked;
-      if (Array.isArray(data.discoveredColors)) { discoveredColors.clear(); data.discoveredColors.forEach(c => discoveredColors.add(c)); }
+      if (typeof data.currentProcessIndex === "number") currentProcessIndex = data.currentProcessIndex;
+      followedStepId = data.followedStepId ?? followedStepId;
+
+      if (data.completedJournalSteps && typeof data.completedJournalSteps === "object") {
+        completedJournalSteps = data.completedJournalSteps;
+      } else if (typeof data.questIndex === "number") {
+        const oldOrder = [
+          "gatherRed", "sellRed", "buyYellow", "buyMixer", "firstMix",
+          "buyVial2", "buyBlue", "buyOrders", "fulfill3", "collect20"
+        ];
+        oldOrder.slice(0, data.questIndex).forEach(id => completedJournalSteps[id] = true);
+      }
+
+      colorGuideUnlocked = data.colorGuideUnlocked ?? (totalMixed > 0);
+      activeJournalTab = data.activeJournalTab ?? activeJournalTab;
+
+      if (data.discoveredColors && typeof data.discoveredColors === "object") {
+        Object.assign(discoveredColors, data.discoveredColors);
+      } else if (totalMixed > 0) {
+        discoveredColors.orange = true;
+      }
+
+      currentProcessIndex = 0;
+      while (
+        currentProcessIndex < processes.length - 1 &&
+        isProcessComplete(processes[currentProcessIndex])
+      ) {
+        currentProcessIndex++;
+      }
+      ensureFollowedStep();
+
       if (data.currentOrder) currentOrder = data.currentOrder;
       if (data.sourcePositions) Object.assign(sourcePositions, data.sourcePositions);
 

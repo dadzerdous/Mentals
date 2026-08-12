@@ -60,15 +60,16 @@ button, .source, .stashChip, .mixChip {
 .stashChip.pickable:active { transform: translateY(1px); }
 .stashChip.empty { opacity: .45; }
 
-/* ---- journal teaser ---- */
-.journalTeaser {
+/* ---- quest ---- */
+#quest {
   position: absolute; top: 74px; left: 10px; right: 10px;
-  min-height: 44px; background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
+  background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
   padding: 6px 10px; font-size: 13px; font-weight: 800; z-index: 5;
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  box-shadow: 0 3px 0 rgba(43,41,39,.12); text-align: left;
 }
 #questProgress { font-size: 12px; opacity: .75; white-space: nowrap; }
+#quest { cursor: pointer; }
+#quest:active { transform: translateY(1px); }
 
 /* ---- order ---- */
 #order {
@@ -186,7 +187,14 @@ button, .source, .stashChip, .mixChip {
 /* ---- action buttons ---- */
 #actions {
   position: absolute; left: 10px; right: 10px; bottom: 16px;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  display: flex; gap: 6px;
+}
+
+#actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 button {
@@ -321,34 +329,57 @@ button:disabled { opacity: .4; }
 
 /* ---- studio journal ---- */
 #journalOverlay {
-  position: absolute; inset: 0; background: rgba(43,41,39,.58);
-  display: none; align-items: flex-end; z-index: 42;
+  position: absolute; inset: 0; background: rgba(43,41,39,.62);
+  display: none; align-items: flex-end; z-index: 46;
 }
 #journalOverlay.open { display: flex; }
+
 #journalSheet {
-  width: 100%; max-height: 86%; background: #f4efe8;
-  border-radius: 22px 22px 0 0; border: 3px solid #2b2927; border-bottom: none;
-  padding: 14px; overflow-y: auto;
+  width: 100%; max-height: 88%; overflow-y: auto;
+  background: #f4efe8; border: 3px solid #2b2927; border-bottom: none;
+  border-radius: 22px 22px 0 0; padding: 14px;
 }
-#journalHeader { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:18px; font-weight:900; margin-bottom:10px; }
-#journalCloseBtn { min-height:40px; padding:0 14px; border-radius:12px; font-size:13px; }
-#journalTabs { display:flex; gap:8px; margin-bottom:12px; }
-.journalTabBtn { flex:1; min-height:46px; border-radius:12px; background:#fff; }
-.journalTabBtn.active { background:#ffe08a; }
-.journalTabBtn.locked { opacity:.55; }
-.processCard, .guideCard { background:#fff; border:2px solid #2b2927; border-radius:16px; padding:12px; margin-bottom:10px; }
-.processCard.current { background:#fff8e6; border-style:dashed; }
-.processCard.complete { opacity:.68; }
-.processTitle { font-weight:900; font-size:15px; margin-bottom:7px; }
-.processStep { display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0; border-top:1px solid rgba(43,41,39,.10); }
-.processStep:first-of-type { border-top:none; }
-.processReward { font-size:12px; opacity:.7; margin-top:7px; }
-.journalNote { text-align:center; font-size:13px; line-height:1.45; padding:18px 8px; opacity:.75; }
-.guideSectionTitle { font-size:12px; font-weight:900; opacity:.65; margin:14px 2px 7px; text-transform:uppercase; letter-spacing:.06em; }
-.guideGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.guideCard { margin:0; text-align:center; padding:12px 6px; min-height:88px; }
-.guideEmoji { font-size:28px; }
-.guideName { font-size:12px; font-weight:900; margin-top:3px; }
-.guideRecipe { font-size:10px; opacity:.65; margin-top:4px; }
-.guideCard.unknown { opacity:.42; filter:grayscale(1); }
-#journalBtn { background:#fff8e6; }
+
+#journalHeader {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; margin-bottom: 10px;
+}
+#journalTitle { font-size: 20px; font-weight: 900; }
+#journalSubtitle { margin-top: 2px; font-size: 12px; opacity: .7; }
+#journalCloseBtn { min-height: 42px; padding: 0 14px; border-radius: 12px; }
+
+#journalTabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.journalTabBtn { flex: 1; min-height: 44px; border-radius: 12px; }
+.journalTabBtn.active { background: #ffe08a; }
+
+.journalProcessCard {
+  background: rgba(255,255,255,.96); border: 2px solid #2b2927;
+  border-radius: 16px; padding: 11px; margin-bottom: 10px;
+}
+.journalProcessCard.complete { opacity: .68; }
+.journalProcessCard.future { opacity: .42; }
+.journalProcessTitle { font-size: 15px; font-weight: 900; }
+.journalProcessDesc { font-size: 12px; opacity: .68; margin: 3px 0 9px; }
+
+.journalStepBtn {
+  width: 100%; min-height: 52px; margin-top: 7px; padding: 7px 10px;
+  border-radius: 13px; display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; text-align: left; background: #fff;
+}
+.journalStepBtn.following { background: #fff1b8; border-style: dashed; }
+.journalStepBtn.complete { background: #eef7e9; opacity: .75; }
+.journalStepMain { display: flex; align-items: center; gap: 8px; }
+.journalStepMark { width: 20px; text-align: center; font-size: 15px; }
+.journalStepProgress { flex: 0 0 auto; font-size: 11px; opacity: .72; }
+.journalFollowHint { font-size: 11px; opacity: .58; text-align: center; margin-top: 9px; }
+
+.guideGroupTitle { font-size: 13px; font-weight: 900; margin: 13px 0 7px; }
+.guideGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.guideColorCard {
+  min-height: 94px; padding: 8px 5px; background: #fff;
+  border: 2px solid #2b2927; border-radius: 14px; text-align: center;
+}
+.guideColorCard.locked { opacity: .43; }
+.guideColorEmoji { font-size: 26px; }
+.guideColorName { font-size: 12px; font-weight: 900; margin-top: 3px; }
+.guideRecipe { margin-top: 3px; font-size: 10px; opacity: .68; }
