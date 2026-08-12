@@ -1536,7 +1536,8 @@ function spawnMinion() {
     tube.color = null;
     tube.amount = 0;
 
-    coinBurstFromElement(bagContents.children[index], earned);
+    sellImpactAt(bagContents.children[index], `+${earned}`);
+    pulseCoins(earned);
     renderAll();
     showSellHint(true);
 
