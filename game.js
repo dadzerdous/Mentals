@@ -1586,7 +1586,10 @@ function paintSplatBurst(color) {
     // Manual taps always leave a small paint mark on the canvas,
     // even when there isn't room to collect more paint.
     if (!fromMinion) {
+      // Splat and sound are feedback for touching the paint bucket itself,
+      // so both happen even when the tube is full.
       createCanvasTapSplat(source, color);
+      playSplatSound();
     }
 
     const placed = addToSlots(tubes, color, 1, bagCapacityPerTube);
@@ -1607,7 +1610,7 @@ function paintSplatBurst(color) {
     checkQuests();
 
     if (!fromMinion) {
-      playSplatSound();
+      
       if (navigator.vibrate) navigator.vibrate(12);
     }
   }
