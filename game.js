@@ -1306,6 +1306,19 @@ function spawnMinion() {
     }
   }
 
+  const sellChingAudio = new Audio("sounds/ching.mp3");
+  sellChingAudio.preload = "auto";
+
+  function playSellSound() {
+    try {
+      sellChingAudio.currentTime = 0;
+      sellChingAudio.play().catch(() => {});
+    } catch (e) {
+      // Audio may be blocked in some browser states; ignore gracefully.
+    }
+  }
+
+
   // =========================================================
   // PAINT SPLAT EFFECT
   // =========================================================
@@ -1768,6 +1781,7 @@ function paintSplatBurst(color) {
             const earned = 1 + studioEarningsBonus;
             coins += earned;
             totalSold += 1;
+            playSellSound();
 
             source.classList.remove("sellBucketHint");
             void source.offsetWidth;
@@ -1855,6 +1869,7 @@ function paintSplatBurst(color) {
 
     coins += earned;
     totalSold += tube.amount;
+    playSellSound();
 
     tube.color = null;
     tube.amount = 0;
@@ -1883,6 +1898,7 @@ function paintSplatBurst(color) {
     vial.amount = 0;
     coins += earned;
     totalSold += amount;
+    playSellSound();
 
     sellImpactAt(chipEl, fullBonus ? `+${earned} FULL!` : `+${earned}`);
     pulseCoins(earned);
@@ -1925,6 +1941,7 @@ function paintSplatBurst(color) {
 
     totalSold += tubesUsedTotal();
     coins += earned;
+    playSellSound();
     initTubes();
 
     pulseCoins(earned);
@@ -1946,6 +1963,7 @@ function paintSplatBurst(color) {
     const earned = base + fullBonus + studioEarningsBonus;
     totalSold += base;
     coins += earned;
+    playSellSound();
     initVials();
 
     pulseCoins(earned);
@@ -1969,6 +1987,7 @@ function paintSplatBurst(color) {
     const earned = raw + mixed + fullBonus + studioEarningsBonus;
     totalSold += raw + mixed;
     coins += earned;
+    playSellSound();
 
     initTubes();
     initVials();
