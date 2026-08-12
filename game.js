@@ -154,9 +154,10 @@
     {
       id: "yellowBucket",
       title: "Process 2 — Add a Primary",
-      description: "Add another permanent primary bucket, then stock it with Yellow paint.",
+      description: "Expand storage, add an empty primary bucket, then choose a new paint color.",
       completionText: "Primary production expanded!",
       steps: [
+        { id: "buyVial", desc: "Buy a new vial", target: 1, progress: () => VIAL_COUNT >= 2 ? 1 : 0 },
         { id: "buyPrimaryBucket", desc: "Buy a Primary Bucket", target: 1, progress: () => primaryBucketSlots >= 1 ? 1 : 0 },
         { id: "buyNewColor", desc: "Buy a new primary color", target: 1, progress: () => (yellowUnlocked || blueUnlocked) ? 1 : 0 }
       ]
@@ -168,8 +169,7 @@
       completionText: "Mixing production established!",
       steps: [
         { id: "buyMixer", desc: "Buy the Mixer", target: 1, progress: () => mixerUnlocked ? 1 : 0 },
-        { id: "firstMix", desc: "Create your first mixed color", target: 1, progress: () => Math.min(totalMixed, 1) },
-        { id: "buyVial2", desc: "Buy a second Warehouse container", target: 1, progress: () => VIAL_COUNT >= 2 ? 1 : 0 }
+        { id: "firstMix", desc: "Create your first mixed color", target: 1, progress: () => Math.min(totalMixed, 1) }
       ]
     },
     {
@@ -238,13 +238,10 @@
       // Completing Process 1 unlocks the Store.
       say("🎉 Process complete — Store unlocked!");
     } else if (process.id === "yellowBucket") {
-      // Strong incremental reward: make the first tube roomier.
-      bagCapacityPerTube += 2;
-      say("🎉 Process complete — Paint Case capacity increased!");
+      // Process reward is progression, not an automatic capacity increase.
+      say("🎉 Process complete — Experimenting unlocked!");
     } else if (process.id === "experiment") {
-      // Strong incremental reward: increase mixed storage capacity.
-      storageCapacityPerVial += 2;
-      say("🎉 Process complete — Vial capacity increased!");
+      say("🎉 Process complete — Color Guide expanded!");
     } else if (process.id === "primaries") {
       say("🎉 Process complete — Customer work established!");
     } else if (process.id === "workingArtist") {
@@ -546,11 +543,92 @@
       document.querySelector("#blue").style.display = "grid";
     }
 
+    const emptyBucketEl = document.querySelector("#emptyPrimaryBucket");
+    if (emptyBucketEl) emptyBucketEl.dataset.placed = "false";
+    refreshPrimaryBucketVisual();
     say(`${colorInfo[color].emoji} ${colorInfo[color].label} added to your new bucket!`);
     renderAll();
     checkJournalSteps();
     saveState();
     return true;
+  }
+
+  function refreshPrimaryBucketVisual() {
+    const emptyBucket = document.querySelector("#emptyPrimaryBucket");
+    if (!emptyBucket) return;
+
+    const hasEmpty = emptyPrimaryBucketCount() > 0;
+    emptyBucket.style.display = hasEmpty ? "grid" : "none";
+
+    if (!hasEmpty) return;
+
+    // Keep its current position once placed so it doesn't jump around on every render.
+    if (emptyBucket.dataset.placed === "true") return;
+
+    const fieldRect = field.getBoundingClientRect();
+    const bucketW = emptyBucket.offsetWidth || 78;
+    const bucketH = emptyBucket.offsetHeight || 78;
+    const padding = 10;
+
+    const occupied = Array.from(document.querySelectorAll(".source[data-color]"))
+      .filter(el => el.style.display !== "none")
+      .map(el => {
+        const r = el.getBoundingClientRect();
+        return {
+          left: r.left - fieldRect.left - padding,
+          top: r.top - fieldRect.top - padding,
+          right: r.right - fieldRect.left + padding,
+          bottom: r.bottom - fieldRect.top + padding
+        };
+      });
+
+    function overlapsAny(left, top) {
+      const rect = {
+        left,
+        top,
+        right: left + bucketW,
+        bottom: top + bucketH
+      };
+
+      return occupied.some(o =>
+        rect.left < o.right &&
+        rect.right > o.left &&
+        rect.top < o.bottom &&
+        rect.bottom > o.top
+      );
+    }
+
+    const maxLeft = Math.max(0, fieldRect.width - bucketW);
+    const maxTop = Math.max(0, fieldRect.height - bucketH);
+
+    let chosen = null;
+
+    // Try a bunch of random positions until we find a clear one.
+    for (let i = 0; i < 40; i++) {
+      const left = Math.round(Math.random() * maxLeft);
+      const top = Math.round(Math.random() * maxTop);
+
+      if (!overlapsAny(left, top)) {
+        chosen = { left, top };
+        break;
+      }
+    }
+
+    // Fallback: use a safe-ish corner if the field is crowded.
+    if (!chosen) {
+      const candidates = [
+        { left: maxLeft, top: 0 },
+        { left: 0, top: maxTop },
+        { left: maxLeft, top: maxTop },
+        { left: Math.round(maxLeft / 2), top: maxTop }
+      ];
+
+      chosen = candidates.find(p => !overlapsAny(p.left, p.top)) || { left: 0, top: 0 };
+    }
+
+    emptyBucket.style.left = chosen.left + "px";
+    emptyBucket.style.top = chosen.top + "px";
+    emptyBucket.dataset.placed = "true";
   }
 
   // =========================================================
@@ -567,6 +645,7 @@
       growth: 2,
       visible: () => {
         if (currentProcessIndex < 1) return false;
+        if (VIAL_COUNT < 2) return false;
         // First extra primary bucket is available in Process 2.
         if (primaryBucketSlots === 0) return true;
         // Second becomes available after the first mixed-color discovery / Process 4.
@@ -581,6 +660,9 @@
       buy: function () {
         primaryBucketSlots++;
         this.level++;
+        const emptyBucketEl = document.querySelector("#emptyPrimaryBucket");
+        if (emptyBucketEl) emptyBucketEl.dataset.placed = "false";
+        refreshPrimaryBucketVisual();
       }
     },
     {
@@ -643,14 +725,24 @@
     },
     {
       id: "vialSlot",
-      name: "Buy a Container",
+      name: "Buy a Vial",
       level: 0,
-      baseCost: 20,
-      growth: 2,
-      visible: () => mixerUnlocked,
-      desc: function () { return `Adds another container to the Warehouse. You have ${VIAL_COUNT} now.`; },
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { vials.push({ color: null, amount: 0 }); VIAL_COUNT++; this.level++; }
+      maxLevel: 1,
+      baseCost: 8,
+      growth: 1,
+      visible: () => currentProcessIndex >= 1,
+      desc: function () {
+        return this.level >= 1
+          ? "Starter vial purchased"
+          : "Adds a second empty vial for storing mixed paint";
+      },
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        if (this.level >= 1) return;
+        vials.push({ color: null, amount: 0 });
+        VIAL_COUNT++;
+        this.level = 1;
+      }
     },
     {
       id: "white",
@@ -778,11 +870,13 @@
   function renderUpgradeCard(item, list) {
     const maxed = item.maxLevel && item.level >= item.maxLevel;
     const locked = item.requires && !item.requires();
+    const soldOut = maxed && (item.id === "vialSlot" || item.id === "buyPrimaryBucket");
     const primaryPaintItem = item.id === "unlockYellow" || item.id === "unlockBlue";
     const primaryPaintPreBucketLocked = primaryPaintItem && primaryBucketSlots === 0;
 
     const card = document.createElement("div");
     card.className = "upgradeCard";
+    if (soldOut) card.classList.add("soldOut");
 
     const info = document.createElement("div");
     info.className = "upgradeInfo";
@@ -793,9 +887,15 @@
 
     const buyBtn = document.createElement("button");
     buyBtn.className = "upgradeBuyBtn";
-    buyBtn.textContent = maxed ? "✓" : `🪙 ${item.cost()}`;
-    buyBtn.disabled = maxed || locked || primaryPaintPreBucketLocked || coins < item.cost();
+    buyBtn.textContent = soldOut ? "SOLD OUT" : maxed ? "✓" : `🪙 ${item.cost()}`;
+    const affordableNow = !maxed && !locked && !primaryPaintPreBucketLocked && coins >= item.cost();
+
+    buyBtn.disabled = !affordableNow;
     if (primaryPaintPreBucketLocked) card.classList.add("storeItemLocked");
+    if (affordableNow) {
+      card.classList.add("affordable");
+      buyBtn.classList.add("affordable");
+    }
     buyBtn.addEventListener("click", () => buyFromList(list, item.id));
 
     card.appendChild(info);
@@ -868,7 +968,7 @@
   }
 
   function getUnlockedSources() {
-    return Array.from(document.querySelectorAll(".source")).filter(el => el.style.display !== "none");
+    return Array.from(document.querySelectorAll(".source[data-color]")).filter(el => el.style.display !== "none");
   }
 
   function beginDragSource(sourceEl, startEvent) {
@@ -1073,7 +1173,6 @@ function spawnMinion() {
   const dropperToggle = document.querySelector("#mixerToolBtn");
   const dropperChips = document.querySelector("#dropperChips");
   const dropperFloaterEl = document.querySelector("#dropperFloater");
-  const storeBadge = document.querySelector("#storeBadge");
   const journalOverlay = document.querySelector("#journalOverlay");
 
   // =========================================================
@@ -1340,8 +1439,12 @@ function spawnMinion() {
     renderWarehouse();
     renderDropper();
     renderQuest();
+    refreshPrimaryBucketVisual();
 
-    storeBadge.style.display = cheapestAffordableExists() ? "grid" : "none";
+    const storeBtnElForHighlight = document.querySelector("#storeBtn");
+    if (storeBtnElForHighlight) {
+      storeBtnElForHighlight.classList.toggle("canAfford", cheapestAffordableExists());
+    }
 
     const storeBtnEl = document.querySelector("#storeBtn");
     const mixerBtnEl = document.querySelector("#mixerToolBtn");
@@ -1513,7 +1616,7 @@ function spawnMinion() {
   // RAW COLOR INPUT — tap to gather, hold to rearrange
   // =========================================================
 
-  document.querySelectorAll(".source").forEach(source => {
+  document.querySelectorAll(".source[data-color]").forEach(source => {
     source.addEventListener("pointerdown", event => {
       event.preventDefault();
       source.classList.add("pressed");
@@ -1583,10 +1686,6 @@ function spawnMinion() {
   // =========================================================
   // SELL — selective selling, with Sell All as a convenience
   // =========================================================
-
-  const sellOverlay = document.querySelector("#sellOverlay");
-  const sellRawCount = document.querySelector("#sellRawCount");
-  const sellMixedCount = document.querySelector("#sellMixedCount");
 
   function pulseCoins(amount) {
     const coinPanel = coinsEl.closest(".panel") || coinsEl;
@@ -1681,9 +1780,6 @@ function spawnMinion() {
   }
 
   function openSellAllPicker() {
-    sellRawCount.textContent = tubesUsedTotal();
-    sellMixedCount.textContent = vialsUsedTotal();
-    sellOverlay.classList.add("open");
   }
 
   document.querySelector("#sellBtn").addEventListener("click", () => {
@@ -1708,25 +1804,6 @@ function spawnMinion() {
   });
 
   document.querySelector("#sellAllBtn").addEventListener("click", openSellAllPicker);
-
-  document.querySelector("#sellCancelBtn").addEventListener("click", () => {
-    sellOverlay.classList.remove("open");
-  });
-
-  document.querySelector("#sellRawBtn").addEventListener("click", () => {
-    sellOverlay.classList.remove("open");
-    sellAllTubesNow();
-  });
-
-  document.querySelector("#sellMixedBtn").addEventListener("click", () => {
-    sellOverlay.classList.remove("open");
-    sellAllVialsNow();
-  });
-
-  document.querySelector("#sellEverythingBtn").addEventListener("click", () => {
-    sellOverlay.classList.remove("open");
-    sellEverythingNow();
-  });
 
 
   function sellAllTubesNow() {

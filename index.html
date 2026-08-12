@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.20</title>
+<title>Color Gather v0.23</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -36,6 +36,7 @@
     <div class="source" id="blue" data-color="blue" style="display:none;">🔵<small>Tap</small></div>
     <div class="source" id="yellow" data-color="yellow" style="display:none;">🟡<small>Tap</small></div>
     <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
+    <div class="source emptyPrimaryBucket" id="emptyPrimaryBucket" style="display:none;">🪣<small>Empty</small></div>
   </div>
 
   <div id="warehouseRow" style="display:none;">
@@ -63,7 +64,6 @@
     </div>
     <button id="storeBtn" class="toolRailBtn" style="display:none;">
       🏪<span>Store</span>
-      <span id="storeBadge" class="storeBadge" style="display:none;">!</span>
     </button>
     <button id="mixerToolBtn" class="toolRailBtn" style="display:none;">💧<span>Mix</span></button>
     <button id="fulfillBtn" class="toolRailBtn" style="display:none;">📦<span>Order</span></button>
@@ -91,17 +91,6 @@
           <button id="journalResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
     </div>
   </div>
-
-  <div id="sellOverlay">
-    <div id="sellSheet">
-      <div class="sellHeader">Sell all of which paint?</div>
-      <button id="sellRawBtn" class="sellOptionBtn">🎨 Sell Raw Colors (<span id="sellRawCount">0</span>)</button>
-      <button id="sellMixedBtn" class="sellOptionBtn">📦 Sell Mixed Colors (<span id="sellMixedCount">0</span>)</button>
-      <button id="sellEverythingBtn" class="sellOptionBtn">🪙 Sell Everything</button>
-      <button id="sellCancelBtn" class="sellCancelBtn">Cancel</button>
-    </div>
-  </div>
-
   <div id="storeOverlay">
     <div id="storeSheet">
       <div id="storeHeader">

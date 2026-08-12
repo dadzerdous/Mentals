@@ -620,3 +620,82 @@ button:disabled { opacity: .4; }
 }
 
 /* old modal kept only as a fallback; normal Sell All uses the rail choices */
+
+
+/* ---- v0.21 store affordability feedback ---- */
+#storeBtn.canAfford {
+  background: #fff1a8;
+  animation: storeAffordablePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes storeAffordablePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 0 rgba(255,183,0,.2);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 6px rgba(255,183,0,0);
+  }
+}
+
+.upgradeCard.affordable {
+  background: #fff9d8;
+  box-shadow: inset 0 0 0 2px rgba(255,183,0,.28);
+}
+
+.upgradeBuyBtn.affordable {
+  background: #ffe08a;
+  animation: affordableBuyPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes affordableBuyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Empty purchased primary bucket waiting for a color */
+.emptyPrimaryBucket {
+  background: rgba(255,255,255,.72);
+  border-style: dashed;
+  font-size: 32px;
+  opacity: .9;
+}
+
+.emptyPrimaryBucket small {
+  background: rgba(255,255,255,.92);
+}
+
+
+/* ---- v0.22 Sell All overlay cascade: does not push later tools down ---- */
+.toolRailSellGroup {
+  position: relative;
+}
+
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 60px;
+  margin: 0;
+  z-index: 25;
+}
+
+/* Strong sold-out treatment for one-time store purchases */
+.upgradeCard.soldOut {
+  opacity: .5;
+}
+
+.upgradeCard.soldOut .upgradeBuyBtn {
+  background: #e8e4dd;
+}
+
+
+.emptyPrimaryBucket {
+  animation: emptyBucketArrival .45s ease-out;
+  box-shadow: 0 6px 0 rgba(43,41,39,.12), 0 0 0 4px rgba(255,255,255,.35);
+}
+
+@keyframes emptyBucketArrival {
+  from { opacity: 0; transform: scale(.55) translateY(10px); }
+  to { opacity: .9; transform: scale(1) translateY(0); }
+}
