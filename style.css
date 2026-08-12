@@ -262,7 +262,31 @@ button:disabled { opacity: .4; }
 .sellOptionBtn { width: 100%; margin-bottom: 8px; text-align: left; padding: 0 16px; }
 .sellCancelBtn { width: 100%; background: #fff8e6; }
 
-/* ---- store overlay ---- */
+/* ---- reset confirm overlay ---- */
+#resetConfirmOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.65);
+  display: none; align-items: flex-end; z-index: 45;
+}
+#resetConfirmOverlay.open { display: flex; }
+#resetConfirmSheet {
+  width: 100%; background: #f4efe8; border-radius: 22px 22px 0 0;
+  border: 3px solid #2b2927; border-bottom: none; padding: 16px;
+}
+#resetYesBtn { background: #ffdcdc; }
+
+/* ---- first-time splash screen ---- */
+.splashOverlay {
+  position: fixed; inset: 0; background: rgba(43,41,39,.82);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.splashOverlay.open { display: flex; }
+#splashCard {
+  max-width: 320px; background: #f4efe8; border: 3px solid #2b2927; border-radius: 22px;
+  padding: 24px 20px; text-align: center; box-shadow: 0 10px 0 rgba(0,0,0,.2);
+}
+#splashTitle { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+#splashStory { font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
+#splashStartBtn { width: 100%; background: #ffe08a; min-height: 56px; font-size: 15px; }
 #storeOverlay {
   position: absolute; inset: 0; background: rgba(43,41,39,.55);
   display: none; align-items: flex-end; z-index: 40;

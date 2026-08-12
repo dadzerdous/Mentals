@@ -160,8 +160,10 @@
       coins += q.reward;
       say(`✅ Quest complete! +${q.reward}`);
       questIndex++;
+      renderAll();
+    } else {
+      renderQuest();
     }
-    renderQuest();
   }
 
   function renderQuest() {
@@ -1301,8 +1303,17 @@ function spawnMinion() {
     }
   }
 
+  const resetConfirmOverlay = document.querySelector("#resetConfirmOverlay");
+
   document.querySelector("#resetBtn").addEventListener("click", () => {
-    if (!window.confirm("Reset all progress? This can't be undone.")) return;
+    resetConfirmOverlay.classList.add("open");
+  });
+
+  document.querySelector("#resetNoBtn").addEventListener("click", () => {
+    resetConfirmOverlay.classList.remove("open");
+  });
+
+  document.querySelector("#resetYesBtn").addEventListener("click", () => {
     try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
     window.location.reload();
   });
@@ -1322,6 +1333,9 @@ function spawnMinion() {
   // START
   // =========================================================
 
+  let hasExistingSave = false;
+  try { hasExistingSave = !!localStorage.getItem(SAVE_KEY); } catch (e) { /* ignore */ }
+
   initTubes();
   initVials();
   loadState();
@@ -1331,5 +1345,13 @@ function spawnMinion() {
   for (let i = 0; i < minionCount; i++) spawnMinion();
 
   renderAll();
+
+  if (!hasExistingSave) {
+    document.querySelector("#splashOverlay").classList.add("open");
+  }
+
+  document.querySelector("#splashStartBtn").addEventListener("click", () => {
+    document.querySelector("#splashOverlay").classList.remove("open");
+  });
 
 })();

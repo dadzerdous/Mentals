@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.12</title>
+<title>Color Gather v0.13</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -85,7 +85,28 @@
     </div>
   </div>
 
+  <div id="resetConfirmOverlay">
+    <div id="resetConfirmSheet">
+      <div class="sellHeader">Reset all progress? This can't be undone.</div>
+      <button id="resetYesBtn" class="sellOptionBtn">🗑️ Yes, reset everything</button>
+      <button id="resetNoBtn" class="sellCancelBtn">No, keep playing</button>
+    </div>
+  </div>
+
 </div>
+
+<div id="splashOverlay" class="splashOverlay">
+  <div id="splashCard">
+    <div id="splashTitle">Color Gather</div>
+    <div id="splashStory">
+      Sad news: your eccentric uncle has passed away.<br><br>
+      Stranger news: he's left you his old art studio — and there's something magical about the paint inside.<br><br>
+      Time to see what you can make of it.
+    </div>
+    <button id="splashStartBtn">🎨 Start Painting</button>
+  </div>
+</div>
+
 <script src="game.js"></script>
 </body>
 </html>
