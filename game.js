@@ -81,8 +81,16 @@
   };
 
   const paintSplatColors = {
-    purple: "#8e5bd9", orange: "#ff9f43", green: "#55c96b",
-    pink: "#ff8fc7", skyblue: "#7fcfff", cream: "#f3df9b"
+    red: "#ff6b6b",
+    blue: "#6fa8ff",
+    yellow: "#ffd95f",
+    white: "#f7f7f2",
+    purple: "#8e5bd9",
+    orange: "#ff9f43",
+    green: "#55c96b",
+    pink: "#ff8fc7",
+    skyblue: "#7fcfff",
+    cream: "#f3df9b"
   };
 
   // =========================================================
@@ -1348,7 +1356,67 @@ function spawnMinion() {
     setTimeout(() => wrap.remove(), lifeMs + 200);
   }
 
-  function paintSplatBurst(color) {
+  
+  function createCanvasTapSplat(source, color) {
+    const game = document.querySelector("#game");
+    if (!game || !source) return;
+
+    const sourceRect = source.getBoundingClientRect();
+    const gameRect = game.getBoundingClientRect();
+
+    const wrap = document.createElement("div");
+    wrap.className = "canvasTapSplat";
+
+    const centerX = sourceRect.left - gameRect.left + sourceRect.width / 2;
+    const centerY = sourceRect.top - gameRect.top + sourceRect.height / 2;
+
+    const offsetX = randomBetween(-24, 24);
+    const offsetY = randomBetween(-18, 18);
+
+    wrap.style.left = `${centerX + offsetX}px`;
+    wrap.style.top = `${centerY + offsetY}px`;
+
+    const splatColor = paintSplatColors[color] || "#999";
+    const size = randomBetween(20, 42);
+
+    const main = document.createElement("div");
+    main.className = "canvasTapSplatMain";
+    main.style.width = `${size}px`;
+    main.style.height = `${randomBetween(size * .65, size)}px`;
+    main.style.background = splatColor;
+    main.style.borderRadius =
+      `${randomBetween(38,58)}% ${randomBetween(38,58)}% ${randomBetween(38,58)}% ${randomBetween(38,58)}% / ` +
+      `${randomBetween(38,58)}% ${randomBetween(38,58)}% ${randomBetween(38,58)}% ${randomBetween(38,58)}%`;
+
+    wrap.appendChild(main);
+
+    const drops = Math.floor(randomBetween(2, 5));
+    for (let i = 0; i < drops; i++) {
+      const drop = document.createElement("div");
+      drop.className = "canvasTapDrop";
+
+      const dropSize = randomBetween(3, 9);
+      const angle = randomBetween(0, Math.PI * 2);
+      const distance = randomBetween(size * .45, size * .9);
+
+      drop.style.width = `${dropSize}px`;
+      drop.style.height = `${dropSize}px`;
+      drop.style.left = `${Math.cos(angle) * distance}px`;
+      drop.style.top = `${Math.sin(angle) * distance}px`;
+      drop.style.background = splatColor;
+
+      wrap.appendChild(drop);
+    }
+
+    const lifeMs = randomBetween(7000, 12000);
+    wrap.style.setProperty("--tapLife", `${lifeMs / 1000}s`);
+
+    game.appendChild(wrap);
+
+    setTimeout(() => wrap.remove(), lifeMs + 300);
+  }
+
+function paintSplatBurst(color) {
     const splatCount = Math.floor(randomBetween(1, 6));
     for (let i = 0; i < splatCount; i++) {
       const delay = randomBetween(0, 250);
@@ -1504,6 +1572,7 @@ function spawnMinion() {
     source.classList.add("pop");
 
     spawnFloater(source, `+1 ${colorInfo[color].emoji}`);
+    if (!fromMinion) createCanvasTapSplat(source, color);
     renderAll();
     checkQuests();
 

@@ -699,3 +699,51 @@ button:disabled { opacity: .4; }
   from { opacity: 0; transform: scale(.55) translateY(10px); }
   to { opacity: .9; transform: scale(1) translateY(0); }
 }
+
+
+/* ---- v0.24 subtle bucket-tap paint marks ---- */
+.canvasTapSplat {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+  transform-origin: center;
+  animation: canvasTapSplatLife var(--tapLife, 9s) ease-out forwards;
+}
+
+.canvasTapSplatMain {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  filter: none;
+  opacity: .68;
+}
+
+.canvasTapDrop {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: .62;
+}
+
+@keyframes canvasTapSplatLife {
+  0% {
+    opacity: 0;
+    transform: scale(.55) rotate(-5deg);
+  }
+  8% {
+    opacity: .72;
+    transform: scale(1.05) rotate(2deg);
+  }
+  18% {
+    opacity: .66;
+    transform: scale(1) rotate(0deg);
+  }
+  72% {
+    opacity: .48;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
