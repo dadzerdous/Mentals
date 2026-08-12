@@ -1583,6 +1583,12 @@ function paintSplatBurst(color) {
   function tapSource(source, fromMinion) {
     const color = source.dataset.color;
 
+    // Manual taps always leave a small paint mark on the canvas,
+    // even when there isn't room to collect more paint.
+    if (!fromMinion) {
+      createCanvasTapSplat(source, color);
+    }
+
     const placed = addToSlots(tubes, color, 1, bagCapacityPerTube);
     if (!placed) {
       if (!fromMinion) say("🧪 No tube space left!");
