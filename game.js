@@ -6,8 +6,14 @@
 
   let coins = 0;
 
-  let TUBE_COUNT = 2;
+  let TUBE_COUNT = 1;
   let VIAL_COUNT = 1;
+
+  // onboarding gates — teach one thing at a time before the full game opens up
+  let yellowUnlocked = false;
+  let mixerUnlocked = false;
+  let blueUnlocked = false;
+  let ordersUnlocked = false;
 
   let tubes = [];   // [{ color: null|string, amount: number }, ...] length TUBE_COUNT
   let vials = [];   // [{ color: null|string, amount: number }, ...] length VIAL_COUNT
@@ -169,11 +175,77 @@
 
   const storeItems = [
     {
+      id: "unlockYellow",
+      name: "Unlock Yellow",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 10,
+      growth: 1,
+      visible: () => !yellowUnlocked,
+      desc: () => "Adds the Yellow paint bucket to your field",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        yellowUnlocked = true;
+        this.level = 1;
+        document.querySelector("#yellow").style.display = "grid";
+      }
+    },
+    {
+      id: "unlockMixer",
+      name: "Unlock Mixer",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 20,
+      growth: 1,
+      visible: () => yellowUnlocked && !mixerUnlocked,
+      desc: () => "Unlocks the Warehouse and the mixing dropper",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        mixerUnlocked = true;
+        this.level = 1;
+        document.querySelector("#warehouseRow").style.display = "block";
+      }
+    },
+    {
+      id: "unlockBlue",
+      name: "Unlock Blue",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 30,
+      growth: 1,
+      visible: () => mixerUnlocked && !blueUnlocked,
+      desc: () => "Adds the Blue paint bucket to your field",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        blueUnlocked = true;
+        this.level = 1;
+        document.querySelector("#blue").style.display = "grid";
+      }
+    },
+    {
+      id: "unlockOrders",
+      name: "Unlock Orders",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 40,
+      growth: 1,
+      visible: () => blueUnlocked && !ordersUnlocked,
+      desc: () => "Customers start placing paint orders for coins",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        ordersUnlocked = true;
+        this.level = 1;
+        document.querySelector("#order").style.display = "block";
+        document.querySelector("#fulfillBtn").style.display = "block";
+      }
+    },
+    {
       id: "tubeSlot",
       name: "Buy a Tube",
       level: 0,
       baseCost: 15,
       growth: 2,
+      visible: () => ordersUnlocked,
       desc: function () { return `Adds another tube to your toolbelt. You have ${TUBE_COUNT} now.`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { tubes.push({ color: null, amount: 0 }); TUBE_COUNT++; this.level++; }
@@ -184,6 +256,7 @@
       level: 0,
       baseCost: 20,
       growth: 2,
+      visible: () => ordersUnlocked,
       desc: function () { return `Adds another container to the Warehouse. You have ${VIAL_COUNT} now.`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { vials.push({ color: null, amount: 0 }); VIAL_COUNT++; this.level++; }
@@ -195,6 +268,7 @@
       maxLevel: 1,
       baseCost: 50,
       growth: 1,
+      visible: () => ordersUnlocked,
       desc: () => "Adds a 4th raw color + 3 new mixable colors (pink, sky blue, cream)",
       cost: function () { return this.baseCost; },
       buy: function () {
@@ -209,6 +283,7 @@
       level: 0,
       baseCost: 40,
       growth: 1.8,
+      visible: () => ordersUnlocked,
       desc: function () { return `A minion that walks between sources and gathers on its own. Minions: ${minionCount} (only while the game is open — no offline progress yet)`; },
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { minionCount++; this.level++; spawnMinion(); }
@@ -226,6 +301,7 @@
       level: 0,
       baseCost: 20,
       growth: 1.6,
+      visible: () => ordersUnlocked,
       desc: () => `Each color tube holds: ${bagCapacityPerTube} → ${bagCapacityPerTube + 4}`,
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { bagCapacityPerTube += 4; this.level++; }
@@ -236,6 +312,7 @@
       level: 0,
       baseCost: 25,
       growth: 1.6,
+      visible: () => ordersUnlocked,
       desc: () => `Each color vial holds: ${storageCapacityPerVial} → ${storageCapacityPerVial + 4}`,
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { storageCapacityPerVial += 4; this.level++; }
@@ -247,6 +324,7 @@
       maxLevel: 5,
       baseCost: 30,
       growth: 1.7,
+      visible: () => ordersUnlocked,
       requires: () => minionCount > 0,
       lockedNote: "Hire a minion in the Store tab first",
       desc: function () { return `Minions gather quicker. Speed level ${this.level} / ${this.maxLevel}`; },
@@ -260,6 +338,7 @@
       maxLevel: 3,
       baseCost: 35,
       growth: 1.8,
+      visible: () => ordersUnlocked,
       requires: () => minionCount > 0,
       lockedNote: "Hire a minion in the Store tab first",
       desc: function () { return `Minions collect more per visit. Currently ${1 + this.level} at a time.`; },
@@ -278,6 +357,7 @@
 
   function cheapestAffordableExists() {
     const affordable = list => list.some(item => {
+      if (item.visible && !item.visible()) return false;
       if (item.maxLevel && item.level >= item.maxLevel) return false;
       if (item.requires && !item.requires()) return false;
       return coins >= item.cost();
@@ -326,17 +406,20 @@
     const list = document.querySelector("#upgradeList");
     list.innerHTML = "";
 
-    const items = activeStoreTab === "store" ? storeItems : toolUpgrades;
+    const allItems = activeStoreTab === "store" ? storeItems : toolUpgrades;
+    const items = allItems.filter(item => !item.visible || item.visible());
 
-    if (activeStoreTab === "upgrades" && toolUpgrades.every(u => u.requires && !u.requires())) {
+    if (items.length === 0) {
       const note = document.createElement("div");
       note.id = "emptyTabNote";
-      note.textContent = "No tools owned yet — buy one in the Store tab to unlock its upgrades.";
+      note.textContent = activeStoreTab === "store"
+        ? "Nothing new to buy yet — keep playing!"
+        : "No tools owned yet — buy one in the Store tab to unlock its upgrades.";
       list.appendChild(note);
       return;
     }
 
-    items.forEach(item => list.appendChild(renderUpgradeCard(item, activeStoreTab === "store" ? storeItems : toolUpgrades)));
+    items.forEach(item => list.appendChild(renderUpgradeCard(item, allItems)));
   }
 
   function setStoreTab(tab) {
@@ -1139,6 +1222,7 @@ function spawnMinion() {
     try {
       const data = {
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial,
+        yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked,
         whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
         totalGathered, totalSold, totalMixed, totalFulfilled,
         questIndex, currentOrder, sourcePositions,
@@ -1168,6 +1252,17 @@ function spawnMinion() {
         VIAL_COUNT = vials.length;
       }
       storageCapacityPerVial = data.storageCapacityPerVial ?? storageCapacityPerVial;
+      yellowUnlocked = data.yellowUnlocked ?? yellowUnlocked;
+      mixerUnlocked = data.mixerUnlocked ?? mixerUnlocked;
+      blueUnlocked = data.blueUnlocked ?? blueUnlocked;
+      ordersUnlocked = data.ordersUnlocked ?? ordersUnlocked;
+      if (yellowUnlocked) document.querySelector("#yellow").style.display = "grid";
+      if (blueUnlocked) document.querySelector("#blue").style.display = "grid";
+      if (mixerUnlocked) document.querySelector("#warehouseRow").style.display = "block";
+      if (ordersUnlocked) {
+        document.querySelector("#order").style.display = "block";
+        document.querySelector("#fulfillBtn").style.display = "block";
+      }
       whiteUnlocked = data.whiteUnlocked ?? whiteUnlocked;
       minionCount = data.minionCount ?? minionCount;
       minionSpeedLevel = data.minionSpeedLevel ?? minionSpeedLevel;

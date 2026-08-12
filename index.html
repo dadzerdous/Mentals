@@ -11,7 +11,7 @@
 
   <div class="top">
     <div id="backpackPanel" class="panel">
-      <div class="stashHeader">🧰 Toolbelt <span id="bagText">0 / 2</span></div>
+      <div class="stashHeader">🧰 Toolbelt <span id="bagText">0 / 1</span></div>
       <div id="bagContents" class="stashContents"></div>
     </div>
     <div class="panel">🪙 <span id="coins">0</span></div>
@@ -22,7 +22,7 @@
     <span id="questProgress">0 / 5</span>
   </div>
 
-  <div id="order">
+  <div id="order" style="display:none;">
     ORDER
     <div id="orderTarget">🟣 Purple ×1</div>
     <div style="font-size:12px;font-weight:700;">Reward: 🪙 <span id="reward">10</span></div>
@@ -33,12 +33,12 @@
 
   <div id="field">
     <div class="source" id="red" data-color="red">🔴<small>Tap</small></div>
-    <div class="source" id="blue" data-color="blue">🔵<small>Tap</small></div>
-    <div class="source" id="yellow" data-color="yellow">🟡<small>Tap</small></div>
+    <div class="source" id="blue" data-color="blue" style="display:none;">🔵<small>Tap</small></div>
+    <div class="source" id="yellow" data-color="yellow" style="display:none;">🟡<small>Tap</small></div>
     <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
   </div>
 
-  <div id="warehouseRow">
+  <div id="warehouseRow" style="display:none;">
     <div id="warehousePanel" class="panel">
       <div class="stashHeader">
         📦 Warehouse <span id="storageText">0 / 1</span>
@@ -52,7 +52,7 @@
 
   <div id="actions">
     <button id="sellBtn">🪙 SELL</button>
-    <button id="fulfillBtn">📦 FULFILL</button>
+    <button id="fulfillBtn" style="display:none;">📦 FULFILL</button>
     <button id="storeBtn">
       🏪 STORE
       <span id="storeBadge" class="storeBadge" style="display:none;">!</span>
