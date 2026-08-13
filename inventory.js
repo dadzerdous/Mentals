@@ -17,7 +17,7 @@
         });
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧪 Empty Vial";
+        chip.textContent = "🧴 Empty Tube";
       }
       bagContents.appendChild(chip);
     });
@@ -36,7 +36,7 @@
         if (sellMode) chip.addEventListener("click", () => sellOneFromVial(index));
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧪 Empty Vial";
+        chip.textContent = "🧪 Empty Mixer Vial";
       }
       storageContents.appendChild(chip);
     });

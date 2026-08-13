@@ -72,7 +72,7 @@
       baseCost: 20,
       growth: 1,
       visible: () => currentProcessIndex >= 2 && !mixerUnlocked,
-      desc: () => "Unlocks paint mixing and the Paint Vials area",
+      desc: () => "Unlocks paint mixing and the Mixer Vials area",
       cost: function () { return this.baseCost; },
       buy: function () {
         mixerUnlocked = true;
@@ -167,12 +167,12 @@
     },
     {
       id: "storage",
-      name: "Bigger Vials",
+      name: "Bigger Mixer Vials",
       level: 0,
       baseCost: 25,
       growth: 1.6,
       visible: () => ordersUnlocked,
-      desc: () => `Each color vial holds: ${storageCapacityPerVial} → ${storageCapacityPerVial + 4}`,
+      desc: () => `Each mixer vial holds: ${storageCapacityPerVial} → ${storageCapacityPerVial + 4}`,
       cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
       buy: function () { storageCapacityPerVial += 4; this.level++; }
     },
@@ -214,14 +214,22 @@
   // STORE LOGIC
   // =========================================================
 
+  function isStoreItemActuallyAffordable(item) {
+    if (item.visible && !item.visible()) return false;
+    if (item.maxLevel && item.level >= item.maxLevel) return false;
+    if (item.requires && !item.requires()) return false;
+
+    const primaryPaintItem = item.id === "unlockYellow" || item.id === "unlockBlue";
+
+    // Paint can only be bought if there is an empty bucket to hold it.
+    if (primaryPaintItem && emptyPrimaryBucketCount() <= 0) return false;
+
+    return coins >= item.cost();
+  }
+
   function cheapestAffordableExists() {
-    const affordable = list => list.some(item => {
-      if (item.visible && !item.visible()) return false;
-      if (item.maxLevel && item.level >= item.maxLevel) return false;
-      if (item.requires && !item.requires()) return false;
-      return coins >= item.cost();
-    });
-    return affordable(storeItems) || affordable(toolUpgrades);
+    return storeItems.some(isStoreItemActuallyAffordable)
+      || toolUpgrades.some(isStoreItemActuallyAffordable);
   }
 
   function buyFromList(list, id) {
@@ -264,7 +272,7 @@
     const buyBtn = document.createElement("button");
     buyBtn.className = "upgradeBuyBtn";
     buyBtn.textContent = soldOut ? "SOLD OUT" : maxed ? "✓" : `🪙 ${item.cost()}`;
-    const affordableNow = !maxed && !locked && !primaryPaintPreBucketLocked && coins >= item.cost();
+    const affordableNow = isStoreItemActuallyAffordable(item);
 
     buyBtn.disabled = !affordableNow;
     if (primaryPaintPreBucketLocked) card.classList.add("storeItemLocked");

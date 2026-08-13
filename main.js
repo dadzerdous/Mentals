@@ -21,3 +21,11 @@
     document.querySelector("#splashOverlay").classList.add("open");
   }
 
+
+
+  const splashStartBtn = document.querySelector("#splashStartBtn");
+  if (splashStartBtn) {
+    splashStartBtn.addEventListener("click", () => {
+      document.querySelector("#splashOverlay")?.classList.remove("open");
+    });
+  }
