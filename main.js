@@ -53,3 +53,5 @@ document.querySelector("#godModeBtn")?.addEventListener("click",e=>{e.preventDef
 
     playClickSound();
   });
+
+  renderFlexibleBuckets();

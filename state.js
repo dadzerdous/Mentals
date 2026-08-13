@@ -56,6 +56,14 @@
   let studioEarningsBonus = 0;
   let studioXp = 0;
   let studioLevel = 1;
+  const colorXp = {};
+  const colorTimesMade = {};
+  const colorTimesCollected = {};
+  const colorTimesUsed = {};
+  const proficientColors = {};
+  const COLOR_PROFICIENCY_XP = 25;
+  let flexibleBucketCount = 0;
+  let flexibleBucketColors = [];
 
   let activeStoreTab = "store";
   let sellMode = false;

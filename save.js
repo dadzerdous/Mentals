@@ -15,6 +15,7 @@
         totalGathered, totalSold, totalMixed, totalFulfilled, totalTubesSold, studioEarningsBonus, studioXp, studioLevel,
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
+        colorXp, colorTimesMade, colorTimesCollected, colorTimesUsed, proficientColors, flexibleBucketCount, flexibleBucketColors,
         currentOrder, orderChoices, orderSelectedCount, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
         toolUpgradeLevels: toolUpgrades.map(i => ({ id: i.id, level: i.level }))
@@ -77,6 +78,14 @@
       studioEarningsBonus = data.studioEarningsBonus ?? studioEarningsBonus;
       if (typeof data.currentProcessIndex === "number") currentProcessIndex = data.currentProcessIndex;
       followedStepId = data.followedStepId ?? followedStepId;
+
+      if (data.colorXp && typeof data.colorXp === "object") Object.assign(colorXp, data.colorXp);
+      if (data.colorTimesMade && typeof data.colorTimesMade === "object") Object.assign(colorTimesMade, data.colorTimesMade);
+      if (data.colorTimesCollected && typeof data.colorTimesCollected === "object") Object.assign(colorTimesCollected, data.colorTimesCollected);
+      if (data.colorTimesUsed && typeof data.colorTimesUsed === "object") Object.assign(colorTimesUsed, data.colorTimesUsed);
+      if (data.proficientColors && typeof data.proficientColors === "object") Object.assign(proficientColors, data.proficientColors);
+      flexibleBucketCount = data.flexibleBucketCount ?? flexibleBucketCount;
+      flexibleBucketColors = Array.isArray(data.flexibleBucketColors) ? data.flexibleBucketColors : flexibleBucketColors;
 
       if (data.completedJournalSteps && typeof data.completedJournalSteps === "object") {
         completedJournalSteps = data.completedJournalSteps;

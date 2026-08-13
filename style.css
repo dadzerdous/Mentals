@@ -1054,3 +1054,5 @@ button:disabled { opacity: .4; }
   display: none !important;
   animation: none !important;
 }
+
+.guideMastery{margin-top:5px;font-size:11px;font-weight:900}.guideStats{margin-top:3px;font-size:9px;opacity:.65}.flexibleBucket{border-style:dashed}

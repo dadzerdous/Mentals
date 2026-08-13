@@ -139,6 +139,22 @@
       }
     },
     {
+      id: "flexibleBucket",
+      name: "Flexible Mixing Bucket",
+      level: 0,
+      maxLevel: 3,
+      baseCost: 45,
+      growth: 1.8,
+      visible: () => proficientMixedColors().length > 0 && flexibleBucketCount < 3,
+      desc: () => "Holds one proficient mixed color. Empty it later to assign another.",
+      cost: function(){return Math.round(this.baseCost*Math.pow(this.growth,this.level));},
+      buy: function(){
+        flexibleBucketCount++; flexibleBucketColors.push(null); this.level++;
+        renderFlexibleBuckets();
+        showMajorNotice("unlock","An empty Flexible Mixing Bucket has been added to the canvas. Tap it to assign a proficient color.",{title:"Flexible Bucket Added!",icon:"🪣"});
+      }
+    },
+    {
       id: "dolly",
       name: "Studio Dolly",
       level: 0,

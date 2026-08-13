@@ -327,6 +327,7 @@
             <div class="guideColorEmoji">${colorInfo[color].emoji}</div>
             <div class="guideColorName">${colorInfo[color].label}</div>
             <div class="guideRecipe">${recipeTextForColor(color)}</div>
+            ${isMixedColor(color) ? `<div class="guideMastery">${isColorProficient(color) ? "★ Proficient" : `Color XP ${colorXp[color] || 0}/${colorXpNeeded()}`}</div><div class="guideStats">Made ${colorTimesMade[color] || 0} · Collected ${colorTimesCollected[color] || 0} · Used ${colorTimesUsed[color] || 0}</div>` : `<div class="guideStats">Primary paint</div>`}
           `;
         } else {
           card.innerHTML = `

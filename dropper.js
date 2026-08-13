@@ -44,6 +44,7 @@
     totalMixed++;
     addStudioXp(4, "mix");
     recordColorDiscovery(recipe.result);
+    recordColorMade(recipe.result);
 
     paintSplatBurst(recipe.result);
     playMixSound();
