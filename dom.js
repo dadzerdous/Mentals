@@ -106,8 +106,3 @@
   function randomBetween(min, max) {
     return Math.random() * (max - min) + min;
   }
-
-
-
-  const majorNoticeOkBtn = document.querySelector("#majorNoticeOkBtn");
-  majorNoticeOkBtn?.addEventListener("click", closeMajorNotice);

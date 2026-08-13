@@ -241,3 +241,12 @@ function paintSplatBurst(color) {
     // Small delay makes queued notices feel intentional instead of flashing.
     setTimeout(displayNextMajorNotice, 120);
   }
+
+  // Wire the persistent notification button here, after the handler exists.
+  const majorNoticeOkBtn = document.querySelector("#majorNoticeOkBtn");
+  majorNoticeOkBtn?.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeMajorNotice();
+  });
+
