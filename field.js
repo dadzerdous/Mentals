@@ -142,4 +142,3 @@
     saveState();
   }
 
-  dollyToolBtn.addEventListener("click", toggleDollyMode);

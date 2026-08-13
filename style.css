@@ -321,19 +321,7 @@ button:disabled { opacity: .4; }
 
 .dropperLabel { font-size: 10px; opacity: .6; margin-left: 3px; }
 
-.dropperChips { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
 
-.dropperFloater {
-  position: fixed;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -140%);
-  font-size: 30px;
-  pointer-events: none;
-  z-index: 35;
-  display: none;
-  filter: drop-shadow(0 4px 2px rgba(43,41,39,.3));
-  animation: dropperBob 1s ease-in-out infinite;
-}
 .dropperFloater.visible { display: block; }
 
 @keyframes dropperBob {
@@ -842,3 +830,17 @@ button:disabled { opacity: .4; }
 .source.dollyReady:active {
   cursor: grabbing;
 }
+
+
+/* ---- v0.37 cleanup: canonical Sell cascade ---- */
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 0;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  z-index: 30;
+}
+.sellAllChoices.open { display: flex; }

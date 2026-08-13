@@ -33,7 +33,7 @@
 
     say(`✅ Order complete! +${earnedReward}`);
     renderAll();
-    checkQuests();
+    checkJournalSteps();
 
     if (navigator.vibrate) navigator.vibrate([25, 20, 25]);
   });

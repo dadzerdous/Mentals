@@ -10,14 +10,12 @@
       const chip = document.createElement("div");
       if (tube.color) {
         chip.className = "stashChip" + (dropperArmed ? " pickable" : "") + (sellMode ? " sellable" : "");
-        const tubeFullBonus = tube.amount >= bagCapacityPerTube ? (1 + tubeSellBonusLevel) : 0;
-        const tubeValue = tube.amount + tubeFullBonus + studioEarningsBonus;
+        const tubeValue = tubeSellValue(tube);
         chip.textContent = sellMode
           ? `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube} · 🪙${tubeValue}`
           : `${colorInfo[tube.color].emoji} ${tube.amount}/${bagCapacityPerTube}`;
-        chip.addEventListener("click", event => {
+        chip.addEventListener("click", () => {
           if (sellMode) sellOneFromTube(index);
-          else feedDropperFromTube(index, event);
         });
       } else {
         chip.className = "stashChip empty";
@@ -52,28 +50,12 @@
   function renderDropper() {
     dropperToggle.innerHTML = dropperArmed ? "❌<span>Done</span>" : "🎨<span>Mix</span>";
     dropperToggle.classList.toggle("armed", dropperArmed);
-    dropperFloaterEl.classList.remove("visible");
-    dropperChips.innerHTML = "";
 
     document.querySelectorAll(".source[data-color]").forEach(source => {
       const active = dropperArmed && source.style.display !== "none";
       source.classList.toggle("mixReady", active);
     });
   }
-
-  function positionDropperFloaterAtPoint(x, y) {
-    dropperFloaterEl.style.left = x + "px";
-    dropperFloaterEl.style.top = y + "px";
-  }
-
-  function positionDropperFloaterAtElement(el) {
-    const rect = el.getBoundingClientRect();
-    positionDropperFloaterAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-  }
-
-  document.addEventListener("pointermove", event => {
-    // Bucket-drag mixing no longer uses the old floating dropper cursor.
-  });
 
   function renderAll() {
     bagText.textContent = `${tubes.filter(t => t.color !== null).length} / ${TUBE_COUNT}`;
@@ -128,7 +110,6 @@ const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     if (fulfillBtnEl) fulfillBtnEl.style.display = ordersUnlocked ? "flex" : "none";
 
     const sellBtnEl = document.querySelector("#sellBtn");
-    const sellAllBtnEl = document.querySelector("#sellAllBtn");
     if (sellBtnEl) {
       sellBtnEl.innerHTML = sellMode ? "❌<span>Done</span>" : "🪙<span>Sell</span>";
       sellBtnEl.classList.toggle("armed", sellMode);
@@ -187,7 +168,7 @@ const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
 
     spawnFloater(source, `+1 ${colorInfo[color].emoji}`);
     renderAll();
-    checkQuests();
+    checkJournalSteps();
 
     if (!fromMinion) {
       

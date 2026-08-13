@@ -14,8 +14,7 @@
   const message = document.querySelector("#message");
   const dropperToggle = document.querySelector("#mixerToolBtn");
   const dollyToolBtn = document.querySelector("#dollyToolBtn");
-  const dropperChips = document.querySelector("#dropperChips");
-  const dropperFloaterEl = document.querySelector("#dropperFloater");
+  dollyToolBtn?.addEventListener("click", toggleDollyMode);
   const journalOverlay = document.querySelector("#journalOverlay");
 
   // =========================================================

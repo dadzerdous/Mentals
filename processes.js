@@ -170,10 +170,6 @@
     }
   }
 
-  function checkQuests() {
-    checkJournalSteps();
-  }
-
   function renderQuest() {
     renderJournalTeaser();
   }

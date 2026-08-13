@@ -117,6 +117,24 @@
       }
     },
     {
+      id: "extraTubeSlot",
+      name: "Buy Another Tube",
+      level: 0,
+      maxLevel: 6,
+      baseCost: 18,
+      growth: 1.55,
+      visible: () => ordersUnlocked && TUBE_COUNT < 8,
+      desc: function () {
+        return `Adds another Tube to your Paint Case. You have ${TUBE_COUNT} now.`;
+      },
+      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
+      buy: function () {
+        tubes.push({ color: null, amount: 0 });
+        TUBE_COUNT++;
+        this.level++;
+      }
+    },
+    {
       id: "dolly",
       name: "Studio Dolly",
       level: 0,
@@ -139,7 +157,7 @@
       maxLevel: 5,
       baseCost: 20,
       growth: 1.55,
-      visible: () => ordersUnlocked && VIAL_COUNT < 6,
+      visible: () => ordersUnlocked && VIAL_COUNT >= 1 && VIAL_COUNT < 6,
       desc: function () {
         return `Adds another Mixer Vial. You have ${VIAL_COUNT} now.`;
       },

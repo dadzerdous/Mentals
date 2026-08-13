@@ -18,6 +18,19 @@
     }
   }
 
+
+  const mixAudio = new Audio("sounds/fart.wav");
+  mixAudio.preload = "auto";
+
+  function playMixSound() {
+    try {
+      mixAudio.currentTime = 0;
+      mixAudio.play().catch(() => {});
+    } catch (e) {
+      // Audio may be blocked in some browser states; ignore gracefully.
+    }
+  }
+
   const sellChingAudio = new Audio("sounds/ching.wav");
   sellChingAudio.preload = "auto";
 

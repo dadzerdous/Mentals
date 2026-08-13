@@ -56,8 +56,7 @@
 
     const color = tube.color;
     const amount = tube.amount;
-    const fullBonus = amount >= bagCapacityPerTube ? (1 + tubeSellBonusLevel) : 0;
-    const earned = amount + fullBonus + studioEarningsBonus;
+    const earned = tubeSellValue(tube);
 
     coins += earned;
     totalSold += amount;
@@ -72,7 +71,7 @@
     renderAll();
     showSellHint(true);
 
-    checkQuests();
+    checkJournalSteps();
 
     if (navigator.vibrate) navigator.vibrate(24);
   }
@@ -97,11 +96,8 @@
     pulseCoins(earned);
     renderAll();
     showSellHint(true);
-    checkQuests();
+    checkJournalSteps();
     if (navigator.vibrate) navigator.vibrate([18, 18, 28]);
-  }
-
-  function openSellAllPicker() {
   }
 
   document.querySelector("#sellBtn").addEventListener("click", () => {
@@ -130,22 +126,18 @@
     renderAll();
   });
 
-  document.querySelector("#sellAllBtn").addEventListener("click", openSellAllPicker);
-
 
   function sellAllTubesNow() {
     const base = tubesUsedTotal();
     if (base === 0) { say("No tube paint to sell"); return; }
 
-    let fullBonus = 0;
+    let earned = studioEarningsBonus;
     let tubesSoldNow = 0;
     tubes.forEach(t => {
       if (!t.color || t.amount <= 0) return;
       tubesSoldNow++;
-      if (t.amount >= bagCapacityPerTube) fullBonus += (1 + tubeSellBonusLevel);
+      earned += tubeSellValue(t) - studioEarningsBonus;
     });
-
-    const earned = base + fullBonus + studioEarningsBonus;
     totalSold += base;
     totalTubesSold += tubesSoldNow;
     coins += earned;
@@ -186,13 +178,13 @@
 
     if (raw + mixed === 0) { say("Nothing to sell"); return; }
 
-    let fullTubeBonus = 0;
+    let tubeValue = 0;
     let tubesSoldNow = 0;
 
     tubes.forEach(t => {
       if (!t.color || t.amount <= 0) return;
       tubesSoldNow++;
-      if (t.amount >= bagCapacityPerTube) fullTubeBonus += (1 + tubeSellBonusLevel);
+      tubeValue += tubeSellValue(t) - studioEarningsBonus;
     });
 
     let mixedValue = 0;
@@ -201,7 +193,7 @@
       mixedValue += mixerVialSellValue(v.color, v.amount, v.amount >= storageCapacityPerVial);
     });
 
-    const earned = raw + fullTubeBonus + mixedValue + studioEarningsBonus;
+    const earned = tubeValue + mixedValue + studioEarningsBonus;
     totalSold += raw + mixed;
     totalTubesSold += tubesSoldNow;
     coins += earned;

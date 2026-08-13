@@ -45,11 +45,11 @@
     recordColorDiscovery(recipe.result);
 
     paintSplatBurst(recipe.result);
-    playSplatSound();
+    playMixSound();
     say(`${colorInfo[recipe.result].emoji} Made ${colorInfo[recipe.result].label}!`);
 
     renderAll();
-    checkQuests();
+    checkJournalSteps();
 
     if (navigator.vibrate) navigator.vibrate([24, 15, 30]);
   }
@@ -89,12 +89,7 @@
       let moved = false;
 
       const holdTimer = setTimeout(() => {
-        if (!rearrangeUnlocked || !dollyMode) return;
-        longPressFired = true;
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-        source.classList.remove("pressed");
-        beginDragSource(source, event);
+        // Dolly mode now handles rearranging explicitly.
       }, 450);
 
       function onMove(e) {
