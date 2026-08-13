@@ -166,7 +166,7 @@
       description: "Expand storage, add an empty primary bucket, then choose a new paint color.",
       completionText: "Primary production expanded!",
       steps: [
-        { id: "buyVial", desc: "Buy a new vial", target: 1, progress: () => VIAL_COUNT >= 2 ? 1 : 0 },
+        { id: "buyTube", desc: "Buy a new tube", target: 1, progress: () => TUBE_COUNT >= 2 ? 1 : 0 },
         { id: "buyPrimaryBucket", desc: "Buy a Primary Bucket", target: 1, progress: () => primaryBucketSlots >= 1 ? 1 : 0 },
         { id: "buyNewColor", desc: "Buy a new primary color", target: 1, progress: () => (yellowUnlocked || blueUnlocked) ? 1 : 0 }
       ]
@@ -668,7 +668,7 @@
       growth: 2,
       visible: () => {
         if (currentProcessIndex < 1) return false;
-        if (VIAL_COUNT < 2) return false;
+        if (TUBE_COUNT < 2) return false;
         // First extra primary bucket is available in Process 2.
         if (primaryBucketSlots === 0) return true;
         // Second becomes available after the first mixed-color discovery / Process 4.
@@ -719,6 +719,24 @@
       buy: function () {}
     },
     {
+      id: "mixer",
+      name: "Buy the Mixer",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 20,
+      growth: 1,
+      visible: () => currentProcessIndex >= 2 && !mixerUnlocked,
+      desc: () => "Unlocks paint mixing and the Paint Vials area",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        mixerUnlocked = true;
+        this.level = 1;
+        document.querySelector("#warehouseRow").style.display = "block";
+        const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
+        if (mixerToolBtnEl) mixerToolBtnEl.style.display = "flex";
+      }
+    },
+    {
       id: "unlockOrders",
       name: "Unlock Orders",
       level: 0,
@@ -739,31 +757,20 @@
       id: "tubeSlot",
       name: "Buy a Tube",
       level: 0,
-      baseCost: 15,
-      growth: 2,
-      visible: () => yellowUnlocked,
-      desc: function () { return `Adds another tube to your Paint Case. You have ${TUBE_COUNT} now.`; },
-      cost: function () { return Math.round(this.baseCost * Math.pow(this.growth, this.level)); },
-      buy: function () { tubes.push({ color: null, amount: 0 }); TUBE_COUNT++; this.level++; }
-    },
-    {
-      id: "vialSlot",
-      name: "Buy a Vial",
-      level: 0,
       maxLevel: 1,
       baseCost: 8,
       growth: 1,
       visible: () => currentProcessIndex >= 1,
       desc: function () {
         return this.level >= 1
-          ? "Starter vial purchased"
-          : "Adds a second empty vial for storing mixed paint";
+          ? "Starter tube purchased"
+          : "Adds a second empty tube to your Paint Case";
       },
       cost: function () { return this.baseCost; },
       buy: function () {
         if (this.level >= 1) return;
-        vials.push({ color: null, amount: 0 });
-        VIAL_COUNT++;
+        tubes.push({ color: null, amount: 0 });
+        TUBE_COUNT++;
         this.level = 1;
       }
     },
@@ -893,7 +900,7 @@
   function renderUpgradeCard(item, list) {
     const maxed = item.maxLevel && item.level >= item.maxLevel;
     const locked = item.requires && !item.requires();
-    const soldOut = maxed && (item.id === "vialSlot" || item.id === "buyPrimaryBucket");
+    const soldOut = maxed && (item.id === "tubeSlot" || item.id === "buyPrimaryBucket");
     const primaryPaintItem = item.id === "unlockYellow" || item.id === "unlockBlue";
     const primaryPaintPreBucketLocked = primaryPaintItem && primaryBucketSlots === 0;
 
@@ -1306,7 +1313,7 @@ function spawnMinion() {
     }
   }
 
-  const sellChingAudio = new Audio("sounds/ching.mp3");
+  const sellChingAudio = new Audio("sounds/ching.wav");
   sellChingAudio.preload = "auto";
 
   function playSellSound() {

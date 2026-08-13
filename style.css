@@ -761,3 +761,7 @@ button:disabled { opacity: .4; }
 
 .canvasTapSplatMain { opacity: .8; }
 .canvasTapDrop { opacity: .72; }
+
+/* ---- v0.29 Store button is white unless something affordable exists ---- */
+#storeBtn { background: #fff !important; }
+#storeBtn.canAfford { background: #fff1a8 !important; }
