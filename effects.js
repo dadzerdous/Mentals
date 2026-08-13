@@ -19,6 +19,16 @@
   }
 
 
+  const clickAudio = new Audio("sounds/click.wav");
+  clickAudio.preload = "auto";
+
+  function playClickSound() {
+    try {
+      clickAudio.currentTime = 0;
+      clickAudio.play().catch(() => {});
+    } catch (e) {}
+  }
+
   const mixAudio = new Audio("sounds/fart.wav");
   mixAudio.preload = "auto";
 
@@ -241,12 +251,3 @@ function paintSplatBurst(color) {
     // Small delay makes queued notices feel intentional instead of flashing.
     setTimeout(displayNextMajorNotice, 120);
   }
-
-  // Wire the persistent notification button here, after the handler exists.
-  const majorNoticeOkBtn = document.querySelector("#majorNoticeOkBtn");
-  majorNoticeOkBtn?.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-    closeMajorNotice();
-  });
-
