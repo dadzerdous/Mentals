@@ -117,6 +117,22 @@
       }
     },
     {
+      id: "dolly",
+      name: "Studio Dolly",
+      level: 0,
+      maxLevel: 1,
+      baseCost: 35,
+      growth: 1,
+      visible: () => ordersUnlocked && !rearrangeUnlocked,
+      desc: () => "Unlocks Dolly mode so you can rearrange paint buckets around the canvas",
+      cost: function () { return this.baseCost; },
+      buy: function () {
+        rearrangeUnlocked = true;
+        this.level = 1;
+        say("🛒 Dolly unlocked!");
+      }
+    },
+    {
       id: "extraMixerVial",
       name: "Buy Another Mixer Vial",
       level: 0,

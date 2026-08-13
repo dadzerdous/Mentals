@@ -71,6 +71,11 @@
     source.addEventListener("pointerdown", event => {
       event.preventDefault();
 
+      if (dollyMode) {
+        beginDragSource(source, event);
+        return;
+      }
+
       if (dropperArmed && !sellMode) {
         beginMixerBucketDrag(source, event);
         return;
@@ -84,7 +89,7 @@
       let moved = false;
 
       const holdTimer = setTimeout(() => {
-        if (!rearrangeUnlocked) return;
+        if (!rearrangeUnlocked || !dollyMode) return;
         longPressFired = true;
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);

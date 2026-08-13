@@ -94,11 +94,16 @@
       if (source.style.display === "none") return;
       const small = source.querySelector("small");
       if (!small) return;
-      small.textContent = sellMode ? `🪙${1 + studioEarningsBonus}` : "Tap";
+      small.textContent = sellMode ? `🪙${1 + studioEarningsBonus}` : (dollyMode ? "Move" : "Tap");
+      source.classList.toggle("dollyReady", dollyMode);
     });
 
     const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     if (mixerToolBtnEl) mixerToolBtnEl.style.display = mixerUnlocked ? "flex" : "none";
+    if (dollyToolBtn) {
+      dollyToolBtn.style.display = rearrangeUnlocked ? "flex" : "none";
+      dollyToolBtn.classList.toggle("armed", dollyMode);
+    }
 
     const warehouseRowEl = document.querySelector("#warehouseRow");
     if (warehouseRowEl) warehouseRowEl.style.display = mixerUnlocked ? "block" : "none";

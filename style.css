@@ -796,3 +796,11 @@ button:disabled { opacity: .4; }
     box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 8px rgba(255,183,0,.18);
   }
 }
+
+
+/* ---- v0.35 Dolly mode ---- */
+#dollyToolBtn.armed {
+  background: #ffe08a;
+  animation: toolPulse 1s ease-in-out infinite alternate;
+}
+.source.dollyReady { cursor: grab; }

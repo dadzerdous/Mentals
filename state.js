@@ -56,6 +56,7 @@
   let activeStoreTab = "store";
   let sellMode = false;
   let rearrangeUnlocked = false;
+  let dollyMode = false;
 
   const GRID = 30;
 

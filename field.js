@@ -96,3 +96,26 @@
     window.addEventListener("pointerup", onDragEnd);
   }
 
+
+
+  function toggleDollyMode() {
+    if (!rearrangeUnlocked) return;
+    dollyMode = !dollyMode;
+
+    if (dollyMode) {
+      if (sellMode) {
+        sellMode = false;
+        document.querySelector("#sellAllChoices")?.classList.remove("open");
+      }
+      if (dropperArmed) {
+        dropperArmed = false;
+        dropperIngredients = [];
+      }
+      say("🛒 Dolly active — drag buckets to rearrange");
+    } else {
+      say("🛒 Dolly parked");
+    }
+    renderAll();
+  }
+
+  dollyToolBtn.addEventListener("click", toggleDollyMode);
