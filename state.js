@@ -18,6 +18,8 @@
   let mixerUnlocked = false;
   let blueUnlocked = false;
   let ordersUnlocked = false;
+  let orderChoices = [];
+  let orderSelectedCount = 0;
 
   let tubes = [];   // [{ color: null|string, amount: number }, ...] length TUBE_COUNT
   let vials = [];   // [{ color: null|string, amount: number }, ...] length VIAL_COUNT

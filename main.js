@@ -29,3 +29,4 @@
       document.querySelector("#splashOverlay")?.classList.remove("open");
     });
   }
+document.querySelector("#godModeBtn")?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();coins+=100;renderAll();saveState();e.currentTarget.textContent="+100";setTimeout(()=>e.currentTarget.textContent="✦",420);say("✦ +100 test coins");});

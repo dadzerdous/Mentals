@@ -113,8 +113,11 @@
       buy: function () {
         ordersUnlocked = true;
         this.level = 1;
+        currentOrder = null;
+        orderChoices = generateOrderChoices();
         document.querySelector("#order").style.display = "block";
         document.querySelector("#fulfillBtn").style.display = "block";
+        showMajorNotice("unlock","Orders are now available. Choose a Quick, Standard, or Big Job.",{title:"Orders Unlocked!",icon:"📦"});
       }
     },
     {

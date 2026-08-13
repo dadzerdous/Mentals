@@ -929,3 +929,10 @@ button:disabled { opacity: .4; }
   opacity: .75;
   transform: scale(.92);
 }
+
+.ordersOverlay{position:absolute;inset:0;background:rgba(43,41,39,.5);display:none;align-items:flex-end;z-index:45}.ordersOverlay.open{display:flex}
+.ordersSheet{width:100%;max-height:82%;overflow-y:auto;background:#f4efe8;border:3px solid #2b2927;border-bottom:none;border-radius:22px 22px 0 0;padding:14px}
+.ordersHeader{display:flex;justify-content:space-between;align-items:center;font-size:19px;font-weight:1000}.ordersIntro{font-size:12px;opacity:.72;margin:8px 0 12px}
+.ordersChoices{display:grid;gap:9px}.orderChoiceCard{background:#fff;border:2px solid #2b2927;border-radius:16px;padding:11px 12px}.orderChoiceCard.selected{background:#fff4c5}.orderChoiceCard.ready,.ordersFulfillBtn.ready{animation:orderPulse 1.1s ease-in-out infinite}
+.orderChoiceTop{display:flex;justify-content:space-between;font-weight:1000}.orderChoiceNeed{font-size:13px;margin-top:5px}.orderChoiceReward{font-size:12px;margin-top:5px;opacity:.75}.ordersFulfillBtn{width:100%;min-height:54px;margin-top:12px}
+#fulfillBtn.orderReady{background:#dcf4df;animation:orderPulse 1s ease-in-out infinite}@keyframes orderPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}

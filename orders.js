@@ -1,40 +1,8 @@
-// Order fulfillment behavior.
-
-  // =========================================================
-  // FULFILL
-  // =========================================================
-
-  document.querySelector("#fulfillBtn").addEventListener("click", () => {
-    const neededColor = currentOrder.color;
-    const vial = vials.find(v =>
-      v.color === neededColor &&
-      v.amount >= storageCapacityPerVial
-    );
-
-    if (!vial) {
-      say(`Need 1 full ${colorInfo[neededColor].emoji} ${colorInfo[neededColor].label} Mixer Vial`);
-      return;
-    }
-
-    vial.color = null;
-    vial.amount = 0;
-
-    const earnedReward = orderRewardForColor(neededColor) + studioEarningsBonus;
-    coins += earnedReward;
-    pulseCoins(earnedReward);
-    totalFulfilled++;
-
-    const colors = activeOrderColors();
-    let nextColor;
-    do {
-      nextColor = colors[Math.floor(Math.random() * colors.length)];
-    } while (colors.length > 1 && nextColor === currentOrder.color);
-    currentOrder = makeOrder(nextColor);
-
-    say(`✅ Order complete! +${earnedReward}`);
-    renderAll();
-    checkJournalSteps();
-
-    if (navigator.vibrate) navigator.vibrate([25, 20, 25]);
-  });
-
+function ensureOrderChoices(force=false){if(!ordersUnlocked)return;if(force||!Array.isArray(orderChoices)||orderChoices.length!==3)orderChoices=generateOrderChoices();}
+function renderOrdersOverlay(){ensureOrderChoices();const list=document.querySelector("#ordersChoices"),fulfill=document.querySelector("#ordersFulfillBtn");if(!list||!fulfill)return;list.innerHTML="";
+orderChoices.forEach(order=>{const tier=orderTierInfo(order.tier),info=colorInfo[order.color],ready=canFulfillOrder(order),selected=currentOrder&&currentOrder.color===order.color&&currentOrder.quantity===order.quantity&&currentOrder.tier===order.tier;const card=document.createElement("div");card.className="orderChoiceCard";card.classList.toggle("selected",!!selected);card.classList.toggle("ready",ready);card.innerHTML=`<div class="orderChoiceTop"><span>${tier.label}</span><span>🪙 ${orderReward(order)}</span></div><div class="orderChoiceNeed">${order.quantity} ${info.emoji} ${info.label} Mixer Vial${order.quantity>1?"s":""}</div><div class="orderChoiceReward">${ready?"✓ Ready to fulfill":`Need ${order.quantity} full vial${order.quantity>1?"s":""}`}</div>`;card.addEventListener("click",()=>{currentOrder={...order};orderSelectedCount++;say(`${tier.label} selected`);renderAll();renderOrdersOverlay();checkJournalSteps();saveState();});list.appendChild(card);});
+const ready=canFulfillOrder(currentOrder);fulfill.disabled=!currentOrder||!ready;fulfill.classList.toggle("ready",ready);fulfill.textContent=!currentOrder?"SELECT AN ORDER FIRST":ready?"✅ FULFILL SELECTED ORDER":"FULFILL SELECTED ORDER";}
+function openOrders(){if(!ordersUnlocked)return;ensureOrderChoices();document.querySelector("#ordersOverlay")?.classList.add("open");renderOrdersOverlay();}
+function closeOrders(){document.querySelector("#ordersOverlay")?.classList.remove("open");}
+function fulfillSelectedOrder(){if(!currentOrder){say("Select an order first");return;}if(!canFulfillOrder(currentOrder)){say("Not enough full Mixer Vials");return;}let remaining=currentOrder.quantity;for(const vial of vials){if(remaining<=0)break;if(vial.color===currentOrder.color&&vial.amount>=storageCapacityPerVial){vial.color=null;vial.amount=0;remaining--;}}const earned=orderReward(currentOrder)+studioEarningsBonus;coins+=earned;pulseCoins(earned);totalFulfilled++;say(`✅ ${orderTierInfo(currentOrder.tier).label} complete! +${earned}`);currentOrder=null;orderChoices=generateOrderChoices();renderAll();renderOrdersOverlay();checkJournalSteps();saveState();}
+document.querySelector("#fulfillBtn")?.addEventListener("click",openOrders);document.querySelector("#ordersCloseBtn")?.addEventListener("click",closeOrders);document.querySelector("#ordersFulfillBtn")?.addEventListener("click",fulfillSelectedOrder);

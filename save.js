@@ -15,7 +15,7 @@
         totalGathered, totalSold, totalMixed, totalFulfilled, totalTubesSold, studioEarningsBonus,
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
-        currentOrder, sourcePositions,
+        currentOrder, orderChoices, orderSelectedCount, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
         toolUpgradeLevels: toolUpgrades.map(i => ({ id: i.id, level: i.level }))
       };

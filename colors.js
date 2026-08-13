@@ -91,9 +91,39 @@
     return mixerVialSellValue(color, storageCapacityPerVial, true) + 3;
   }
 
-  function makeOrder(color) {
-    return { color };
+  function makeOrder(color, quantity = 1, tier = "quick") {
+    return { color, quantity, tier };
   }
 
-  let currentOrder = makeOrder("purple");
+  function orderTierInfo(tier) {
+    if (tier === "standard") return { label: "Standard", quantity: 2, premium: 8 };
+    if (tier === "big") return { label: "Big Job", quantity: 3, premium: 18 };
+    return { label: "Quick", quantity: 1, premium: 3 };
+  }
+
+  function orderReward(order) {
+    if (!order || !order.color) return 0;
+    const tier = orderTierInfo(order.tier || "quick");
+    const quantity = Math.max(1, order.quantity || tier.quantity);
+    return orderRewardForColor(order.color) * quantity + tier.premium;
+  }
+
+  function generateOrderChoices() {
+    const colors = activeOrderColors();
+    const pick = () => colors[Math.floor(Math.random()*colors.length)];
+    return ["quick","standard","big"].map(tier => {
+      const info = orderTierInfo(tier);
+      return makeOrder(pick(), info.quantity, tier);
+    });
+  }
+
+  function fullVialCountForColor(color) {
+    return vials.filter(v => v.color === color && v.amount >= storageCapacityPerVial).length;
+  }
+
+  function canFulfillOrder(order) {
+    return !!order && fullVialCountForColor(order.color) >= Math.max(1, order.quantity || 1);
+  }
+
+  let currentOrder = null;
 

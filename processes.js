@@ -62,6 +62,7 @@
       description: "Put the studio to work.",
       completionText: "Studio earnings boosted!",
       steps: [
+        { id: "selectOrder", desc: "Select an Order", target: 1, progress: () => Math.min(orderSelectedCount, 1) },
         { id: "fulfill3", desc: "Fulfill 3 orders", target: 3, progress: () => Math.min(totalFulfilled, 3) },
         { id: "collect20", desc: "Gather 20 paint total", target: 20, progress: () => Math.min(totalGathered, 20) }
       ]

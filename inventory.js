@@ -62,9 +62,7 @@
     storageText.textContent = `${vialsUsedTotal()} / ${storageMaxTotal()}`;
     coinsEl.textContent = coins;
 
-    const orderInfo = colorInfo[currentOrder.color];
-    orderTarget.textContent = `1 ${orderInfo.emoji} ${orderInfo.label} Mixer Vial`;
-    rewardEl.textContent = orderRewardForColor(currentOrder.color);
+    if(currentOrder&&currentOrder.color){const orderInfo=colorInfo[currentOrder.color],qty=Math.max(1,currentOrder.quantity||1);orderTarget.textContent=`${qty} ${orderInfo.emoji} ${orderInfo.label} Mixer Vial${qty>1?"s":""}`;rewardEl.textContent=orderReward(currentOrder);}else{orderTarget.textContent=ordersUnlocked?"Choose an Order":"No Orders Yet";rewardEl.textContent="—";}
 
     renderBackpack();
     renderWarehouse();
@@ -86,6 +84,7 @@
       sellVialsChoice.style.display = VIAL_COUNT > 0 ? "flex" : "none";
     }
 
+const ordersBtnEl=document.querySelector("#fulfillBtn");if(ordersBtnEl)ordersBtnEl.classList.toggle("orderReady",ordersUnlocked&&canFulfillOrder(currentOrder));
 const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     if (mixerToolBtnEl) mixerToolBtnEl.style.display = mixerUnlocked ? "flex" : "none";
     if (dollyToolBtn) {
