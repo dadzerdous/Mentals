@@ -199,6 +199,7 @@ function paintSplatBurst(color) {
 
   const majorNoticeQueue = [];
   let majorNoticeShowing = false;
+  let currentMajorNotice = null;
 
   const majorNoticeDefaults = {
     unlock:    { icon: "🔓", title: "New Unlock!" },
@@ -215,7 +216,6 @@ function paintSplatBurst(color) {
       title: options.title,
       icon: options.icon
     });
-
     displayNextMajorNotice();
   }
 
@@ -223,6 +223,7 @@ function paintSplatBurst(color) {
     if (majorNoticeShowing || majorNoticeQueue.length === 0) return;
 
     const notice = majorNoticeQueue.shift();
+    currentMajorNotice = notice;
     const defaults = majorNoticeDefaults[notice.type];
 
     const overlay = document.querySelector("#majorNoticeOverlay");
@@ -231,23 +232,38 @@ function paintSplatBurst(color) {
     const title = document.querySelector("#majorNoticeTitle");
     const text = document.querySelector("#majorNoticeText");
 
-    if (!overlay || !card || !icon || !title || !text) return;
+    if (!overlay || !card || !icon || !title || !text) {
+      currentMajorNotice = null;
+      return;
+    }
 
     majorNoticeShowing = true;
-
     card.className = `majorNoticeCard notice-${notice.type}`;
     icon.textContent = notice.icon || defaults.icon;
     title.textContent = notice.title || defaults.title;
     text.textContent = notice.text;
-
     overlay.classList.add("open");
   }
 
   function closeMajorNotice() {
-    const overlay = document.querySelector("#majorNoticeOverlay");
-    overlay?.classList.remove("open");
-    majorNoticeShowing = false;
+    if (!majorNoticeShowing) return;
 
-    // Small delay makes queued notices feel intentional instead of flashing.
-    setTimeout(displayNextMajorNotice, 120);
+    const overlay = document.querySelector("#majorNoticeOverlay");
+    majorNoticeShowing = false;
+    currentMajorNotice = null;
+    overlay?.classList.remove("open");
+
+    // Queue advances only after the current card is fully dismissed.
+    setTimeout(() => {
+      if (!majorNoticeShowing) displayNextMajorNotice();
+    }, 120);
   }
+
+  // Delegated listener is resilient to re-rendering and guarantees one close path.
+  document.addEventListener("click", event => {
+    const okBtn = event.target.closest("#majorNoticeOkBtn");
+    if (!okBtn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeMajorNotice();
+  });
