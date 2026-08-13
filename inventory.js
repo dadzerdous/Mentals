@@ -96,13 +96,20 @@
       if (!small) return;
       small.textContent = sellMode ? `🪙${1 + studioEarningsBonus}` : (dollyMode ? "Move" : "Tap");
       source.classList.toggle("dollyReady", dollyMode);
+      source.classList.toggle("dollyShake", dollyMode);
     });
 
-    const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
+        const sellVialsChoice = document.querySelector("#sellMixedBtnRail");
+    if (sellVialsChoice) {
+      sellVialsChoice.style.display = VIAL_COUNT > 0 ? "flex" : "none";
+    }
+
+const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     if (mixerToolBtnEl) mixerToolBtnEl.style.display = mixerUnlocked ? "flex" : "none";
     if (dollyToolBtn) {
       dollyToolBtn.style.display = rearrangeUnlocked ? "flex" : "none";
       dollyToolBtn.classList.toggle("armed", dollyMode);
+      dollyToolBtn.innerHTML = dollyMode ? "❌<span>Dolly</span>" : "🛒<span>Dolly</span>";
     }
 
     const warehouseRowEl = document.querySelector("#warehouseRow");
@@ -126,7 +133,6 @@
       sellBtnEl.innerHTML = sellMode ? "❌<span>Done</span>" : "🪙<span>Sell</span>";
       sellBtnEl.classList.toggle("armed", sellMode);
     }
-    if (sellAllBtnEl) sellAllBtnEl.style.display = sellMode ? "flex" : "none";
 
     if (document.querySelector("#storeOverlay").classList.contains("open")) {
       renderStore();

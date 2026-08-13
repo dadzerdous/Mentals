@@ -106,20 +106,25 @@
 
   document.querySelector("#sellBtn").addEventListener("click", () => {
     sellMode = !sellMode;
+
     if (sellMode && dropperArmed) {
-      dropperIngredients.forEach(ingredient => {
-        if (ingredient.source === "tube") addToSlots(tubes, ingredient.color, 1, bagCapacityPerTube);
-      });
       dropperArmed = false;
       dropperIngredients = [];
     }
 
+    if (sellMode && dollyMode) {
+      dollyMode = false;
+    }
+
+    const choices = document.querySelector("#sellAllChoices");
+
     if (sellMode) {
+      choices?.classList.add("open");
       showSellHint(false);
     } else {
+      choices?.classList.remove("open");
       clearTimeout(message._timer);
       message.classList.remove("show", "dimmed");
-      document.querySelector("#sellAllChoices")?.classList.remove("open");
     }
 
     renderAll();

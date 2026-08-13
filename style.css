@@ -804,3 +804,41 @@ button:disabled { opacity: .4; }
   animation: toolPulse 1s ease-in-out infinite alternate;
 }
 .source.dollyReady { cursor: grab; }
+
+
+/* ---- v0.36 Sell cascade + Dolly polish ---- */
+#sellBtn.armed {
+  background: #fff1a8;
+}
+
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 0;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 30;
+}
+
+.sellAllChoices.open {
+  display: flex;
+}
+
+.source.dollyShake {
+  animation: dollyBucketShake .26s ease-in-out infinite;
+}
+
+@keyframes dollyBucketShake {
+  0%   { transform: rotate(-2deg); }
+  50%  { transform: rotate(2deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+.source.dollyReady {
+  cursor: grab;
+}
+
+.source.dollyReady:active {
+  cursor: grabbing;
+}
