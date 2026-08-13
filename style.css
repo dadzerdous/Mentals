@@ -949,3 +949,65 @@ button:disabled { opacity: .4; }
 .studioXpFloat{position:absolute;right:8px;top:25px;opacity:0;pointer-events:none;font-size:11px}
 .studioXpFloat.pop{animation:xpFloat .7s ease-out}
 @keyframes xpFloat{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-18px)}}
+
+
+/* =========================================================
+   v0.42 — bottom Process teaser + Mixer Vials above it
+   ========================================================= */
+
+/* Process / Journal teaser is now the lowest HUD element. */
+#quest {
+  top: auto;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 12;
+}
+
+/* Mixer Vials live immediately above the Process teaser. */
+#warehouseRow {
+  top: auto;
+  bottom: 58px;
+  left: 10px;
+  right: 10px;
+  z-index: 11;
+}
+
+/* The top is now reserved for Paint Case / coins / XP.
+   Give the canvas back the middle of the screen. */
+#field {
+  top: 108px;
+  bottom: 126px;
+}
+
+/* Orders can remain near the upper play area without colliding with XP. */
+#order {
+  top: 108px;
+}
+
+/* Temporary feedback sits below the XP bar. */
+#message {
+  top: 110px;
+}
+
+/* On mobile, keep the bottom HUD clear of the vertical toolbox. */
+@media (max-width: 700px) {
+  #quest {
+    left: 74px;
+    right: 10px;
+  }
+
+  #warehouseRow {
+    left: 74px;
+    right: 10px;
+  }
+
+  #field {
+    left: 66px;
+  }
+
+  #order {
+    margin-left: 28px;
+    width: min(76vw, 390px);
+  }
+}
