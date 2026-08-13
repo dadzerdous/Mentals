@@ -19,7 +19,7 @@
         });
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧴 Empty Tube";
+        chip.textContent = `🧴 0/${bagCapacityPerTube}`;
       }
       bagContents.appendChild(chip);
     });
@@ -63,7 +63,13 @@
     coinsEl.textContent = coins;
     renderStudioXp();
 
-    if(currentOrder&&currentOrder.color){const orderInfo=colorInfo[currentOrder.color],qty=Math.max(1,currentOrder.quantity||1);orderTarget.textContent=`${qty} ${orderInfo.emoji} ${orderInfo.label} Mixer Vial${qty>1?"s":""}`;rewardEl.textContent=orderReward(currentOrder);}else{orderTarget.textContent=ordersUnlocked?"Choose an Order":"No Orders Yet";rewardEl.textContent="—";}
+    if (currentOrder && Array.isArray(currentOrder.requirements)) {
+      orderTarget.textContent = orderRequirementText(currentOrder);
+      rewardEl.textContent = orderReward(currentOrder);
+    } else {
+      orderTarget.textContent = ordersUnlocked ? "Choose an Order" : "No Orders Yet";
+      rewardEl.textContent = "—";
+    }
 
     renderBackpack();
     renderWarehouse();
@@ -85,7 +91,7 @@
       sellVialsChoice.style.display = VIAL_COUNT > 0 ? "flex" : "none";
     }
 
-const ordersBtnEl=document.querySelector("#fulfillBtn");if(ordersBtnEl)ordersBtnEl.classList.toggle("orderReady",ordersUnlocked&&canFulfillOrder(currentOrder));
+const ordersBtnEl=document.querySelector("#fulfillBtn");if(ordersBtnEl)ordersBtnEl.classList.toggle("orderReady",ordersUnlocked&&anyOrderReady());
 const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     if (mixerToolBtnEl) mixerToolBtnEl.style.display = mixerUnlocked ? "flex" : "none";
     if (dollyToolBtn) {

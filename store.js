@@ -313,7 +313,7 @@
       maxLevel: 5,
       baseCost: 30,
       growth: 1.7,
-      visible: () => ordersUnlocked,
+      visible: () => minionCount > 0,
       requires: () => minionCount > 0,
       lockedNote: "Hire a minion in the Store tab first",
       desc: function () { return `Minions gather quicker. Speed level ${this.level} / ${this.maxLevel}`; },
@@ -327,7 +327,7 @@
       maxLevel: 3,
       baseCost: 35,
       growth: 1.8,
-      visible: () => ordersUnlocked,
+      visible: () => minionCount > 0,
       requires: () => minionCount > 0,
       lockedNote: "Hire a minion in the Store tab first",
       desc: function () { return `Minions collect more per visit. Currently ${1 + this.level} at a time.`; },
@@ -416,6 +416,19 @@
     checkJournalSteps();
   }
 
+  function storeSectionForItem(item, list) {
+    if (list === toolUpgrades) return "upgrades";
+    const toolIds = new Set(["mixer", "unlockOrders", "dolly", "minion"]);
+    return toolIds.has(item.id) ? "tools" : "equipment";
+  }
+
+  function storeItemUnlockedForDisplay(item, list) {
+    if (!item.visible) return true;
+    if (item.visible()) return true;
+    if ((item.level || 0) > 0) return true;
+    return false;
+  }
+
   function renderUpgradeCard(item, list) {
     const maxed = item.maxLevel && item.level >= item.maxLevel;
     const locked = item.requires && !item.requires();
@@ -436,7 +449,9 @@
 
     const buyBtn = document.createElement("button");
     buyBtn.className = "upgradeBuyBtn";
-    buyBtn.textContent = soldOut ? "SOLD OUT" : maxed ? "✓" : `🪙 ${item.cost()}`;
+    const section = storeSectionForItem(item, list);
+    const ownedTool = section === "tools" && maxed;
+    buyBtn.textContent = soldOut ? "SOLD OUT" : ownedTool ? "OWNED" : maxed ? "MAX" : `🪙 ${item.cost()}`;
     const affordableNow = isStoreItemActuallyAffordable(item);
 
     buyBtn.disabled = !affordableNow;
@@ -453,23 +468,22 @@
   }
 
   function renderStore() {
-    const list = document.querySelector("#upgradeList");
-    list.innerHTML = "";
-
-    const allItems = activeStoreTab === "store" ? storeItems : toolUpgrades;
-    const items = allItems.filter(item => !item.visible || item.visible());
-
-    if (items.length === 0) {
-      const note = document.createElement("div");
-      note.id = "emptyTabNote";
-      note.textContent = activeStoreTab === "store"
-        ? "Nothing new to buy yet — keep playing!"
-        : "No tools owned yet — buy one in the Store tab to unlock its upgrades.";
-      list.appendChild(note);
-      return;
-    }
-
-    items.forEach(item => list.appendChild(renderUpgradeCard(item, allItems)));
+    const storeListEl = document.querySelector("#storeList");
+    if (!storeListEl) return;
+    storeListEl.innerHTML = "";
+    const allItems = [
+      ...storeItems.map(item => ({ item, list: storeItems })),
+      ...toolUpgrades.map(item => ({ item, list: toolUpgrades }))
+    ];
+    allItems
+      .filter(({ item, list }) => storeSectionForItem(item, list) === activeStoreSection)
+      .filter(({ item, list }) => storeItemUnlockedForDisplay(item, list))
+      .forEach(({ item, list }) => renderUpgradeCard(item, list));
+    document.querySelectorAll(".storeSectionBtn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.section === activeStoreSection);
+    });
+    const storeBtn = document.querySelector("#storeBtn");
+    if (storeBtn) storeBtn.classList.toggle("canAfford", cheapestAffordableExists());
   }
 
   function setStoreTab(tab) {

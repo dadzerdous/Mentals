@@ -66,6 +66,7 @@
   let flexibleBucketColors = [];
 
   let activeStoreTab = "store";
+  let activeStoreSection = "equipment";
   let sellMode = false;
   let rearrangeUnlocked = false;
   let dollyMode = false;

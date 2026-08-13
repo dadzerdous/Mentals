@@ -15,6 +15,7 @@
         totalGathered, totalSold, totalMixed, totalFulfilled, totalTubesSold, studioEarningsBonus, studioXp, studioLevel,
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
+        activeStoreSection,
         colorXp, colorTimesMade, colorTimesCollected, colorTimesUsed, proficientColors, flexibleBucketCount, flexibleBucketColors,
         currentOrder, orderChoices, orderSelectedCount, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
@@ -99,6 +100,7 @@
 
       colorGuideUnlocked = data.colorGuideUnlocked ?? (totalMixed > 0);
       activeJournalTab = data.activeJournalTab ?? activeJournalTab;
+      activeStoreSection = data.activeStoreSection ?? activeStoreSection;
 
       if (data.discoveredColors && typeof data.discoveredColors === "object") {
         Object.assign(discoveredColors, data.discoveredColors);

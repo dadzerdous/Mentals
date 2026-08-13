@@ -91,39 +91,63 @@
     return mixerVialSellValue(color, storageCapacityPerVial, true) + 3;
   }
 
-  function makeOrder(color, quantity = 1, tier = "quick") {
-    return { color, quantity, tier };
-  }
-
+  function makeOrder(type, requirements, tier = "quick") { return { type, requirements, tier }; }
   function orderTierInfo(tier) {
-    if (tier === "standard") return { label: "Standard", quantity: 2, premium: 8 };
-    if (tier === "big") return { label: "Big Job", quantity: 3, premium: 18 };
-    return { label: "Quick", quantity: 1, premium: 3 };
+    if (tier === "standard") return { label: "Standard", premium: 8 };
+    if (tier === "big") return { label: "Big Job", premium: 18 };
+    return { label: "Quick", premium: 3 };
   }
-
+  function orderRequirementText(order) {
+    if (!order || !Array.isArray(order.requirements)) return "";
+    return order.requirements.map(req => {
+      const info = colorInfo[req.color];
+      return req.kind === "tube" ? `1 ${info.emoji} ${info.label} Tube` : `1 ${info.emoji} ${info.label} Mixer Vial`;
+    }).join(" + ");
+  }
   function orderReward(order) {
-    if (!order || !order.color) return 0;
-    const tier = orderTierInfo(order.tier || "quick");
-    const quantity = Math.max(1, order.quantity || tier.quantity);
-    return orderRewardForColor(order.color) * quantity + tier.premium;
+    if (!order || !Array.isArray(order.requirements)) return 0;
+    let base = 0;
+    order.requirements.forEach(req => { base += req.kind === "tube" ? bagCapacityPerTube + 2 : orderRewardForColor(req.color); });
+    return base + orderTierInfo(order.tier).premium;
   }
-
+  function randomRawOrderColor() {
+    const colors = ["red"];
+    if (yellowUnlocked) colors.push("yellow");
+    if (blueUnlocked) colors.push("blue");
+    if (whiteUnlocked) colors.push("white");
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+  function randomMixedOrderColor(exclude = null) {
+    const colors = activeOrderColors().filter(c => c !== exclude);
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
   function generateOrderChoices() {
-    const colors = activeOrderColors();
-    const pick = () => colors[Math.floor(Math.random()*colors.length)];
-    return ["quick","standard","big"].map(tier => {
-      const info = orderTierInfo(tier);
-      return makeOrder(pick(), info.quantity, tier);
-    });
+    const quickColor = randomRawOrderColor();
+    const standardColor = randomMixedOrderColor();
+    const bigA = randomMixedOrderColor();
+    const bigB = randomMixedOrderColor(bigA);
+    return [
+      makeOrder("tube", [{ kind: "tube", color: quickColor }], "quick"),
+      makeOrder("vial", [{ kind: "vial", color: standardColor }], "standard"),
+      makeOrder("multi", [{ kind: "vial", color: bigA }, { kind: "vial", color: bigB }], "big")
+    ];
   }
-
-  function fullVialCountForColor(color) {
-    return vials.filter(v => v.color === color && v.amount >= storageCapacityPerVial).length;
-  }
-
   function canFulfillOrder(order) {
-    return !!order && fullVialCountForColor(order.color) >= Math.max(1, order.quantity || 1);
+    if (!order || !Array.isArray(order.requirements)) return false;
+    const tempTubes = tubes.map(t => ({...t}));
+    const tempVials = vials.map(v => ({...v}));
+    for (const req of order.requirements) {
+      if (req.kind === "tube") {
+        const idx = tempTubes.findIndex(t => t.color === req.color && t.amount >= bagCapacityPerTube);
+        if (idx < 0) return false;
+        tempTubes.splice(idx, 1);
+      } else {
+        const idx = tempVials.findIndex(v => v.color === req.color && v.amount >= storageCapacityPerVial);
+        if (idx < 0) return false;
+        tempVials.splice(idx, 1);
+      }
+    }
+    return true;
   }
-
   let currentOrder = null;
 
