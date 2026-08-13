@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.37</title>
+<title>Color Gather v0.38</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -85,9 +85,19 @@
 
       <div id="journalProcessList"></div>
       <div id="colorGuidePanel" style="display:none;"></div>
-          <button id="journalResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
+          <button id="godModeBtn" class="godModeBtn" title="Studio test button">✦</button>
+      <button id="journalResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
     </div>
   </div>
+  <div id="majorNoticeOverlay" class="majorNoticeOverlay">
+    <div id="majorNoticeCard" class="majorNoticeCard notice-unlock">
+      <div id="majorNoticeIcon" class="majorNoticeIcon">🔓</div>
+      <div id="majorNoticeTitle" class="majorNoticeTitle">Unlocked!</div>
+      <div id="majorNoticeText" class="majorNoticeText"></div>
+      <button id="majorNoticeOkBtn" class="majorNoticeOkBtn">OK</button>
+    </div>
+  </div>
+
   <div id="storeOverlay">
     <div id="storeSheet">
       <div id="storeHeader">

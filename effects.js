@@ -180,3 +180,64 @@ function paintSplatBurst(color) {
     }
   }
 
+
+
+  // =========================================================
+  // MAJOR NOTIFICATIONS
+  // Persistent, queued notices for meaningful progression events.
+  // =========================================================
+
+  const majorNoticeQueue = [];
+  let majorNoticeShowing = false;
+
+  const majorNoticeDefaults = {
+    unlock:    { icon: "🔓", title: "New Unlock!" },
+    level:     { icon: "⭐", title: "Studio Level Up!" },
+    discovery: { icon: "🎨", title: "New Discovery!" },
+    reward:    { icon: "🎁", title: "Reward!" },
+    warning:   { icon: "⚠️", title: "Important" }
+  };
+
+  function showMajorNotice(type, text, options = {}) {
+    majorNoticeQueue.push({
+      type: majorNoticeDefaults[type] ? type : "unlock",
+      text,
+      title: options.title,
+      icon: options.icon
+    });
+
+    displayNextMajorNotice();
+  }
+
+  function displayNextMajorNotice() {
+    if (majorNoticeShowing || majorNoticeQueue.length === 0) return;
+
+    const notice = majorNoticeQueue.shift();
+    const defaults = majorNoticeDefaults[notice.type];
+
+    const overlay = document.querySelector("#majorNoticeOverlay");
+    const card = document.querySelector("#majorNoticeCard");
+    const icon = document.querySelector("#majorNoticeIcon");
+    const title = document.querySelector("#majorNoticeTitle");
+    const text = document.querySelector("#majorNoticeText");
+
+    if (!overlay || !card || !icon || !title || !text) return;
+
+    majorNoticeShowing = true;
+
+    card.className = `majorNoticeCard notice-${notice.type}`;
+    icon.textContent = notice.icon || defaults.icon;
+    title.textContent = notice.title || defaults.title;
+    text.textContent = notice.text;
+
+    overlay.classList.add("open");
+  }
+
+  function closeMajorNotice() {
+    const overlay = document.querySelector("#majorNoticeOverlay");
+    overlay?.classList.remove("open");
+    majorNoticeShowing = false;
+
+    // Small delay makes queued notices feel intentional instead of flashing.
+    setTimeout(displayNextMajorNotice, 120);
+  }

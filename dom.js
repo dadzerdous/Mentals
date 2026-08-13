@@ -107,3 +107,16 @@
     return Math.random() * (max - min) + min;
   }
 
+
+
+  const majorNoticeOkBtn = document.querySelector("#majorNoticeOkBtn");
+  majorNoticeOkBtn?.addEventListener("click", closeMajorNotice);
+
+  const godModeBtn = document.querySelector("#godModeBtn");
+  godModeBtn?.addEventListener("click", () => {
+    coins += 100;
+    pulseCoins(100);
+    renderAll();
+    saveState();
+    say("✦ +100 test coins");
+  });

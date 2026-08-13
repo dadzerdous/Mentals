@@ -80,6 +80,7 @@
         document.querySelector("#warehouseRow").style.display = "block";
         const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
         if (mixerToolBtnEl) mixerToolBtnEl.style.display = "flex";
+        showMajorNotice("unlock", "The Mixer is now available in your Tools. Drag one paint bucket onto another to experiment.", { title: "Mixer Unlocked!", icon: "🎨" });
       }
     },
     {
@@ -147,7 +148,7 @@
       buy: function () {
         rearrangeUnlocked = true;
         this.level = 1;
-        say("🛒 Dolly unlocked!");
+        showMajorNotice("unlock", "Dolly Mode is now available in your Tools. Use it to rearrange paint buckets.", { title: "Dolly Unlocked!", icon: "🛒" });
       }
     },
     {
@@ -220,6 +221,7 @@
       buy: function () {
         whiteUnlocked = true;
         this.level = 1;
+        showMajorNotice("unlock", "White paint is now available, opening new light and pastel mixes.", { title: "White Paint Unlocked!", icon: "⚪" });
 
         const whiteEl = document.querySelector("#white");
         whiteEl.style.display = "grid";

@@ -109,18 +109,18 @@
     // Process rewards are progression rewards, not little coin payouts.
     if (process.id === "firstPaint") {
       // Completing Process 1 unlocks the Store.
-      say("🎉 Process complete — Store unlocked!");
+      showMajorNotice("unlock", "The Store is now available. New studio equipment can be purchased here.", { title: "Store Unlocked!", icon: "🏪" });
     } else if (process.id === "yellowBucket") {
       // Process reward is progression, not an automatic capacity increase.
-      say("🎉 Process complete — Experimenting unlocked!");
+      showMajorNotice("unlock", "Experimenting is available. Your next process will introduce paint mixing.", { title: "Experimenting Unlocked!", icon: "🎨" });
     } else if (process.id === "experiment") {
-      say("🎉 Process complete — Color Guide expanded!");
+      showMajorNotice("unlock", "Your Journal can now track more of your paint discoveries.", { title: "Color Guide Updated!", icon: "📖" });
     } else if (process.id === "primaries") {
-      say("🎉 Process complete — Customer work established!");
+      showMajorNotice("unlock", "Customer Orders are now part of your studio.", { title: "Orders Unlocked!", icon: "📦" });
     } else if (process.id === "workingArtist") {
       // Simple earnings milestone for now: future order payouts get boosted.
       studioEarningsBonus += 1;
-      say("🎉 Process complete — Studio earnings +1!");
+      showMajorNotice("reward", "Your studio reputation has improved. Studio earnings receive a permanent +1 bonus.", { title: "Process Complete!", icon: "🪙" });
     }
 
     saveState();
@@ -225,6 +225,8 @@
 
     saveState();
     return true;
+
+    showMajorNotice("discovery", `${colorInfo[color].label} has been added to your Color Guide.`, { title: `${colorInfo[color].label} Discovered!`, icon: colorInfo[color].emoji });
   }
 
   function recipeTextForColor(color) {

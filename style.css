@@ -844,3 +844,88 @@ button:disabled { opacity: .4; }
   z-index: 30;
 }
 .sellAllChoices.open { display: flex; }
+
+
+/* =========================================================
+   v0.38 — Persistent major notifications
+   ========================================================= */
+.majorNoticeOverlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(43,41,39,.38);
+  z-index: 80;
+}
+
+.majorNoticeOverlay.open {
+  display: flex;
+}
+
+.majorNoticeCard {
+  width: min(88vw, 360px);
+  padding: 20px 18px 16px;
+  border: 3px solid #2b2927;
+  border-radius: 22px;
+  box-shadow: 0 9px 0 rgba(43,41,39,.18);
+  text-align: center;
+  animation: majorNoticeIn .22s ease-out;
+}
+
+.majorNoticeCard.notice-unlock    { background: #fff0a8; }
+.majorNoticeCard.notice-level     { background: #dcecff; }
+.majorNoticeCard.notice-discovery { background: #f3ddff; }
+.majorNoticeCard.notice-reward    { background: #dcf4df; }
+.majorNoticeCard.notice-warning   { background: #ffdcdc; }
+
+.majorNoticeIcon {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.majorNoticeTitle {
+  font-size: 20px;
+  font-weight: 1000;
+  margin-bottom: 6px;
+}
+
+.majorNoticeText {
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+  margin-bottom: 15px;
+}
+
+.majorNoticeOkBtn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+@keyframes majorNoticeIn {
+  from { opacity: 0; transform: scale(.82) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Secret test control: intentionally subtle, but still tappable. */
+.godModeBtn {
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 12px auto 5px;
+  display: block;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  opacity: .16;
+  font-size: 13px;
+}
+
+.godModeBtn:active {
+  opacity: .75;
+  transform: scale(.92);
+}
