@@ -61,6 +61,7 @@
     bagText.textContent = `${tubes.filter(t => t.color !== null).length} / ${TUBE_COUNT}`;
     storageText.textContent = `${vialsUsedTotal()} / ${storageMaxTotal()}`;
     coinsEl.textContent = coins;
+    renderStudioXp();
 
     if(currentOrder&&currentOrder.color){const orderInfo=colorInfo[currentOrder.color],qty=Math.max(1,currentOrder.quantity||1);orderTarget.textContent=`${qty} ${orderInfo.emoji} ${orderInfo.label} Mixer Vial${qty>1?"s":""}`;rewardEl.textContent=orderReward(currentOrder);}else{orderTarget.textContent=ordersUnlocked?"Choose an Order":"No Orders Yet";rewardEl.textContent="—";}
 
@@ -160,6 +161,7 @@ const mixerToolBtnEl = document.querySelector("#mixerToolBtn");
     }
 
     totalGathered++;
+    if (!fromMinion) addStudioXp(1, "gather");
 
     source.classList.remove("pop");
     void source.offsetWidth;

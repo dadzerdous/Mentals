@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.39</title>
+<title>Color Gather v0.40</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,6 +15,13 @@
       <div id="bagContents" class="stashContents"></div>
     </div>
     <div class="panel">🪙 <span id="coins">0</span></div>
+  </div>
+
+  <div id="studioXpBar" class="studioXpBar">
+    <span id="studioLevel">⭐ Studio Lv 1</span>
+    <div class="studioXpTrack"><div id="studioXpFill" class="studioXpFill"></div></div>
+    <span id="studioXpText">0 / 25 XP</span>
+    <span id="studioXpFloat" class="studioXpFloat"></span>
   </div>
 
   <div id="quest" role="button" aria-label="Open Journal">
@@ -153,6 +160,7 @@
 <script src="minions.js"></script>
 <script src="dom.js"></script>
 <script src="effects.js"></script>
+<script src="xp.js"></script>
 <script src="inventory.js"></script>
 <script src="dropper.js"></script>
 <script src="sell.js"></script>

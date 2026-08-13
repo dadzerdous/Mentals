@@ -54,6 +54,8 @@
   let totalFulfilled = 0;
   let totalTubesSold = 0;
   let studioEarningsBonus = 0;
+  let studioXp = 0;
+  let studioLevel = 1;
 
   let activeStoreTab = "store";
   let sellMode = false;

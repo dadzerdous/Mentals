@@ -42,6 +42,7 @@
 
     addToSlots(vials, recipe.result, weight, storageCapacityPerVial);
     totalMixed++;
+    addStudioXp(4, "mix");
     recordColorDiscovery(recipe.result);
 
     paintSplatBurst(recipe.result);

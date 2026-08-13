@@ -12,7 +12,7 @@
         coins, tubes, vials, bagCapacityPerTube, storageCapacityPerVial, vialSellBonusLevel, tubeSellBonusLevel,
         primaryBucketSlots, primaryBucketColors, firstPrimaryChoice, pendingPrimaryBucketPosition, yellowUnlocked, mixerUnlocked, blueUnlocked, ordersUnlocked, rearrangeUnlocked,
         whiteBucketPurchased, whiteUnlocked, minionCount, minionSpeedLevel, minionCarryLevel,
-        totalGathered, totalSold, totalMixed, totalFulfilled, totalTubesSold, studioEarningsBonus,
+        totalGathered, totalSold, totalMixed, totalFulfilled, totalTubesSold, studioEarningsBonus, studioXp, studioLevel,
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
         currentOrder, orderChoices, orderSelectedCount, sourcePositions,
@@ -72,6 +72,8 @@
       totalMixed = data.totalMixed ?? totalMixed;
       totalFulfilled = data.totalFulfilled ?? totalFulfilled;
       totalTubesSold = data.totalTubesSold ?? totalTubesSold;
+      studioXp = data.studioXp ?? studioXp;
+      studioLevel = data.studioLevel ?? studioLevel;
       studioEarningsBonus = data.studioEarningsBonus ?? studioEarningsBonus;
       if (typeof data.currentProcessIndex === "number") currentProcessIndex = data.currentProcessIndex;
       followedStepId = data.followedStepId ?? followedStepId;

@@ -106,6 +106,7 @@
   function awardProcessCompletion(process) {
     if (!process || completedProcessRewards[process.id]) return;
     completedProcessRewards[process.id] = true;
+    addStudioXp(25, "process complete");
 
     // Process rewards are progression rewards, not little coin payouts.
     if (process.id === "firstPaint") {
@@ -217,17 +218,21 @@
     if (isColorDiscovered(color)) return false;
 
     discoveredColors[color] = true;
+    addStudioXp(15, "color discovery");
 
     if (!colorGuideUnlocked) {
       colorGuideUnlocked = true;
       activeJournalTab = "guide";
-      setTimeout(() => say("📖 Color Guide added to your Journal!"), 450);
     }
+
+    showMajorNotice(
+      "discovery",
+      `${colorInfo[color].label} has been added to your Color Guide. You earned 15 Studio XP.`,
+      { title: `${colorInfo[color].label} Discovered!`, icon: colorInfo[color].emoji }
+    );
 
     saveState();
     return true;
-
-    showMajorNotice("discovery", `${colorInfo[color].label} has been added to your Color Guide.`, { title: `${colorInfo[color].label} Discovered!`, icon: colorInfo[color].emoji });
   }
 
   function recipeTextForColor(color) {
