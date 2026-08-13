@@ -1011,3 +1011,46 @@ button:disabled { opacity: .4; }
     width: min(76vw, 390px);
   }
 }
+
+
+/* =========================================================
+   v0.44 — Orders: track one, fulfill any
+   ========================================================= */
+
+.orderChoiceActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.orderTrackBtn,
+.orderCardFulfillBtn {
+  min-height: 40px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.orderTrackBtn {
+  background: #fff;
+}
+
+.orderChoiceCard.selected .orderTrackBtn {
+  background: #fff0a8;
+}
+
+/* Only the individual ready job gets fulfillment emphasis.
+   There is no longer a global "Fulfill Selected Order" animation. */
+.orderCardFulfillBtn {
+  background: #dcf4df;
+}
+
+.orderChoiceCard.ready {
+  animation: none;
+}
+
+.ordersFulfillBtn,
+.ordersFulfillBtn.ready {
+  display: none !important;
+  animation: none !important;
+}
