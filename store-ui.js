@@ -15,22 +15,9 @@
     storeOverlay.classList.remove("open");
   });
 
-  document.querySelector("#storeTabBtn").addEventListener("click", () => setStoreTab("store"));
-  document.querySelector("#upgradeTabBtn").addEventListener("click", () => setStoreTab("upgrades"));
-
-
-  document.querySelectorAll(".storeSectionBtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activeStoreSection = btn.dataset.section || "equipment";
-      renderStore();
-      saveState();
-    });
-  });
-
   document.addEventListener("click", event => {
     const btn = event.target.closest(".storeSectionBtn");
     if (!btn) return;
-
     activeStoreSection = btn.dataset.section || "equipment";
     renderStore();
     saveState();

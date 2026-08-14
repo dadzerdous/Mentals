@@ -64,9 +64,7 @@
   const COLOR_PROFICIENCY_XP = 25;
   let flexibleBucketCount = 0;
   let flexibleBucketColors = [];
-
-  let activeStoreTab = "store";
-  let activeStoreSection = "equipment";
+let activeStoreSection = "equipment";
   let sellMode = false;
   let rearrangeUnlocked = false;
   let dollyMode = false;

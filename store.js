@@ -431,8 +431,7 @@
 
   function renderUpgradeCard(item, list) {
     const maxed = item.maxLevel && item.level >= item.maxLevel;
-    const normallyVisible = item.visible ? !!item.visible() : true;
-    const locked = (item.requires && !item.requires()) || (!normallyVisible && (item.level || 0) === 0);
+    const locked = item.requires && !item.requires();
     const soldOut = maxed && (item.id === "tubeSlot" || item.id === "buyPrimaryBucket");
     const primaryPaintItem = item.id === "unlockYellow" || item.id === "unlockBlue";
     const primaryPaintPreBucketLocked = primaryPaintItem && primaryBucketSlots === 0;
@@ -445,7 +444,7 @@
     info.className = "upgradeInfo";
     info.innerHTML = `
       <div class="upgradeName">${item.name}${maxed ? " (Maxed)" : ""}</div>
-      <div class="upgradeDesc">${locked ? (item.lockedNote || "Not available yet") : (typeof item.desc === "function" ? item.desc() : item.desc)}</div>
+      <div class="upgradeDesc">${locked ? item.lockedNote : (typeof item.desc === "function" ? item.desc() : item.desc)}</div>
     `;
 
     const buyBtn = document.createElement("button");
@@ -453,7 +452,7 @@
     const section = storeSectionForItem(item, list);
     const ownedTool = section === "tools" && maxed;
     buyBtn.textContent = soldOut ? "SOLD OUT" : ownedTool ? "OWNED" : maxed ? "MAX" : `🪙 ${item.cost()}`;
-    const affordableNow = !locked && isStoreItemActuallyAffordable(item);
+    const affordableNow = isStoreItemActuallyAffordable(item);
 
     buyBtn.disabled = !affordableNow;
     if (primaryPaintPreBucketLocked) card.classList.add("storeItemLocked");
@@ -471,41 +470,18 @@
   function renderStore() {
     const storeListEl = document.querySelector("#storeList");
     if (!storeListEl) return;
-
     storeListEl.innerHTML = "";
-
-    const entries = [
-      ...storeItems.map(item => ({ item, list: storeItems, section: storeSectionForItem(item, storeItems) })),
-      ...toolUpgrades.map(item => ({ item, list: toolUpgrades, section: "upgrades" }))
+    const allItems = [
+      ...storeItems.map(item => ({ item, list: storeItems })),
+      ...toolUpgrades.map(item => ({ item, list: toolUpgrades }))
     ];
-
-    const sectionEntries = entries.filter(entry => entry.section === activeStoreSection);
-
-    sectionEntries.forEach(({ item, list }) => renderUpgradeCard(item, list));
-
-    if (sectionEntries.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "storeEmptyState";
-      empty.textContent = activeStoreSection === "equipment"
-        ? "No equipment available yet."
-        : activeStoreSection === "tools"
-          ? "No tools available yet."
-          : "No upgrades available yet.";
-      storeListEl.appendChild(empty);
-    }
-
+    allItems
+      .filter(({ item, list }) => storeSectionForItem(item, list) === activeStoreSection)
+      .filter(({ item, list }) => storeItemUnlockedForDisplay(item, list))
+      .forEach(({ item, list }) => renderUpgradeCard(item, list));
     document.querySelectorAll(".storeSectionBtn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.section === activeStoreSection);
     });
-
     const storeBtn = document.querySelector("#storeBtn");
     if (storeBtn) storeBtn.classList.toggle("canAfford", cheapestAffordableExists());
   }
-
-  function setStoreTab(tab) {
-    activeStoreTab = tab;
-    document.querySelector("#storeTabBtn").classList.toggle("active", tab === "store");
-    document.querySelector("#upgradeTabBtn").classList.toggle("active", tab === "upgrades");
-    renderStore();
-  }
-
