@@ -433,3 +433,19 @@ As of the Store-tab work:
 - Keep individual splat/drop sizes roughly the same.
 - Keep random angle/distance/count behavior.
 - Let droplets spread noticeably farther from the main splat/bucket so the effect reads as a real splatter rather than a tight blob.
+
+
+### Dynamic paint splatter direction (v0.57)
+
+- Paint gathering splats should react to tapping speed.
+- Rapid repeated taps build a temporary **mess level**:
+  - more droplets
+  - somewhat wider spray
+  - higher chance of far-away droplets
+- Slower tapping lets the mess level decay.
+- Individual splat/drop sizes should remain roughly the same; the increased mess comes from quantity and distribution, not giant blobs.
+- Distance is intentionally probability-weighted:
+  - most paint lands near the bucket
+  - less paint lands at medium distance
+  - only a small percentage reaches far away
+- Faster clicking shifts some probability from near splashes toward medium/far splashes.

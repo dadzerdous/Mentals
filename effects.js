@@ -120,12 +120,65 @@
   }
 
   
+
+  // Track rapid paint gathering per bucket.
+  // Faster repeated taps make a temporarily messier splatter.
+  const bucketSplatActivity = new WeakMap();
+
+  function getBucketMessLevel(source) {
+    const now = performance.now();
+    const previous = bucketSplatActivity.get(source) || {
+      lastTap: 0,
+      mess: 0
+    };
+
+    const gap = now - previous.lastTap;
+
+    // Build mess quickly when the player is tapping rapidly.
+    if (gap < 180) {
+      previous.mess = Math.min(4, previous.mess + 1.15);
+    } else if (gap < 320) {
+      previous.mess = Math.min(4, previous.mess + 0.75);
+    } else if (gap < 520) {
+      previous.mess = Math.min(4, previous.mess + 0.35);
+    } else {
+      // Slow tapping lets the mess level cool down.
+      previous.mess = Math.max(0, previous.mess - Math.min(2.2, gap / 700));
+    }
+
+    previous.lastTap = now;
+    bucketSplatActivity.set(source, previous);
+    return previous.mess;
+  }
+
+  function weightedTapSplatDistance(size, messLevel) {
+    const roll = Math.random();
+
+    // At normal speed:
+    // ~68% close, ~24% medium, ~8% far.
+    //
+    // Rapid clicking shifts more probability into medium/far spray.
+    const farChance = Math.min(.20, .08 + messLevel * .03);
+    const mediumChance = Math.min(.34, .24 + messLevel * .025);
+
+    if (roll < farChance) {
+      return randomBetween(size * 1.25, size * (1.85 + messLevel * .16));
+    }
+
+    if (roll < farChance + mediumChance) {
+      return randomBetween(size * .82, size * (1.35 + messLevel * .10));
+    }
+
+    return randomBetween(size * .42, size * .92);
+  }
+
   function createCanvasTapSplat(source, color) {
     const game = document.querySelector("#game");
     if (!game || !source) return;
 
     const sourceRect = source.getBoundingClientRect();
     const gameRect = game.getBoundingClientRect();
+    const messLevel = getBucketMessLevel(source);
 
     const wrap = document.createElement("div");
     wrap.className = "canvasTapSplat";
@@ -135,7 +188,10 @@
 
     // Start just outside the bucket edge so the paint reads as hitting the canvas.
     const angle = randomBetween(0, Math.PI * 2);
-    const edgeDistance = randomBetween(sourceRect.width * .62, sourceRect.width * 1.18);
+    const edgeDistance = randomBetween(
+      sourceRect.width * .62,
+      sourceRect.width * (1.18 + messLevel * .08)
+    );
     const offsetX = Math.cos(angle) * edgeDistance;
     const offsetY = Math.sin(angle) * edgeDistance;
 
@@ -156,14 +212,15 @@
 
     wrap.appendChild(main);
 
-    const drops = Math.floor(randomBetween(2, 5));
+    // Faster tapping = more droplets, but individual droplet sizes stay unchanged.
+    const drops = Math.floor(randomBetween(2, 5) + messLevel * randomBetween(1.0, 2.0));
     for (let i = 0; i < drops; i++) {
       const drop = document.createElement("div");
       drop.className = "canvasTapDrop";
 
       const dropSize = randomBetween(3, 9);
       const angle = randomBetween(0, Math.PI * 2);
-      const distance = randomBetween(size * .55, size * 1.55);
+      const distance = weightedTapSplatDistance(size, messLevel);
 
       drop.style.width = `${dropSize}px`;
       drop.style.height = `${dropSize}px`;
