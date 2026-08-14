@@ -449,3 +449,9 @@ As of the Store-tab work:
   - less paint lands at medium distance
   - only a small percentage reaches far away
 - Faster clicking shifts some probability from near splashes toward medium/far splashes.
+
+
+### Sell UX note (v0.58)
+- **Sell All** is a one-shot action.
+- After Sell All completes, Sell Mode turns off and the cascading Sell options close automatically.
+- Individual/bulk category selling can still remain interactive unless explicitly changed later.

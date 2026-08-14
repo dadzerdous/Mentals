@@ -212,8 +212,14 @@
     initVials();
 
     pulseCoins(earned);
+
+    // Sell All is a one-shot action: close Sell Mode and its cascade immediately.
+    sellMode = false;
+    document.querySelector("#sellAllChoices")?.classList.remove("open");
+
     renderAll();
-    showSellHint(true);
+    clearTimeout(message._timer);
+    message.classList.remove("show", "dimmed");
     checkJournalSteps();
     if (navigator.vibrate) navigator.vibrate(28);
   }
