@@ -1,3 +1,14 @@
+/*
+ * ================================================================
+ * COLOR GATHER DEVELOPMENT ROADMAP
+ * ================================================================
+ * See PROJECT_NOTES.md in the project root before making major
+ * gameplay/refactor changes. It records current systems, agreed UX
+ * rules, planned Studio/Color XP progression, Flexible Buckets,
+ * White/Black milestones, Painting plans, and deferred ideas.
+ * ================================================================
+ */
+
 // Initialization sequence and splash-screen startup.
 
   // =========================================================
