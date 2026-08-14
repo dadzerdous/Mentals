@@ -91,7 +91,7 @@
       drop.className = "paintDrop";
       const size = randomBetween(10, 42);
       const angle = randomBetween(0, Math.PI * 2);
-      const distance = randomBetween(baseSize * .35, baseSize * .95);
+      const distance = randomBetween(baseSize * .45, baseSize * 1.25);
       drop.style.width = size + "px";
       drop.style.height = randomBetween(size * .75, size * 1.2) + "px";
       drop.style.left = (Math.cos(angle) * distance) + "px";
@@ -106,7 +106,7 @@
       drop.className = "paintDrop";
       const size = randomBetween(5, 14);
       const angle = randomBetween(0, Math.PI * 2);
-      const distance = randomBetween(baseSize * .95, baseSize * 1.45);
+      const distance = randomBetween(baseSize * 1.15, baseSize * 2.05);
       drop.style.width = size + "px";
       drop.style.height = size + "px";
       drop.style.left = (Math.cos(angle) * distance) + "px";
@@ -135,7 +135,7 @@
 
     // Start just outside the bucket edge so the paint reads as hitting the canvas.
     const angle = randomBetween(0, Math.PI * 2);
-    const edgeDistance = randomBetween(sourceRect.width * .58, sourceRect.width * .88);
+    const edgeDistance = randomBetween(sourceRect.width * .62, sourceRect.width * 1.18);
     const offsetX = Math.cos(angle) * edgeDistance;
     const offsetY = Math.sin(angle) * edgeDistance;
 
@@ -163,7 +163,7 @@
 
       const dropSize = randomBetween(3, 9);
       const angle = randomBetween(0, Math.PI * 2);
-      const distance = randomBetween(size * .45, size * .9);
+      const distance = randomBetween(size * .55, size * 1.55);
 
       drop.style.width = `${dropSize}px`;
       drop.style.height = `${dropSize}px`;

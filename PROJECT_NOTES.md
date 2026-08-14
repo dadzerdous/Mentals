@@ -427,3 +427,9 @@ As of the Store-tab work:
 - Primary Buckets are **Equipment**.
 - Paint colors are also **Equipment** because they are production setup, not permanent Tools.
 - Keep bucket/color progression adjacent where practical: bucket first, then paint/color.
+
+
+### Paint splat visual direction (v0.56)
+- Keep individual splat/drop sizes roughly the same.
+- Keep random angle/distance/count behavior.
+- Let droplets spread noticeably farther from the main splat/bucket so the effect reads as a real splatter rather than a tight blob.
