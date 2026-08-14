@@ -1081,3 +1081,8 @@ button:disabled { opacity: .4; }
   gap: 8px;
   overflow-y: auto;
 }
+
+/* v0.54: progressive Store tabs must be truly hidden until unlocked. */
+.storeSectionBtn[hidden] {
+  display: none !important;
+}

@@ -15,6 +15,7 @@ The long-term answer to “why am I collecting all this paint?” is the Paintin
 - Reveal complexity gradually. **Once a UI section is unlocked, do not hide it again.**
 - Store structure is **Equipment | Tools | Upgrades**.
 - Equipment appears first.
+- On a fresh Store unlock, **Tools and Upgrades must be hidden immediately**; do not show empty tabs even briefly.
 - Tools appears when the first Tool becomes relevant, then stays permanently visible.
 - Upgrades appears when the first relevant Upgrade becomes available, then stays permanently visible.
 - Purchased one-time Tools stay listed and show **SOLD OUT** instead of disappearing.
