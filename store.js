@@ -451,7 +451,7 @@
     buyBtn.className = "upgradeBuyBtn";
     const section = storeSectionForItem(item, list);
     const ownedTool = section === "tools" && maxed;
-    buyBtn.textContent = soldOut ? "SOLD OUT" : ownedTool ? "OWNED" : maxed ? "MAX" : `🪙 ${item.cost()}`;
+    buyBtn.textContent = soldOut || ownedTool ? "SOLD OUT" : maxed ? "MAX" : `🪙 ${item.cost()}`;
     const affordableNow = isStoreItemActuallyAffordable(item);
 
     buyBtn.disabled = !affordableNow;
@@ -467,17 +467,72 @@
     return card;
   }
 
+  function rememberStoreRevealOrder(items) {
+    items.forEach(({ item, list }) => {
+      const section = storeSectionForItem(item, list);
+      const order = storeRevealOrder[section] || (storeRevealOrder[section] = []);
+      const revealedNow = (item.level || 0) > 0 || !item.visible || !!item.visible();
+
+      if (revealedNow && !order.includes(item.id)) {
+        order.push(item.id);
+      }
+    });
+  }
+
+  function storeRevealIndex(section, itemId) {
+    const order = storeRevealOrder[section] || [];
+    const index = order.indexOf(itemId);
+    return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
+  }
+
+  function updateStoreSectionUnlocks() {
+    // Tabs are hidden until they first become useful. Once revealed, they stay forever.
+    if (!toolsStoreTabUnlocked) {
+      const hasAvailableTool = storeItems.some(item =>
+        storeSectionForItem(item, storeItems) === "tools" &&
+        (!item.visible || item.visible()) &&
+        !(item.maxLevel && item.level >= item.maxLevel)
+      );
+      if (hasAvailableTool) toolsStoreTabUnlocked = true;
+    }
+
+    if (!upgradesStoreTabUnlocked) {
+      const hasAvailableUpgrade = toolUpgrades.some(item =>
+        (!item.visible || item.visible()) &&
+        !(item.maxLevel && item.level >= item.maxLevel)
+      );
+      if (hasAvailableUpgrade) upgradesStoreTabUnlocked = true;
+    }
+  }
+
   function renderStore() {
     const storeListEl = document.querySelector("#storeList");
     if (!storeListEl) return;
     storeListEl.innerHTML = "";
+    updateStoreSectionUnlocks();
+
+    const toolsTab = document.querySelector('.storeSectionBtn[data-section="tools"]');
+    const upgradesTab = document.querySelector('.storeSectionBtn[data-section="upgrades"]');
+    if (toolsTab) toolsTab.hidden = !toolsStoreTabUnlocked;
+    if (upgradesTab) upgradesTab.hidden = !upgradesStoreTabUnlocked;
+
+    // If an old save points at a section that is not revealed yet, fall back safely.
+    if (activeStoreSection === "tools" && !toolsStoreTabUnlocked) activeStoreSection = "equipment";
+    if (activeStoreSection === "upgrades" && !upgradesStoreTabUnlocked) activeStoreSection = "equipment";
     const allItems = [
       ...storeItems.map(item => ({ item, list: storeItems })),
       ...toolUpgrades.map(item => ({ item, list: toolUpgrades }))
     ];
+
+    rememberStoreRevealOrder(allItems);
+
     allItems
       .filter(({ item, list }) => storeSectionForItem(item, list) === activeStoreSection)
-      .filter(({ item, list }) => storeItemUnlockedForDisplay(item, list))
+      .filter(({ item, list }) => storeRevealIndex(activeStoreSection, item.id) !== Number.MAX_SAFE_INTEGER)
+      .sort((a, b) =>
+        storeRevealIndex(activeStoreSection, a.item.id) -
+        storeRevealIndex(activeStoreSection, b.item.id)
+      )
       .forEach(({ item, list }) => {
         const card = renderUpgradeCard(item, list);
         if (card) storeListEl.appendChild(card);

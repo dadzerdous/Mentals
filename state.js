@@ -65,6 +65,10 @@
   let flexibleBucketCount = 0;
   let flexibleBucketColors = [];
 let activeStoreSection = "equipment";
+  let toolsStoreTabUnlocked = false;
+  let upgradesStoreTabUnlocked = false;
+  // Stable first-reveal order for Store cards.
+  const storeRevealOrder = { equipment: [], tools: [], upgrades: [] };
   let sellMode = false;
   let rearrangeUnlocked = false;
   let dollyMode = false;

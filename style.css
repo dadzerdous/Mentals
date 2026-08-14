@@ -1086,3 +1086,26 @@ button:disabled { opacity: .4; }
 .storeSectionBtn[hidden] {
   display: none !important;
 }
+
+/* ---- v0.55 stable Store size ---- */
+#storeSheet{
+  width:min(92vw,430px);
+  height:min(72vh,560px);
+  min-height:440px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#storeHeader,#storeSectionTabs{flex:0 0 auto}
+#storeList{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  align-content:start;
+  padding-right:3px;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#storeList::-webkit-scrollbar{width:7px}
+#storeList::-webkit-scrollbar-thumb{background:rgba(43,41,39,.24);border-radius:999px}

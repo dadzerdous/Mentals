@@ -16,6 +16,8 @@
         currentProcessIndex, followedStepId, completedJournalSteps,
         colorGuideUnlocked, activeJournalTab, discoveredColors,
         activeStoreSection,
+        toolsStoreTabUnlocked, upgradesStoreTabUnlocked,
+        storeRevealOrder,
         colorXp, colorTimesMade, colorTimesCollected, colorTimesUsed, proficientColors, flexibleBucketCount, flexibleBucketColors,
         currentOrder, orderChoices, orderSelectedCount, sourcePositions,
         storeItemLevels: storeItems.map(i => ({ id: i.id, level: i.level })),
@@ -101,6 +103,15 @@
       colorGuideUnlocked = data.colorGuideUnlocked ?? (totalMixed > 0);
       activeJournalTab = data.activeJournalTab ?? activeJournalTab;
       activeStoreSection = data.activeStoreSection ?? activeStoreSection;
+      toolsStoreTabUnlocked = data.toolsStoreTabUnlocked ?? toolsStoreTabUnlocked;
+      upgradesStoreTabUnlocked = data.upgradesStoreTabUnlocked ?? upgradesStoreTabUnlocked;
+      if (data.storeRevealOrder && typeof data.storeRevealOrder === "object") {
+        ["equipment","tools","upgrades"].forEach(section => {
+          if (Array.isArray(data.storeRevealOrder[section])) {
+            storeRevealOrder[section].splice(0, storeRevealOrder[section].length, ...data.storeRevealOrder[section]);
+          }
+        });
+      }
 
       if (data.discoveredColors && typeof data.discoveredColors === "object") {
         Object.assign(discoveredColors, data.discoveredColors);

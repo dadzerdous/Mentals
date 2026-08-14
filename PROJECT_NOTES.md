@@ -419,3 +419,11 @@ As of the Store-tab work:
 ---
 
 **Update this file whenever a meaningful design decision changes.**
+
+
+### Store layout/order decisions (v0.55)
+- Store window stays a consistent fixed size; cards scroll internally.
+- Newly revealed items append at the bottom of their section and keep that reveal order.
+- Primary Buckets are **Equipment**.
+- Paint colors are also **Equipment** because they are production setup, not permanent Tools.
+- Keep bucket/color progression adjacent where practical: bucket first, then paint/color.
