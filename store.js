@@ -478,7 +478,10 @@
     allItems
       .filter(({ item, list }) => storeSectionForItem(item, list) === activeStoreSection)
       .filter(({ item, list }) => storeItemUnlockedForDisplay(item, list))
-      .forEach(({ item, list }) => renderUpgradeCard(item, list));
+      .forEach(({ item, list }) => {
+        const card = renderUpgradeCard(item, list);
+        if (card) storeListEl.appendChild(card);
+      });
     document.querySelectorAll(".storeSectionBtn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.section === activeStoreSection);
     });
