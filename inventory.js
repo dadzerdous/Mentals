@@ -41,7 +41,7 @@
         if (sellMode) chip.addEventListener("click", () => sellOneFromVial(index));
       } else {
         chip.className = "stashChip empty";
-        chip.textContent = "🧪 Empty Mixer Vial";
+        chip.textContent = `🧪 0/${storageCapacityPerVial}`;
       }
       storageContents.appendChild(chip);
     });
