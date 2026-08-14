@@ -26,3 +26,12 @@
       saveState();
     });
   });
+
+  document.addEventListener("click", event => {
+    const btn = event.target.closest(".storeSectionBtn");
+    if (!btn) return;
+
+    activeStoreSection = btn.dataset.section || "equipment";
+    renderStore();
+    saveState();
+  });

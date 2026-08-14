@@ -1062,3 +1062,28 @@ button:disabled { opacity: .4; }
 .storeSectionBtn.active{background:#fff0a8}
 .godModeBtn{font-size:0}.godModeBtn::after{content:"✦";font-size:13px}
 .godModeBtn.godPulse{animation:godSecretPulse .35s ease}@keyframes godSecretPulse{50%{transform:scale(1.35);opacity:.8}}
+
+/* ---- v0.49 Store cleanup ---- */
+.storeSectionTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.storeSectionBtn {
+  min-height: 42px;
+  padding: 6px 4px;
+  font-size: 11px;
+  border-radius: 12px;
+  background: #fff;
+}
+.storeSectionBtn.active {
+  background: #fff0a8;
+  box-shadow: inset 0 0 0 2px rgba(255,183,0,.35);
+}
+.storeEmptyState {
+  padding: 18px 10px;
+  text-align: center;
+  opacity: .65;
+  font-size: 12px;
+}
