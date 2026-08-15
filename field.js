@@ -44,7 +44,7 @@
   function beginDragSource(sourceEl, startEvent) {
     if (!rearrangeUnlocked) return;
 
-    const color = sourceEl.dataset.color;
+    const positionKey = sourceEl.dataset.positionKey || sourceEl.id || sourceEl.dataset.color;
     const fieldRect = field.getBoundingClientRect();
 
     const startLeft = parseFloat(sourceEl.style.left) || 0;
@@ -86,7 +86,7 @@
       sourceEl.style.left = snappedLeft + "px";
       sourceEl.style.top = snappedTop + "px";
 
-      sourcePositions[color] = { left: snappedLeft, top: snappedTop };
+      sourcePositions[positionKey] = { left: snappedLeft, top: snappedTop };
       saveState();
 
       if (navigator.vibrate) navigator.vibrate(10);
@@ -103,7 +103,7 @@
 
     // Snapshot every visible bucket's exact current position before changing modes.
     const positionSnapshot = {};
-    document.querySelectorAll(".source[data-color]").forEach(source => {
+    document.querySelectorAll(".source[data-color], .flexibleBucket").forEach(source => {
       if (source.style.display === "none") return;
       positionSnapshot[source.id] = {
         left: source.style.left,

@@ -499,3 +499,33 @@ As of the Store-tab work:
 - The setting persists in localStorage.
 - Gather/splat, button click, mixing, and selling sounds all respect the same SFX toggle.
 - Music remains controlled independently.
+
+
+### v0.65 playtest cleanup
+- Sell `ching.wav` must respect the global Sound Effects toggle.
+- Sell Mode may still be used for individual bucket selling, but the cascading bulk-sell options stay closed when Tubes/Vials contain no paint.
+- Tool rail starts below the top HUD so the Journal button cannot overlap the Paint Case.
+- Newly purchased Primary Buckets retain random placement, but spawn inside a central canvas zone rather than near extreme edges/bottom UI.
+- Process 4 explicitly asks the player to **purchase/unlock Orders**.
+- Journal now continues through:
+  - Process 5: select/track and fulfill Orders
+  - Process 6: purchase Dolly
+  - Process 7: become proficient with a mixed color
+  - Process 8: buy a Flexible Mixing Bucket
+- Flexible Mixing Bucket UX itself is still a prototype and needs the planned larger rework.
+
+
+### Flexible Mixing Bucket UX (v0.66)
+- Flexible Mixing Buckets must behave like normal canvas buckets in Dolly mode:
+  - shake/jiggle
+  - drag
+  - snap to grid
+  - persist their moved position
+- Filled Flexible Buckets should visually resemble normal filled paint buckets:
+  - solid bucket background in the assigned color
+  - distinct circular paint mark in the center
+  - not a transparent bucket with only a giant emoji/color circle
+- Empty Flexible Bucket selection uses an in-game color picker, not browser `prompt()`.
+- Picker shows clickable colored balls/cards for proficient mixed colors, similar to the Color Guide.
+- Browser `prompt()` has been removed from this flow.
+- Full empty/reassign management still needs the larger planned Flexible Bucket overhaul.
