@@ -463,3 +463,10 @@ As of the Store-tab work:
 - The existing Paint Case / coin belt remains directly underneath.
 - Reset Progress has moved out of the Journal and into **Options → Game Data**.
 - Options is the future home for Music, Sound Effects, and Vibration controls.
+
+
+### v0.60 Options/HUD correction
+- Legacy `.studioXpBar { position:absolute }` must be overridden inside `#statusHeader`.
+- XP and Options are a real top flex row; Paint Case / coins sit below.
+- Options button uses `playClickSound()` (the existing click-audio helper).
+- Reset Progress lives in Options, not Journal.

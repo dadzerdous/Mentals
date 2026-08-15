@@ -63,12 +63,12 @@ document.querySelector("#godModeBtn")?.addEventListener("click", e => {
   const optionsCloseBtn = document.querySelector("#optionsCloseBtn");
 
   optionsBtn?.addEventListener("click", () => {
-    playButtonClick?.();
+    playClickSound();
     optionsOverlay?.classList.add("open");
   });
 
   optionsCloseBtn?.addEventListener("click", () => {
-    playButtonClick?.();
+    playClickSound();
     optionsOverlay?.classList.remove("open");
   });
 
