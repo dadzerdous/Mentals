@@ -53,3 +53,27 @@ document.querySelector("#godModeBtn")?.addEventListener("click", e => {
   });
 
   renderFlexibleBuckets();
+
+
+  // =========================================================
+  // OPTIONS
+  // =========================================================
+  const optionsOverlay = document.querySelector("#optionsOverlay");
+  const optionsBtn = document.querySelector("#optionsBtn");
+  const optionsCloseBtn = document.querySelector("#optionsCloseBtn");
+
+  optionsBtn?.addEventListener("click", () => {
+    playButtonClick?.();
+    optionsOverlay?.classList.add("open");
+  });
+
+  optionsCloseBtn?.addEventListener("click", () => {
+    playButtonClick?.();
+    optionsOverlay?.classList.remove("open");
+  });
+
+  optionsOverlay?.addEventListener("click", event => {
+    if (event.target === optionsOverlay) {
+      optionsOverlay.classList.remove("open");
+    }
+  });

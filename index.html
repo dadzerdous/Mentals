@@ -3,25 +3,28 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Color Gather v0.58</title>
+<title>Color Gather v0.59</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="game">
+
+  <div id="statusHeader">
+    <div id="studioXpBar" class="studioXpBar">
+      <span id="studioLevel">⭐ Studio Lv 1</span>
+      <div class="studioXpTrack"><div id="studioXpFill" class="studioXpFill"></div></div>
+      <span id="studioXpText">0 / 25 XP</span>
+      <span id="studioXpFloat" class="studioXpFloat"></span>
+    </div>
+    <button id="optionsBtn" class="optionsBtn" aria-label="Open Options" title="Options">⚙️</button>
+  </div>
 
   <div class="top">
     <div id="backpackPanel" class="panel">
       <div class="stashHeader">🎨 Paint Case <span id="bagText">0 / 1</span></div>
       <div id="bagContents" class="stashContents"></div>
     </div>
-    <div class="panel">🪙 <span id="coins">0</span></div>
-  </div>
-
-  <div id="studioXpBar" class="studioXpBar">
-    <span id="studioLevel">⭐ Studio Lv 1</span>
-    <div class="studioXpTrack"><div id="studioXpFill" class="studioXpFill"></div></div>
-    <span id="studioXpText">0 / 25 XP</span>
-    <span id="studioXpFloat" class="studioXpFloat"></span>
+    <div class="panel coinPanel">🪙 <span id="coins">0</span></div>
   </div>
 
   <div id="quest" role="button" aria-label="Open Journal">
@@ -93,7 +96,6 @@
       <div id="journalProcessList"></div>
       <div id="colorGuidePanel" style="display:none;"></div>
           <button id="godModeBtn" class="godModeBtn" title="Studio test button">✦</button>
-      <button id="journalResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
     </div>
   </div>
   <div id="majorNoticeOverlay" class="majorNoticeOverlay">
@@ -129,6 +131,24 @@
       </div>
 
       <div id="storeList"></div>
+    </div>
+  </div>
+
+  <div id="optionsOverlay" class="optionsOverlay">
+    <div id="optionsSheet" class="optionsSheet">
+      <div class="optionsHeader">
+        <span>⚙️ Options</span>
+        <button id="optionsCloseBtn">Close</button>
+      </div>
+
+      <div class="optionsComingSoon">
+        🎵 Music and 🔊 Sound controls coming next.
+      </div>
+
+      <div class="optionsDangerZone">
+        <div class="optionsSectionLabel">Game Data</div>
+        <button id="optionsResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
+      </div>
     </div>
   </div>
 

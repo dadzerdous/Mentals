@@ -149,7 +149,7 @@
 
   const resetConfirmOverlay = document.querySelector("#resetConfirmOverlay");
 
-  document.querySelector("#journalResetBtn").addEventListener("click", () => {
+  document.querySelector("#optionsResetBtn").addEventListener("click", () => {
     resetConfirmOverlay.classList.add("open");
   });
 

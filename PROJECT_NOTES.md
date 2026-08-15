@@ -455,3 +455,11 @@ As of the Store-tab work:
 - **Sell All** is a one-shot action.
 - After Sell All completes, Sell Mode turns off and the cascading Sell options close automatically.
 - Individual/bulk category selling can still remain interactive unless explicitly changed later.
+
+
+### Main HUD / Options layout (v0.59)
+- Studio XP is back at the **top** of the game.
+- The ⚙️ Options button sits immediately to the **right of the XP bar at the same height**.
+- The existing Paint Case / coin belt remains directly underneath.
+- Reset Progress has moved out of the Journal and into **Options → Game Data**.
+- Options is the future home for Music, Sound Effects, and Vibration controls.
