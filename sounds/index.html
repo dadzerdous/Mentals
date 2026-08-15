@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Color Gather v0.63</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+
+  <div id="topHud">
+    <div id="statusHeader">
+      <div id="studioXpBar" class="studioXpBar">
+        <span id="studioLevel">⭐ Studio Lv 1</span>
+        <div class="studioXpTrack"><div id="studioXpFill" class="studioXpFill"></div></div>
+        <span id="studioXpText">0 / 25 XP</span>
+        <span id="studioXpFloat" class="studioXpFloat"></span>
+      </div>
+      <button id="optionsBtn" class="optionsBtn" aria-label="Open Options" title="Options">⚙️</button>
+    </div>
+
+    <div class="top">
+      <div id="backpackPanel" class="panel">
+        <div class="stashHeader">🎨 Paint Case <span id="bagText">0 / 1</span></div>
+        <div id="bagContents" class="stashContents"></div>
+      </div>
+      <div class="panel coinPanel">🪙 <span id="coins">0</span></div>
+    </div>
+  </div>
+
+  <div id="quest" role="button" aria-label="Open Journal">
+    <span id="questText">📖 Process 1 — My First Paint: Gather 4 Red paint</span>
+    <span id="questProgress">0 / 4</span>
+  </div>
+
+  <div id="order" style="display:none;">
+    ORDER
+    <div id="orderTarget">🟣 Purple ×1</div>
+    <div style="font-size:12px;font-weight:700;">Reward: 🪙 <span id="reward">10</span></div>
+  </div>
+
+  <div id="message"></div>
+<div id="field">
+    <div class="source" id="red" data-color="red">🔴<small>Tap</small></div>
+    <div class="source" id="blue" data-color="blue" style="display:none;">🔵<small>Tap</small></div>
+    <div class="source" id="yellow" data-color="yellow" style="display:none;">🟡<small>Tap</small></div>
+    <div class="source" id="white" data-color="white" style="display:none;">⚪<small>Tap</small></div>
+    <div class="source emptyPrimaryBucket" id="emptyPrimaryBucket" style="display:none;">🪣<small>Empty</small></div>
+  </div>
+
+  <div id="warehouseRow" style="display:none;">
+    <div id="warehousePanel" class="panel">
+      <div class="stashHeader">
+        🎨 Mixer Vials <span id="storageText">0 / 1</span>
+</div>
+      <div id="storageContents" class="stashContents"></div>
+    </div>
+  </div>
+
+  <div id="toolsRail" aria-label="Studio tools">
+    <button id="journalBtn" class="toolRailBtn">📖<span>Journal</span></button>
+    <div class="toolRailSellGroup">
+      <div class="toolRailRow">
+        <button id="sellBtn" class="toolRailBtn">🪙<span>Sell</span></button>
+</div>
+      <div id="sellAllChoices" class="sellAllChoices">
+        <button id="sellRawBtnRail" class="toolRailChoiceBtn">🎨<span>Sell Tubes</span></button>
+        <button id="sellMixedBtnRail" class="toolRailChoiceBtn">🧪<span>Sell Vials</span></button>
+        <button id="sellEverythingBtnRail" class="toolRailChoiceBtn">💰<span>Sell All</span></button>
+      </div>
+    </div>
+    <button id="storeBtn" class="toolRailBtn" style="display:none;">
+      🏪<span>Store</span>
+    </button>
+    <button id="mixerToolBtn" class="toolRailBtn" style="display:none;">💧<span>Mix</span></button>
+    <button id="dollyToolBtn" class="toolRailBtn" style="display:none;">🛒<span>Dolly</span></button>
+    <button id="fulfillBtn" class="toolRailBtn" style="display:none;">📦<span>Order</span></button>
+  </div>
+
+
+
+  <div id="journalOverlay">
+    <div id="journalSheet">
+      <div id="journalHeader">
+        <div>
+          <div id="journalTitle">📖 Studio Journal</div>
+          <div id="journalSubtitle">Choose what you want to work on.</div>
+        </div>
+        <button id="journalCloseBtn">Close</button>
+      </div>
+
+      <div id="journalTabs">
+        <button id="journalProcessesTab" class="journalTabBtn active">📋 Processes</button>
+        <button id="journalGuideTab" class="journalTabBtn" style="display:none;">🎨 Color Guide</button>
+      </div>
+
+      <div id="journalProcessList"></div>
+      <div id="colorGuidePanel" style="display:none;"></div>
+          <button id="godModeBtn" class="godModeBtn" title="Studio test button">✦</button>
+    </div>
+  </div>
+  <div id="majorNoticeOverlay" class="majorNoticeOverlay">
+    <div id="majorNoticeCard" class="majorNoticeCard notice-unlock">
+      <div id="majorNoticeIcon" class="majorNoticeIcon">🔓</div>
+      <div id="majorNoticeTitle" class="majorNoticeTitle">Unlocked!</div>
+      <div id="majorNoticeText" class="majorNoticeText"></div>
+      <button id="majorNoticeOkBtn" class="majorNoticeOkBtn">OK</button>
+    </div>
+  </div>
+
+  <div id="ordersOverlay" class="ordersOverlay">
+    <div class="ordersSheet">
+      <div class="ordersHeader"><span>📦 Orders</span><button id="ordersCloseBtn">Close</button></div>
+      <div class="ordersIntro">Pick the job you want. You can switch later.</div>
+      <div id="ordersChoices" class="ordersChoices"></div>
+</div>
+  </div>
+
+  <div id="storeOverlay">
+    <div id="storeSheet">
+      <div id="storeHeader">
+        <span>🏪 Store</span>
+        <div id="storeHeaderBtns">
+          <button id="storeCloseBtn">Close</button>
+        </div>
+      </div>
+
+      <div id="storeSectionTabs" class="storeSectionTabs">
+        <button class="storeSectionBtn active" data-section="equipment">🧰 Equipment</button>
+        <button class="storeSectionBtn" data-section="tools" hidden>🔧 Tools</button>
+        <button class="storeSectionBtn" data-section="upgrades" hidden>⬆️ Upgrades</button>
+      </div>
+
+      <div id="storeList"></div>
+    </div>
+  </div>
+
+  <div id="optionsOverlay" class="optionsOverlay">
+    <div id="optionsSheet" class="optionsSheet">
+      <div class="optionsHeader">
+        <span>⚙️ Options</span>
+        <button id="optionsCloseBtn">Close</button>
+      </div>
+
+      <div class="optionsAudio">
+        <div class="optionRow">
+          <label for="musicEnabled">🎵 Music</label>
+          <input id="musicEnabled" type="checkbox" checked>
+        </div>
+        <div class="optionRow optionVolumeRow">
+          <label for="musicVolume">Music Volume</label>
+          <input id="musicVolume" type="range" min="0" max="100" value="25" step="1">
+          <span id="musicVolumeValue">25%</span>
+        </div>
+        <div class="optionsComingSoon">
+          🔊 Sound Effects and 📳 Vibration controls coming later.
+        </div>
+      </div>
+
+      <div class="optionsDangerZone">
+        <div class="optionsSectionLabel">Game Data</div>
+        <button id="optionsResetBtn" class="journalResetBtn">🔄 Reset Progress</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resetConfirmOverlay">
+    <div id="resetConfirmSheet">
+      <div class="sellHeader">Reset all progress? This can't be undone.</div>
+      <button id="resetYesBtn" class="sellOptionBtn">🗑️ Yes, reset everything</button>
+      <button id="resetNoBtn" class="sellCancelBtn">No, keep playing</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="splashOverlay" class="splashOverlay">
+  <div id="splashCard">
+    <div id="splashTitle">Color Gather</div>
+    <div id="splashStory">
+      Sad news: your eccentric uncle has passed away.<br><br>
+      Stranger news: he's left you his old art studio — and there's something magical about the paint inside.<br><br>
+      Time to see what you can make of it.
+    </div>
+    <button id="splashStartBtn">🎨 Start Painting</button>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script src="colors.js"></script>
+<script src="processes.js"></script>
+<script src="store.js"></script>
+<script src="field.js"></script>
+<script src="minions.js"></script>
+<script src="dom.js"></script>
+<script src="effects.js"></script>
+<script src="xp.js"></script>
+<script src="color-xp.js"></script>
+<script src="inventory.js"></script>
+<script src="dropper.js"></script>
+<script src="sell.js"></script>
+<script src="orders.js"></script>
+<script src="journal-ui.js"></script>
+<script src="store-ui.js"></script>
+<script src="save.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

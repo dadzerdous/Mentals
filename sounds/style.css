@@ -1,0 +1,1473 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #f4efe8;
+  color: #2b2927;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+button, .source, .stashChip, .mixChip {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  background-image: url("images/background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.panel {
+  background: rgba(255,255,255,.94);
+  border: 2px solid #2b2927;
+  border-radius: 16px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 0 rgba(43,41,39,.15);
+  font-weight: 800;
+}
+
+/* ---- top row: backpack + coins ---- */
+.top {
+  position: absolute; top: 10px; left: 10px; right: 10px;
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; z-index: 5;
+}
+
+#backpackPanel, #warehousePanel { min-height: 56px; }
+.stashHeader { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; }
+.stashContents { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
+
+.stashChip {
+  background: #fff; border: 2px solid #2b2927; border-radius: 999px;
+  padding: 3px 8px; font-size: 12px; font-weight: 900;
+}
+.stashChip.pickable { cursor: pointer; }
+.stashChip.pickable:active { transform: translateY(1px); }
+.stashChip.empty { opacity: .45; }
+
+/* ---- quest ---- */
+#quest {
+  position: absolute; top: 106px; left: 10px; right: 10px;
+  background: #fff8e6; border: 2px dashed #2b2927; border-radius: 14px;
+  padding: 6px 10px; font-size: 13px; font-weight: 800; z-index: 5;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+#questProgress { font-size: 12px; opacity: .75; white-space: nowrap; }
+#quest { cursor: pointer; }
+#quest:active { transform: translateY(1px); }
+
+/* ---- order ---- */
+#order {
+  position: absolute; top: 156px; left: 50%; transform: translateX(-50%);
+  width: min(92vw, 390px); text-align: center;
+  background: #fff; border: 3px solid #2b2927; border-radius: 18px;
+  padding: 8px 12px; font-weight: 900; box-shadow: 0 5px 0 rgba(43,41,39,.15);
+  font-size: 13px;
+}
+#orderTarget { font-size: 22px; margin-top: 2px; }
+
+/* ---- play field ---- */
+#field { position: absolute; inset: 224px 0 240px 0; z-index: 8; }
+
+.source {
+  position: absolute; width: 78px; height: 78px;
+  border: 3px solid #2b2927; border-radius: 20px;
+  display: grid; place-items: center; font-size: 34px;
+  box-shadow: 0 6px 0 rgba(43,41,39,.15); cursor: pointer;
+  transition: transform .12s ease;
+}
+
+.source.pressed { transform: scale(0.85); }
+
+.source small {
+  position: absolute; bottom: 5px; font-size: 10px;
+  background: rgba(255,255,255,.85); padding: 2px 6px; border-radius: 99px;
+}
+
+#red { background: #ff6b6b; }
+#blue { background: #6fa8ff; }
+#yellow { background: #ffd95f; }
+#white { background: #ffffff; }
+
+.source.pop { animation: pop .18s ease; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(.9); } 100% { transform: scale(1); } }
+
+/* rearrange mode: jiggle + drag */
+.source.jiggling { animation: jiggle .26s ease-in-out infinite; }
+@keyframes jiggle { 0% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 100% { transform: rotate(-3deg); } }
+
+.source.dragging {
+  z-index: 12;
+  box-shadow: 0 10px 0 rgba(43,41,39,.2);
+}
+
+/* ---- +1 floating text ---- */
+.floater {
+  position: absolute; font-size: 18px; font-weight: 900;
+  pointer-events: none; animation: floatUp .5s ease-out forwards; z-index: 10;
+}
+@keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+
+/* ---- paint splats ---- */
+.paintSplatWrap {
+  position: absolute; pointer-events: none; z-index: 30; transform-origin: center;
+  animation: paintSplatLife var(--life, 2.8s) ease-out forwards;
+}
+.paintSplatMain {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+  filter: drop-shadow(0 4px 2px rgba(0,0,0,.12));
+}
+.paintDrop { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); }
+
+@keyframes paintSplatLife {
+  0% { opacity: 0; transform: scale(.18) rotate(var(--r0)); }
+  12% { opacity: .95; transform: scale(1.18) rotate(var(--r1)); }
+  28% { opacity: .9; transform: scale(1) rotate(var(--r2)); }
+  100% { opacity: 0; transform: scale(1.08) rotate(var(--r2)); }
+}
+
+/* ---- minions ---- */
+.minion {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 9;
+  transition: left 3.5s ease-in-out, top 3.5s ease-in-out;
+  filter: drop-shadow(0 3px 2px rgba(43, 41, 39, .25));
+}
+
+.minion.moving {
+  animation: minionLife .8s ease-in-out infinite;
+}
+
+@keyframes minionLife {
+  0%   { transform: scale(1, 1) rotate(-6deg); }
+  25%  { transform: scale(1.1, 0.9) rotate(4deg); }
+  50%  { transform: scale(0.92, 1.08) rotate(-4deg); }
+  75%  { transform: scale(1.06, 0.95) rotate(5deg); }
+  100% { transform: scale(1, 1) rotate(-6deg); }
+}
+
+.minion img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.minion.asleep {
+  opacity: .55;
+}
+.minion.asleep::after {
+  content: "💤"; position: absolute; top: -14px; right: -10px; font-size: 14px;
+}
+
+/* ---- warehouse ---- */
+#warehouseRow { position: absolute; left: 10px; right: 10px; bottom: 96px; z-index: 5; }
+
+/* ---- left-side studio tools ---- */
+#toolsRail {
+  position: absolute;
+  left: 8px;
+  top: 118px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 58px;
+}
+
+.toolRailBtn {
+  position: relative;
+  width: 58px;
+  min-height: 54px;
+  padding: 5px 2px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 20px;
+}
+
+.toolRailBtn span:not(.storeBadge) {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.toolRailBtn.armed {
+  background: #ffdcdc;
+}
+
+.toolRailMini {
+  min-height: 42px;
+  background: #fff8d6;
+  font-size: 16px;
+}
+
+.coinImpact {
+  animation: coinImpact .34s ease-out;
+}
+
+@keyframes coinImpact {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16) rotate(-2deg); }
+  70% { transform: scale(.96) rotate(1deg); }
+  100% { transform: scale(1); }
+}
+
+.coinGainFloater {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 120;
+  pointer-events: none;
+  font-weight: 1000;
+  font-size: 17px;
+  animation: coinGainFloat .9s ease-out forwards;
+  text-shadow: 0 2px 0 #fff;
+}
+
+@keyframes coinGainFloat {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.7); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -34px) scale(1); }
+}
+
+.sellImpact {
+  animation: sellImpact .36s ease-out;
+}
+
+@keyframes sellImpact {
+  0% { transform: scale(1); }
+  40% { transform: scale(.82) rotate(-4deg); }
+  75% { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1); }
+}
+
+.sellCoinBurst,
+.sellLabelBurst {
+  position: fixed;
+  z-index: 119;
+  pointer-events: none;
+}
+
+.sellCoinBurst {
+  transform: translate(-50%, -50%);
+  animation: sellCoinBurst .62s ease-out forwards;
+}
+
+@keyframes sellCoinBurst {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(.6); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25); }
+}
+
+.sellLabelBurst {
+  transform: translate(-50%, -100%);
+  font-weight: 1000;
+  font-size: 14px;
+  animation: sellLabelBurst .72s ease-out forwards;
+  text-shadow: 0 2px 0 #fff;
+}
+
+@keyframes sellLabelBurst {
+  0% { opacity: 0; transform: translate(-50%, -60%) scale(.7); }
+  20% { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -170%) scale(1); }
+}
+
+/* ---- selling controls ---- */
+.stashChip.sellable {
+  cursor: pointer;
+  background: #fff4c7;
+  box-shadow: inset 0 0 0 2px rgba(255, 183, 0, .35);
+}
+
+
+button {
+  min-height: 72px; border: 3px solid #2b2927; border-radius: 18px;
+  background: #fff; font: inherit; font-weight: 900; font-size: 13px;
+  box-shadow: 0 6px 0 rgba(43,41,39,.15);
+}
+button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(43,41,39,.15); }
+button:disabled { opacity: .4; }
+
+.dropperToggle {
+  display: inline-grid; place-items: center;
+  width: 26px; height: 26px; margin-left: 6px;
+  background: #fff; border: 2px solid #2b2927; border-radius: 999px;
+  font-size: 14px; cursor: pointer;
+}
+.dropperToggle.armed { background: #ffdcdc; }
+
+.dropperLabel { font-size: 10px; opacity: .6; margin-left: 3px; }
+
+
+.dropperFloater.visible { display: block; }
+
+@keyframes dropperBob {
+  0%   { transform: translate(-50%, -140%) rotate(-8deg) scale(1); }
+  50%  { transform: translate(-50%, -150%) rotate(8deg) scale(1.08); }
+  100% { transform: translate(-50%, -140%) rotate(-8deg) scale(1); }
+}
+.mixChip {
+  background: #fff8e6; border: 2px solid #2b2927; border-radius: 999px;
+  width: 22px; height: 22px; font-size: 12px; display: grid; place-items: center; cursor: pointer;
+}
+
+/* ---- store button ---- */
+#storeBtn { background: #ffe08a; position: relative; }
+.storeBadge {
+  position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%;
+  background: #ff5f5f; border: 2px solid #2b2927; font-size: 10px; color: #fff;
+  display: grid; place-items: center;
+}
+
+/* ---- message popup ---- */
+#message {
+  position: absolute; left: 50%; top: 188px; transform: translateX(-50%);
+  background: rgba(43,41,39,.94); color: white; padding: 8px 14px;
+  border-radius: 999px; font-weight: 800; opacity: 0; transition: opacity .15s;
+  pointer-events: none; z-index: 31; white-space: nowrap;
+}
+#message.show { opacity: 1; }
+#message.dimmed { opacity: .42; }
+
+/* ---- sell overlay ---- */
+#sellOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.55);
+  display: none; align-items: flex-end; z-index: 40;
+}
+#sellOverlay.open { display: flex; }
+#sellSheet {
+  width: 100%; background: #f4efe8; border-radius: 22px 22px 0 0;
+  border: 3px solid #2b2927; border-bottom: none; padding: 14px;
+}
+.sellHeader { font-weight: 900; font-size: 16px; margin-bottom: 10px; text-align: center; }
+.sellOptionBtn { width: 100%; margin-bottom: 8px; text-align: left; padding: 0 16px; }
+.sellCancelBtn { width: 100%; background: #fff8e6; }
+
+/* ---- reset confirm overlay ---- */
+#resetConfirmOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.65);
+  display: none; align-items: flex-end; z-index: 47;
+}
+#resetConfirmOverlay.open { display: flex; }
+#resetConfirmSheet {
+  width: 100%; background: #f4efe8; border-radius: 22px 22px 0 0;
+  border: 3px solid #2b2927; border-bottom: none; padding: 16px;
+}
+#resetYesBtn { background: #ffdcdc; }
+
+/* ---- first-time splash screen ---- */
+.splashOverlay {
+  position: fixed; inset: 0; background: rgba(43,41,39,.82);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.splashOverlay.open { display: flex; }
+#splashCard {
+  max-width: 320px; background: #f4efe8; border: 3px solid #2b2927; border-radius: 22px;
+  padding: 24px 20px; text-align: center; box-shadow: 0 10px 0 rgba(0,0,0,.2);
+}
+#splashTitle { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+#splashStory { font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
+#splashStartBtn { width: 100%; background: #ffe08a; min-height: 56px; font-size: 15px; }
+#storeOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.55);
+  display: none; align-items: flex-end; z-index: 40;
+}
+#storeOverlay.open { display: flex; }
+#storeSheet {
+  width: 100%; max-height: 82%; background: #f4efe8; border-radius: 22px 22px 0 0;
+  border: 3px solid #2b2927; border-bottom: none; padding: 14px; overflow-y: auto;
+}
+#storeHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 900; font-size: 18px; gap: 8px; }
+#storeHeaderBtns { display: flex; gap: 6px; }
+#storeCloseBtn { min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px; }
+
+#storeTabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.storeTabBtn { flex: 1; min-height: 44px; border-radius: 12px; font-size: 13px; background: #fff; }
+.storeTabBtn.active { background: #ffe08a; }
+
+.upgradeCard {
+  background: #fff; border: 2px solid #2b2927; border-radius: 16px;
+  padding: 10px 12px; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.upgradeInfo { flex: 1; }
+.upgradeName { font-weight: 900; font-size: 14px; }
+.upgradeDesc { font-size: 12px; opacity: .75; margin-top: 2px; }
+.upgradeBuyBtn { min-height: 52px; padding: 0 14px; font-size: 13px; white-space: nowrap; }
+
+#emptyTabNote { font-size: 13px; opacity: .7; text-align: center; padding: 20px 10px; }
+
+
+/* ---- studio journal ---- */
+#journalOverlay {
+  position: absolute; inset: 0; background: rgba(43,41,39,.62);
+  display: none; align-items: flex-end; z-index: 46;
+}
+#journalOverlay.open { display: flex; }
+
+#journalSheet {
+  width: 100%; max-height: 88%; overflow-y: auto;
+  background: #f4efe8; border: 3px solid #2b2927; border-bottom: none;
+  border-radius: 22px 22px 0 0; padding: 14px;
+}
+
+#journalHeader {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; margin-bottom: 10px;
+}
+#journalTitle { font-size: 20px; font-weight: 900; }
+#journalSubtitle { margin-top: 2px; font-size: 12px; opacity: .7; }
+#journalCloseBtn { min-height: 42px; padding: 0 14px; border-radius: 12px; }
+
+#journalTabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.journalTabBtn { flex: 1; min-height: 44px; border-radius: 12px; }
+.journalTabBtn.active { background: #ffe08a; }
+
+.journalProcessCard {
+  background: rgba(255,255,255,.96); border: 2px solid #2b2927;
+  border-radius: 16px; padding: 11px; margin-bottom: 10px;
+}
+.journalProcessCard.complete { opacity: .68; }
+.journalProcessCard.future { opacity: .42; }
+.journalProcessTitle { font-size: 15px; font-weight: 900; }
+.journalProcessDesc { font-size: 12px; opacity: .68; margin: 3px 0 9px; }
+
+.journalStepBtn {
+  width: 100%; min-height: 52px; margin-top: 7px; padding: 7px 10px;
+  border-radius: 13px; display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; text-align: left; background: #fff;
+}
+.journalStepBtn.following { background: #fff1b8; border-style: dashed; }
+.journalStepBtn.complete { background: #eef7e9; opacity: .75; }
+.journalStepMain { display: flex; align-items: center; gap: 8px; }
+.journalStepMark { width: 20px; text-align: center; font-size: 15px; }
+.journalStepProgress { flex: 0 0 auto; font-size: 11px; opacity: .72; }
+.journalFollowHint { font-size: 11px; opacity: .58; text-align: center; margin-top: 9px; }
+
+.guideGroupTitle { font-size: 13px; font-weight: 900; margin: 13px 0 7px; }
+.guideGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.guideColorCard {
+  min-height: 94px; padding: 8px 5px; background: #fff;
+  border: 2px solid #2b2927; border-radius: 14px; text-align: center;
+}
+.guideColorCard.locked { opacity: .43; }
+.guideColorEmoji { font-size: 26px; }
+.guideColorName { font-size: 12px; font-weight: 900; margin-top: 3px; }
+.guideRecipe { margin-top: 3px; font-size: 10px; opacity: .68; }
+
+
+/* ---- room for the vertical tools rail ---- */
+@media (max-width: 700px) {
+  #field { left: 66px; }
+  #quest { left: 74px; }
+  #order { margin-left: 28px; width: min(76vw, 390px); }
+  #warehouseRow { left: 74px; }
+}
+
+
+/* ---- v0.16 sell-mode polish ---- */
+#sellBtn.armed {
+  animation: sellModePulse 1.05s ease-in-out infinite;
+}
+
+@keyframes sellModePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 0 rgba(255,183,0,.28); }
+  50% { transform: scale(1.045); box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 7px rgba(255,183,0,0); }
+}
+
+.stashChip.sellable.fullVial {
+  background: #ffe79a;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 156, 0, .55),
+    0 0 0 3px rgba(255, 214, 74, .28);
+  animation: fullVialPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes fullVialPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.055); }
+}
+
+.source.sellBucketHint {
+  animation: sellBucketHint .62s ease-out;
+}
+
+@keyframes sellBucketHint {
+  0% { transform: scale(1); }
+  35% { transform: scale(.94); box-shadow: 0 0 0 7px rgba(255,183,0,.22); }
+  100% { transform: scale(1); }
+}
+
+
+/* ---- v0.17 journal reset ---- */
+.journalResetBtn {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  background: #ffdcdc;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
+
+/* ---- v0.18 tools rail sell row ---- */
+.toolRailRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  width: max-content;
+}
+
+.toolRailRow #sellAllBtn {
+  width: 58px;
+  min-height: 54px;
+}
+
+/* While Sell All is visible, it sits immediately to the right of Sell. */
+#sellAllBtn {
+  margin: 0;
+}
+
+
+/* ---- v0.19 primary bucket / color choice ---- */
+.upgradeCard.storeItemLocked {
+  opacity: .45;
+  filter: grayscale(.7);
+}
+
+.upgradeCard.storeItemLocked .upgradeBuyBtn {
+  cursor: not-allowed;
+}
+
+
+/* ---- v0.20 cascading Sell All ---- */
+.toolRailSellGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: max-content;
+}
+
+.sellAllChoices {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  margin-left: 64px;
+  margin-top: -2px;
+}
+
+.sellAllChoices.open {
+  display: flex;
+  animation: sellCascadeIn .18s ease-out;
+}
+
+.toolRailChoiceBtn {
+  width: 58px;
+  min-height: 44px;
+  padding: 4px 2px;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff8d6;
+  font-size: 16px;
+}
+
+.toolRailChoiceBtn span {
+  font-size: 9px;
+  line-height: 1;
+}
+
+@keyframes sellCascadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* old modal kept only as a fallback; normal Sell All uses the rail choices */
+
+
+/* ---- v0.21 store affordability feedback ---- */
+#storeBtn.canAfford {
+  background: #fff1a8;
+  animation: storeAffordablePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes storeAffordablePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 0 rgba(255,183,0,.2);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 6px rgba(255,183,0,0);
+  }
+}
+
+.upgradeCard.affordable {
+  background: #fff9d8;
+  box-shadow: inset 0 0 0 2px rgba(255,183,0,.28);
+}
+
+.upgradeBuyBtn.affordable {
+  background: #ffe08a;
+  animation: affordableBuyPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes affordableBuyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Empty purchased primary bucket waiting for a color */
+.emptyPrimaryBucket {
+  background: rgba(255,255,255,.72);
+  border-style: dashed;
+  font-size: 32px;
+  opacity: .9;
+}
+
+.emptyPrimaryBucket small {
+  background: rgba(255,255,255,.92);
+}
+
+
+/* ---- v0.22 Sell All overlay cascade: does not push later tools down ---- */
+.toolRailSellGroup {
+  position: relative;
+}
+
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 60px;
+  margin: 0;
+  z-index: 25;
+}
+
+/* Strong sold-out treatment for one-time store purchases */
+.upgradeCard.soldOut {
+  opacity: .5;
+}
+
+.upgradeCard.soldOut .upgradeBuyBtn {
+  background: #e8e4dd;
+}
+
+
+.emptyPrimaryBucket {
+  animation: emptyBucketArrival .45s ease-out;
+  box-shadow: 0 6px 0 rgba(43,41,39,.12), 0 0 0 4px rgba(255,255,255,.35);
+}
+
+@keyframes emptyBucketArrival {
+  from { opacity: 0; transform: scale(.55) translateY(10px); }
+  to { opacity: .9; transform: scale(1) translateY(0); }
+}
+
+
+/* ---- v0.24 subtle bucket-tap paint marks ---- */
+.canvasTapSplat {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+  transform-origin: center;
+  animation: canvasTapSplatLife var(--tapLife, 9s) ease-out forwards;
+}
+
+.canvasTapSplatMain {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  filter: none;
+  opacity: .68;
+}
+
+.canvasTapDrop {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: .62;
+}
+
+@keyframes canvasTapSplatLife {
+  0% {
+    opacity: 0;
+    transform: scale(.55) rotate(-5deg);
+  }
+  8% {
+    opacity: .72;
+    transform: scale(1.05) rotate(2deg);
+  }
+  18% {
+    opacity: .66;
+    transform: scale(1) rotate(0deg);
+  }
+  72% {
+    opacity: .48;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+
+/* ---- v0.25 store affordability cleanup ---- */
+.upgradeCard:not(.affordable):not(.storeItemLocked):not(.soldOut) {
+  background: #fff;
+  box-shadow: none;
+}
+
+.upgradeBuyBtn:not(.affordable) {
+  background: #fff;
+}
+
+.canvasTapSplatMain { opacity: .8; }
+.canvasTapDrop { opacity: .72; }
+
+/* ---- v0.29 Store button is white unless something affordable exists ---- */
+#storeBtn { background: #fff !important; }
+#storeBtn.canAfford { background: #fff1a8 !important; }
+
+
+/* ---- v0.34 drag-to-mix ---- */
+.source.mixReady {
+  box-shadow:
+    0 6px 0 rgba(43,41,39,.15),
+    0 0 0 4px rgba(255,224,138,.42);
+}
+
+.source.mixDragging {
+  transform: scale(1.08);
+  cursor: grabbing;
+  box-shadow:
+    0 10px 0 rgba(43,41,39,.18),
+    0 0 0 6px rgba(255,224,138,.38);
+}
+
+.source.mixTarget {
+  animation: mixTargetPulse .55s ease-in-out infinite alternate;
+}
+
+@keyframes mixTargetPulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 4px rgba(255,224,138,.35);
+  }
+  to {
+    transform: scale(1.09);
+    box-shadow: 0 6px 0 rgba(43,41,39,.15), 0 0 0 8px rgba(255,183,0,.18);
+  }
+}
+
+
+/* ---- v0.35 Dolly mode ---- */
+#dollyToolBtn.armed {
+  background: #ffe08a;
+  animation: toolPulse 1s ease-in-out infinite alternate;
+}
+.source.dollyReady { cursor: grab; }
+
+
+/* ---- v0.36 Sell cascade + Dolly polish ---- */
+#sellBtn.armed {
+  background: #fff1a8;
+}
+
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 0;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 30;
+}
+
+.sellAllChoices.open {
+  display: flex;
+}
+
+.source.dollyShake {
+  animation: dollyBucketShake .26s ease-in-out infinite;
+}
+
+@keyframes dollyBucketShake {
+  0%   { transform: rotate(-2deg); }
+  50%  { transform: rotate(2deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+.source.dollyReady {
+  cursor: grab;
+}
+
+.source.dollyReady:active {
+  cursor: grabbing;
+}
+
+
+/* ---- v0.37 cleanup: canonical Sell cascade ---- */
+.sellAllChoices {
+  position: absolute;
+  left: 64px;
+  top: 0;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  z-index: 30;
+}
+.sellAllChoices.open { display: flex; }
+
+
+/* =========================================================
+   v0.38 — Persistent major notifications
+   ========================================================= */
+.majorNoticeOverlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(43,41,39,.38);
+  z-index: 80;
+}
+
+.majorNoticeOverlay.open {
+  display: flex;
+}
+
+.majorNoticeCard {
+  width: min(88vw, 360px);
+  padding: 20px 18px 16px;
+  border: 3px solid #2b2927;
+  border-radius: 22px;
+  box-shadow: 0 9px 0 rgba(43,41,39,.18);
+  text-align: center;
+  animation: majorNoticeIn .22s ease-out;
+}
+
+.majorNoticeCard.notice-unlock    { background: #fff0a8; }
+.majorNoticeCard.notice-level     { background: #dcecff; }
+.majorNoticeCard.notice-discovery { background: #f3ddff; }
+.majorNoticeCard.notice-reward    { background: #dcf4df; }
+.majorNoticeCard.notice-warning   { background: #ffdcdc; }
+
+.majorNoticeIcon {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.majorNoticeTitle {
+  font-size: 20px;
+  font-weight: 1000;
+  margin-bottom: 6px;
+}
+
+.majorNoticeText {
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+  margin-bottom: 15px;
+}
+
+.majorNoticeOkBtn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+@keyframes majorNoticeIn {
+  from { opacity: 0; transform: scale(.82) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Secret test control: intentionally subtle, but still tappable. */
+.godModeBtn {
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 12px auto 5px;
+  display: block;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  opacity: .16;
+  font-size: 13px;
+}
+
+.godModeBtn:active {
+  opacity: .75;
+  transform: scale(.92);
+}
+
+.ordersOverlay{position:absolute;inset:0;background:rgba(43,41,39,.5);display:none;align-items:flex-end;z-index:45}.ordersOverlay.open{display:flex}
+.ordersSheet{width:100%;max-height:82%;overflow-y:auto;background:#f4efe8;border:3px solid #2b2927;border-bottom:none;border-radius:22px 22px 0 0;padding:14px}
+.ordersHeader{display:flex;justify-content:space-between;align-items:center;font-size:19px;font-weight:1000}.ordersIntro{font-size:12px;opacity:.72;margin:8px 0 12px}
+.ordersChoices{display:grid;gap:9px}.orderChoiceCard{background:#fff;border:2px solid #2b2927;border-radius:16px;padding:11px 12px}.orderChoiceCard.selected{background:#fff4c5}.orderChoiceCard.ready,.ordersFulfillBtn.ready{animation:orderPulse 1.1s ease-in-out infinite}
+.orderChoiceTop{display:flex;justify-content:space-between;font-weight:1000}.orderChoiceNeed{font-size:13px;margin-top:5px}.orderChoiceReward{font-size:12px;margin-top:5px;opacity:.75}.ordersFulfillBtn{width:100%;min-height:54px;margin-top:12px}
+#fulfillBtn.orderReady{background:#dcf4df;animation:orderPulse 1s ease-in-out infinite}@keyframes orderPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+
+/* ---- v0.40 Studio XP ---- */
+.studioXpBar{
+  position:absolute;top:74px;left:10px;right:10px;height:26px;z-index:6;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;
+  padding:4px 8px;background:rgba(255,255,255,.9);border:2px solid #2b2927;border-radius:12px;
+  font-size:10px;font-weight:900;box-shadow:0 3px 0 rgba(43,41,39,.12)
+}
+.studioXpTrack{height:8px;background:#e8e4dd;border:1px solid #2b2927;border-radius:999px;overflow:hidden}
+.studioXpFill{height:100%;width:0;background:#9fc6ff;transition:width .25s ease}
+.studioXpFloat{position:absolute;right:8px;top:25px;opacity:0;pointer-events:none;font-size:11px}
+.studioXpFloat.pop{animation:xpFloat .7s ease-out}
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-18px)}}
+
+
+/* =========================================================
+   v0.42 — bottom Process teaser + Mixer Vials above it
+   ========================================================= */
+
+/* Process / Journal teaser is now the lowest HUD element. */
+#quest {
+  top: auto;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 12;
+}
+
+/* Mixer Vials live immediately above the Process teaser. */
+#warehouseRow {
+  top: auto;
+  bottom: 58px;
+  left: 10px;
+  right: 10px;
+  z-index: 11;
+}
+
+/* The top is now reserved for Paint Case / coins / XP.
+   Give the canvas back the middle of the screen. */
+#field {
+  top: 108px;
+  bottom: 126px;
+}
+
+/* Orders can remain near the upper play area without colliding with XP. */
+#order {
+  top: 108px;
+}
+
+/* Temporary feedback sits below the XP bar. */
+#message {
+  top: 110px;
+}
+
+/* On mobile, keep the bottom HUD clear of the vertical toolbox. */
+@media (max-width: 700px) {
+  #quest {
+    left: 74px;
+    right: 10px;
+  }
+
+  #warehouseRow {
+    left: 74px;
+    right: 10px;
+  }
+
+  #field {
+    left: 66px;
+  }
+
+  #order {
+    margin-left: 28px;
+    width: min(76vw, 390px);
+  }
+}
+
+
+/* =========================================================
+   v0.44 — Orders: track one, fulfill any
+   ========================================================= */
+
+.orderChoiceActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.orderTrackBtn,
+.orderCardFulfillBtn {
+  min-height: 40px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.orderTrackBtn {
+  background: #fff;
+}
+
+.orderChoiceCard.selected .orderTrackBtn {
+  background: #fff0a8;
+}
+
+/* Only the individual ready job gets fulfillment emphasis.
+   There is no longer a global "Fulfill Selected Order" animation. */
+.orderCardFulfillBtn {
+  background: #dcf4df;
+}
+
+.orderChoiceCard.ready {
+  animation: none;
+}
+
+.ordersFulfillBtn,
+.ordersFulfillBtn.ready {
+  display: none !important;
+  animation: none !important;
+}
+
+.guideMastery{margin-top:5px;font-size:11px;font-weight:900}.guideStats{margin-top:3px;font-size:9px;opacity:.65}.flexibleBucket{border-style:dashed}
+
+.storeSectionTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 10px}
+.storeSectionBtn{min-height:40px;font-size:11px;border-radius:12px;background:#fff}
+.storeSectionBtn.active{background:#fff0a8}
+.godModeBtn{font-size:0}.godModeBtn::after{content:"✦";font-size:13px}
+.godModeBtn.godPulse{animation:godSecretPulse .35s ease}@keyframes godSecretPulse{50%{transform:scale(1.35);opacity:.8}}
+
+
+/* ---- v0.51 Store card/render fix ---- */
+#storeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#storeSectionTabs {
+  width: 100%;
+  margin: 10px 0 12px;
+}
+
+#storeList {
+  display: grid;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* v0.54: progressive Store tabs must be truly hidden until unlocked. */
+.storeSectionBtn[hidden] {
+  display: none !important;
+}
+
+/* ---- v0.55 stable Store size ---- */
+#storeSheet{
+  width:min(92vw,430px);
+  height:min(72vh,560px);
+  min-height:440px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#storeHeader,#storeSectionTabs{flex:0 0 auto}
+#storeList{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  align-content:start;
+  padding-right:3px;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#storeList::-webkit-scrollbar{width:7px}
+#storeList::-webkit-scrollbar-thumb{background:rgba(43,41,39,.24);border-radius:999px}
+
+
+/* =========================================================
+   v0.59 — Top XP + Options / Options panel
+   ========================================================= */
+
+#statusHeader{
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+  width:100%;
+  margin-bottom:8px;
+}
+
+#statusHeader .studioXpBar{
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+}
+
+.optionsBtn{
+  flex:0 0 auto;
+  width:52px;
+  min-height:100%;
+  border:2px solid rgba(43,41,39,.18);
+  border-radius:14px;
+  background:#fff;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:0 3px 0 rgba(43,41,39,.12);
+}
+
+.optionsBtn:active{
+  transform:translateY(1px);
+  box-shadow:0 2px 0 rgba(43,41,39,.12);
+}
+
+.top{
+  margin-top:0;
+}
+
+/* Options behaves like the game's other modal sheets. */
+.optionsOverlay{
+  position:fixed;
+  inset:0;
+  z-index:10020;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:rgba(20,18,16,.42);
+}
+
+.optionsOverlay.open{
+  display:flex;
+}
+
+.optionsSheet{
+  width:min(92vw,420px);
+  border:2px solid rgba(43,41,39,.18);
+  border-radius:18px;
+  background:#fffdf8;
+  box-shadow:0 16px 45px rgba(0,0,0,.24);
+  padding:14px;
+}
+
+.optionsHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:14px;
+}
+
+.optionsHeader button{
+  background:#fff;
+  border:1px solid rgba(43,41,39,.18);
+  border-radius:10px;
+  padding:8px 11px;
+  font-weight:800;
+}
+
+.optionsComingSoon{
+  padding:12px;
+  border-radius:12px;
+  background:rgba(43,41,39,.05);
+  font-size:13px;
+  font-weight:700;
+}
+
+.optionsDangerZone{
+  margin-top:22px;
+  padding-top:14px;
+  border-top:1px solid rgba(43,41,39,.14);
+}
+
+.optionsSectionLabel{
+  margin-bottom:8px;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  opacity:.62;
+}
+
+.optionsDangerZone .journalResetBtn{
+  width:100%;
+  margin:0;
+}
+
+@media (max-width:520px){
+  #statusHeader{ gap:6px; }
+  .optionsBtn{ width:48px; }
+}
+
+/* ---- v0.60: correct legacy XP positioning ---- */
+#statusHeader{
+  position:relative;
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+  width:100%;
+  height:42px;
+  margin:8px 10px 6px;
+  width:calc(100% - 20px);
+  box-sizing:border-box;
+}
+#statusHeader .studioXpBar{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  height:auto !important;
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+  box-sizing:border-box;
+}
+#statusHeader .optionsBtn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:52px;
+  height:42px;
+  min-height:42px;
+  padding:0;
+  box-sizing:border-box;
+}
+
+
+/* =========================================================
+   v0.61 — deterministic two-row top HUD
+   Row 1: Studio XP + Options
+   Row 2: Paint Case + Coins
+   ========================================================= */
+
+#topHud{
+  position:absolute;
+  top:8px;
+  left:10px;
+  right:10px;
+  z-index:20;
+  display:grid;
+  grid-template-rows:42px 70px;
+  gap:6px;
+  box-sizing:border-box;
+}
+
+#topHud #statusHeader{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:100% !important;
+  height:42px !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 54px;
+  gap:8px;
+  align-items:stretch;
+}
+
+#topHud #studioXpBar{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:auto !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  box-sizing:border-box;
+}
+
+#topHud #optionsBtn{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:54px !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  z-index:2;
+}
+
+#topHud .top{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:100% !important;
+  height:70px !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 84px;
+  gap:8px;
+  box-sizing:border-box;
+}
+
+#topHud .top > .panel{
+  height:70px;
+  box-sizing:border-box;
+}
+
+#topHud #backpackPanel{
+  min-width:0;
+}
+
+#topHud .coinPanel{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:11px;
+}
+
+/* Push the playable HUD/content down below the new fixed top HUD. */
+#quest{
+  top:132px;
+}
+
+#order{
+  top:182px;
+}
+
+#message{
+  top:214px;
+}
+
+#field{
+  top:246px;
+}
+
+@media (max-width:520px){
+  #topHud{
+    left:6px;
+    right:6px;
+    top:6px;
+    grid-template-rows:40px 66px;
+  }
+
+  #topHud #statusHeader{
+    height:40px !important;
+    grid-template-columns:minmax(0,1fr) 48px;
+    gap:6px;
+  }
+
+  #topHud #studioXpBar,
+  #topHud #optionsBtn{
+    height:40px !important;
+    min-height:40px !important;
+  }
+
+  #topHud #optionsBtn{
+    width:48px !important;
+  }
+
+  #topHud .top{
+    height:66px !important;
+    grid-template-columns:minmax(0,1fr) 72px;
+    gap:6px;
+  }
+
+  #topHud .top > .panel{
+    height:66px;
+  }
+}
+
+
+/* =========================================================
+   v0.62 — restore compact Process tracker to bottom
+   ========================================================= */
+#quest{
+  position:absolute !important;
+  left:12px !important;
+  right:12px !important;
+  top:auto !important;
+  bottom:10px !important;
+  width:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  z-index:8;
+  box-sizing:border-box;
+}
+
+/* The field/canvas should not inherit the Process tracker's dashed frame. */
+#field{
+  top:126px !important;
+  bottom:0 !important;
+}
+
+/* Keep the process bar compact rather than stretching through the canvas. */
+#quest.processTip,
+#quest.quest{
+  max-height:none !important;
+}
+
+@media (max-width:520px){
+  #quest{
+    left:8px !important;
+    right:8px !important;
+    bottom:8px !important;
+  }
+}
+
+
+/* ---- v0.63 Options audio controls ---- */
+.optionsAudio{
+  display:grid;
+  gap:10px;
+}
+.optionRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid rgba(43,41,39,.12);
+  border-radius:12px;
+  background:#fff;
+  font-weight:800;
+}
+.optionRow input[type="checkbox"]{
+  width:22px;
+  height:22px;
+}
+.optionVolumeRow{
+  display:grid;
+  grid-template-columns:auto minmax(90px,1fr) 42px;
+}
+.optionVolumeRow input[type="range"]{
+  width:100%;
+}
+#musicVolumeValue{
+  text-align:right;
+  font-size:12px;
+}
