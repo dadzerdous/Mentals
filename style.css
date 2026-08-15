@@ -1259,3 +1259,145 @@ button:disabled { opacity: .4; }
   padding:0;
   box-sizing:border-box;
 }
+
+
+/* =========================================================
+   v0.61 — deterministic two-row top HUD
+   Row 1: Studio XP + Options
+   Row 2: Paint Case + Coins
+   ========================================================= */
+
+#topHud{
+  position:absolute;
+  top:8px;
+  left:10px;
+  right:10px;
+  z-index:20;
+  display:grid;
+  grid-template-rows:42px 70px;
+  gap:6px;
+  box-sizing:border-box;
+}
+
+#topHud #statusHeader{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:100% !important;
+  height:42px !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 54px;
+  gap:8px;
+  align-items:stretch;
+}
+
+#topHud #studioXpBar{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:auto !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  box-sizing:border-box;
+}
+
+#topHud #optionsBtn{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:54px !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  z-index:2;
+}
+
+#topHud .top{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:100% !important;
+  height:70px !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 84px;
+  gap:8px;
+  box-sizing:border-box;
+}
+
+#topHud .top > .panel{
+  height:70px;
+  box-sizing:border-box;
+}
+
+#topHud #backpackPanel{
+  min-width:0;
+}
+
+#topHud .coinPanel{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:11px;
+}
+
+/* Push the playable HUD/content down below the new fixed top HUD. */
+#quest{
+  top:132px;
+}
+
+#order{
+  top:182px;
+}
+
+#message{
+  top:214px;
+}
+
+#field{
+  top:246px;
+}
+
+@media (max-width:520px){
+  #topHud{
+    left:6px;
+    right:6px;
+    top:6px;
+    grid-template-rows:40px 66px;
+  }
+
+  #topHud #statusHeader{
+    height:40px !important;
+    grid-template-columns:minmax(0,1fr) 48px;
+    gap:6px;
+  }
+
+  #topHud #studioXpBar,
+  #topHud #optionsBtn{
+    height:40px !important;
+    min-height:40px !important;
+  }
+
+  #topHud #optionsBtn{
+    width:48px !important;
+  }
+
+  #topHud .top{
+    height:66px !important;
+    grid-template-columns:minmax(0,1fr) 72px;
+    gap:6px;
+  }
+
+  #topHud .top > .panel{
+    height:66px;
+  }
+}

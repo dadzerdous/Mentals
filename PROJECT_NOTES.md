@@ -470,3 +470,10 @@ As of the Store-tab work:
 - XP and Options are a real top flex row; Paint Case / coins sit below.
 - Options button uses `playClickSound()` (the existing click-audio helper).
 - Reset Progress lives in Options, not Journal.
+
+
+### v0.61 Top HUD rule
+- The top HUD is now one explicit two-row container:
+  - Row 1: Studio XP + Options
+  - Row 2: Paint Case + Coins
+- Keep these elements inside `#topHud`; do not independently absolutely-position them later.
