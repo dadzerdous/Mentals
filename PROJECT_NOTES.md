@@ -483,3 +483,12 @@ As of the Store-tab work:
 - Process tracker stays as a compact bar at the **very bottom** of the playable area.
 - Do not assign `#quest` a top position when changing the top HUD.
 - Canvas/field remains for buckets, splats, and gameplay; the Process tracker must not stretch into a large dashed panel.
+
+
+### Background music (v0.63)
+- Background track path: `sounds/bgmusic.mp3`.
+- Music loops continuously after the browser allows playback from the player's first interaction.
+- Default music volume is 25%.
+- Options contains Music On/Off + volume.
+- Music preference and volume persist in localStorage.
+- SFX and vibration controls are still future Options work.

@@ -77,3 +77,98 @@ document.querySelector("#godModeBtn")?.addEventListener("click", e => {
       optionsOverlay.classList.remove("open");
     }
   });
+
+
+  // =========================================================
+  // BACKGROUND MUSIC
+  // =========================================================
+  const bgMusic = new Audio("sounds/bgmusic.mp3");
+  bgMusic.loop = true;
+  bgMusic.preload = "auto";
+
+  let musicEnabled = true;
+  let musicVolume = 0.25;
+  let musicStarted = false;
+
+  try {
+    const savedMusicEnabled = localStorage.getItem("colorGatherMusicEnabled");
+    const savedMusicVolume = localStorage.getItem("colorGatherMusicVolume");
+    if (savedMusicEnabled !== null) musicEnabled = savedMusicEnabled === "true";
+    if (savedMusicVolume !== null) {
+      const parsedVolume = Number(savedMusicVolume);
+      if (Number.isFinite(parsedVolume)) musicVolume = Math.max(0, Math.min(1, parsedVolume));
+    }
+  } catch (e) {}
+
+  bgMusic.volume = musicVolume;
+
+  function syncMusicControls() {
+    const enabledInput = document.querySelector("#musicEnabled");
+    const volumeInput = document.querySelector("#musicVolume");
+    const volumeValue = document.querySelector("#musicVolumeValue");
+
+    if (enabledInput) enabledInput.checked = musicEnabled;
+    if (volumeInput) volumeInput.value = String(Math.round(musicVolume * 100));
+    if (volumeValue) volumeValue.textContent = `${Math.round(musicVolume * 100)}%`;
+  }
+
+  function saveMusicSettings() {
+    try {
+      localStorage.setItem("colorGatherMusicEnabled", String(musicEnabled));
+      localStorage.setItem("colorGatherMusicVolume", String(musicVolume));
+    } catch (e) {}
+  }
+
+  function startBackgroundMusic() {
+    if (!musicEnabled || musicStarted) return;
+    bgMusic.volume = musicVolume;
+    bgMusic.play()
+      .then(() => { musicStarted = true; })
+      .catch(() => {
+        // Mobile browsers may require another user interaction.
+      });
+  }
+
+  function applyMusicState() {
+    bgMusic.volume = musicVolume;
+
+    if (!musicEnabled) {
+      bgMusic.pause();
+      musicStarted = false;
+      return;
+    }
+
+    startBackgroundMusic();
+  }
+
+  // Browsers, especially mobile Safari/Chrome, require audio to begin from
+  // a user gesture. Keep listening until playback successfully starts.
+  function tryStartMusicFromInteraction() {
+    startBackgroundMusic();
+    if (musicStarted || !musicEnabled) {
+      document.removeEventListener("pointerdown", tryStartMusicFromInteraction);
+      document.removeEventListener("keydown", tryStartMusicFromInteraction);
+    }
+  }
+
+  document.addEventListener("pointerdown", tryStartMusicFromInteraction);
+  document.addEventListener("keydown", tryStartMusicFromInteraction);
+
+  const musicEnabledInput = document.querySelector("#musicEnabled");
+  const musicVolumeInput = document.querySelector("#musicVolume");
+
+  musicEnabledInput?.addEventListener("change", event => {
+    musicEnabled = !!event.currentTarget.checked;
+    saveMusicSettings();
+    applyMusicState();
+    syncMusicControls();
+  });
+
+  musicVolumeInput?.addEventListener("input", event => {
+    musicVolume = Math.max(0, Math.min(1, Number(event.currentTarget.value) / 100));
+    bgMusic.volume = musicVolume;
+    saveMusicSettings();
+    syncMusicControls();
+  });
+
+  syncMusicControls();

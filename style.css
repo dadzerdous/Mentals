@@ -1438,3 +1438,36 @@ button:disabled { opacity: .4; }
     bottom:8px !important;
   }
 }
+
+
+/* ---- v0.63 Options audio controls ---- */
+.optionsAudio{
+  display:grid;
+  gap:10px;
+}
+.optionRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid rgba(43,41,39,.12);
+  border-radius:12px;
+  background:#fff;
+  font-weight:800;
+}
+.optionRow input[type="checkbox"]{
+  width:22px;
+  height:22px;
+}
+.optionVolumeRow{
+  display:grid;
+  grid-template-columns:auto minmax(90px,1fr) 42px;
+}
+.optionVolumeRow input[type="range"]{
+  width:100%;
+}
+#musicVolumeValue{
+  text-align:right;
+  font-size:12px;
+}
