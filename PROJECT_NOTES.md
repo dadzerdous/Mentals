@@ -492,3 +492,10 @@ As of the Store-tab work:
 - Options contains Music On/Off + volume.
 - Music preference and volume persist in localStorage.
 - SFX and vibration controls are still future Options work.
+
+
+### Sound Effects option (v0.64)
+- Options now includes **Sound Effects On/Off**.
+- The setting persists in localStorage.
+- Gather/splat, button click, mixing, and selling sounds all respect the same SFX toggle.
+- Music remains controlled independently.

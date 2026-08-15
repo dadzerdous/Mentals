@@ -1,3 +1,15 @@
+  // Global SFX preference. All gameplay sound helpers below respect this.
+  let sfxEnabled = true;
+  try {
+    const savedSfxEnabled = localStorage.getItem("colorGatherSfxEnabled");
+    if (savedSfxEnabled !== null) sfxEnabled = savedSfxEnabled === "true";
+  } catch (e) {}
+
+  function setSfxEnabled(enabled) {
+    sfxEnabled = !!enabled;
+    try { localStorage.setItem("colorGatherSfxEnabled", String(sfxEnabled)); } catch (e) {}
+  }
+
 // Audio, paint splats, coin effects, and visual feedback helpers.
 
   // =========================================================
@@ -7,6 +19,7 @@
   const splatSoundSrc = "sounds/splat.mp3";
 
   function playSplatSound() {
+    if (!sfxEnabled) return;
     try {
       const sound = new Audio(splatSoundSrc);
       sound.volume = 0.7;
@@ -23,6 +36,7 @@
   clickAudio.preload = "auto";
 
   function playClickSound() {
+    if (!sfxEnabled) return;
     try {
       clickAudio.currentTime = 0;
       clickAudio.play().catch(() => {});
@@ -33,6 +47,7 @@
   mixAudio.preload = "auto";
 
   function playMixSound() {
+    if (!sfxEnabled) return;
     try {
       mixAudio.currentTime = 0;
       mixAudio.play().catch(() => {});

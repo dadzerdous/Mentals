@@ -172,3 +172,14 @@ document.querySelector("#godModeBtn")?.addEventListener("click", e => {
   });
 
   syncMusicControls();
+
+  // Sound Effects on/off. Individual SFX helpers in effects.js honor this flag.
+  const sfxEnabledInput = document.querySelector("#sfxEnabled");
+  if (sfxEnabledInput) {
+    sfxEnabledInput.checked = sfxEnabled;
+    sfxEnabledInput.addEventListener("change", event => {
+      setSfxEnabled(!!event.currentTarget.checked);
+      playClickSound(); // Plays only when SFX has just been turned ON.
+    });
+  }
+
