@@ -477,3 +477,9 @@ As of the Store-tab work:
   - Row 1: Studio XP + Options
   - Row 2: Paint Case + Coins
 - Keep these elements inside `#topHud`; do not independently absolutely-position them later.
+
+
+### v0.62 Process tracker placement
+- Process tracker stays as a compact bar at the **very bottom** of the playable area.
+- Do not assign `#quest` a top position when changing the top HUD.
+- Canvas/field remains for buckets, splats, and gameplay; the Process tracker must not stretch into a large dashed panel.
